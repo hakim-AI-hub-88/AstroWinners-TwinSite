@@ -1,0 +1,22 @@
+{#- Footer shared by every page: sitemap columns, guides/docs, policy, license. -#}
+<footer class="site-footer">
+  <div class="site-footer__grid">
+    <div class="site-footer__about">
+      <a class="site-nav__brand" href="/"><img src="{{ url_for('static', filename='img/favicon.svg') }}" width="26" height="26" alt=""><span>TWINSITE</span></a>
+      <p>Open-source planetary analog discovery. Built by team AstroWinners for the NASA Space Apps Challenge 2026.</p>
+    </div>
+    <nav aria-label="Platform"><h2>Platform</h2>
+      <a href="/app#mission">Mission Control</a><a href="/auto">Agentic Auto Mode</a><a href="/console/">Mission Console</a><a href="/app#science">Science &amp; validation</a>
+    </nav>
+    <nav aria-label="Data and APIs"><h2>Data &amp; APIs</h2>
+      <a href="/data">Data Hub</a><a href="/data#cleaning">Cleaning algorithms</a><a href="/resources#api">API reference</a><a href="/v1/openapi.json">OpenAPI (platform)</a>
+    </nav>
+    <nav aria-label="Guides and documentation"><h2>Guides &amp; Docs</h2>
+      <a href="/resources#guides">Guides</a><a href="/resources#architecture">Architecture</a><a href="/resources#stack">Stack &amp; dependencies</a><a href="{{ repo_url }}#readme">README</a>
+    </nav>
+    <nav aria-label="Project"><h2>Project</h2>
+      <a href="/sitemap">Sitemap</a><a href="/policy">Policy &amp; privacy</a><a href="{{ repo_url }}/blob/master/LICENSE">MIT License</a><a href="{{ repo_url }}" rel="noopener">Source on GitHub</a><a href="https://www.spaceappschallenge.org/" rel="noopener">NASA Space Apps</a>
+    </nav>
+  </div>
+  <p class="site-footer__legal">© {{ year }} TwinSite contributors · MIT License · NASA imagery and data are public domain unless noted; OpenStreetMap data © OpenStreetMap contributors (ODbL). TwinSite is a research tool and is not endorsed by NASA.</p>
+</footer>

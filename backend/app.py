@@ -17,11 +17,20 @@
 from __future__ import annotations
 
 import logging
+import sys
+from pathlib import Path
+
+# The TwinSite platform package (backend/twinsite) imports `contracts` from the repository root.
+_ROOT = Path(__file__).resolve().parents[1]
+for _p in (str(_ROOT / "backend"), str(_ROOT)):
+    if _p not in sys.path:
+        sys.path.insert(0, _p)
 
 from flask import Flask, jsonify, render_template
 
 from routes.assistant_routes import bp as assistant_bp
 from routes.ml_routes import bp as ml_bp
+from routes.platform_routes import bp as platform_bp
 from routes.report_routes import bp as report_bp
 from routes.similarity_routes import bp as similarity_bp
 from routes.twin_routes import bp as twin_bp
@@ -43,6 +52,7 @@ def create_app(preload: bool = True) -> Flask:
     app.register_blueprint(ml_bp)             # machine-learning models (PCA, K-means)
     app.register_blueprint(report_bp)         # TWINSITE mission report (AI narrative + map images)
     app.register_blueprint(twin_bp)           # TWINSITE interactive globes (data layers, region check)
+    app.register_blueprint(platform_bp)       # pages, sitemap, React console, /v1 platform API proxy
 
     # ----------------------------------------------------------------------
     # PAGE ROUTES

@@ -1,0 +1,20 @@
+<!doctype html>
+{#- Shared layout for every multi-page view (auto, data, resources, sitemap, policy).
+    Pages: {% extends "base.html" %} and fill blocks title / description / head / content / scripts. -#}
+<html lang="en">
+<head>
+  {% include "partials/head.html" %}
+  <title>{% block title %}TwinSite{% endblock %} · TwinSite</title>
+  <meta name="description" content="{% block description %}Planetary analog discovery: match Moon and Mars terrain to Earth using NASA data, autonomous agents and open APIs.{% endblock %}">
+  {% block head %}{% endblock %}
+</head>
+<body class="site">
+  <a class="skip-link" href="#main">Skip to content</a>
+  {% include "partials/nav.html" %}
+  <main id="main" class="site-main">
+    {% block content %}{% endblock %}
+  </main>
+  {% include "partials/footer.html" %}
+  {% block scripts %}{% endblock %}
+</body>
+</html>

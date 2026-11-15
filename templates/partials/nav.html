@@ -1,0 +1,19 @@
+{#- Top navigation shared by every page. Set `active` in the route (auto, data, resources, ...). -#}
+<header class="site-nav" data-nav>
+  <a class="site-nav__brand" href="/" aria-label="TwinSite home">
+    <img src="{{ url_for('static', filename='img/favicon.svg') }}" width="30" height="30" alt="">
+    <span>TWINSITE</span>
+  </a>
+  <button class="site-nav__toggle" type="button" aria-expanded="false" aria-controls="site-nav-links" data-nav-toggle>Menu</button>
+  <nav id="site-nav-links" class="site-nav__links" aria-label="Main">
+    <a href="/app#mission" {% if active == 'app' %}aria-current="page"{% endif %}>Mission Control</a>
+    <a href="/auto" {% if active == 'auto' %}aria-current="page"{% endif %}>Auto Mode</a>
+    <a href="/data" {% if active == 'data' %}aria-current="page"{% endif %}>Data Hub</a>
+    <a href="/console/" {% if active == 'console' %}aria-current="page"{% endif %}>Console</a>
+    <a href="/resources" {% if active == 'resources' %}aria-current="page"{% endif %}>Resources</a>
+    <a class="site-nav__gh" href="{{ repo_url }}" rel="noopener">GitHub</a>
+  </nav>
+</header>
+<script>
+  (function(){var b=document.querySelector('[data-nav-toggle]');if(!b)return;b.addEventListener('click',function(){var o=b.getAttribute('aria-expanded')==='true';b.setAttribute('aria-expanded',String(!o));document.querySelector('[data-nav]').classList.toggle('is-open',!o);});})();
+</script>
