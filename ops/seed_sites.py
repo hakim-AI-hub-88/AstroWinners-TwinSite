@@ -72,11 +72,11 @@ def main():
             if db.observations([d['site_id']], domain='accessibility_environment')[0]:
                 continue
             try:
-                rows = gateway.acquire_osm_access(data_dir, d['site_id'], d['aoi'])
+                rows = gateway.acquire_osm_access(data_dir, d['site_id'], d['aoi'], timeout=60)
                 print(json.dumps({'site': d['name'], 'osm': [(r['quantity'], r['value']) for r in rows]}), flush=True)
             except Exception as error:  # noqa: BLE001
                 print(json.dumps({'site': d['name'], 'error': type(error).__name__}), flush=True)
-            time.sleep(2)
+            time.sleep(6)
         return
     data_dir = load_settings().data_dir
     todo = [s for s in SITES if not args.body or s[0] == args.body]

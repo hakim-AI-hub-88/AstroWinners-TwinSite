@@ -43,7 +43,7 @@ def site_id(body, lon, lat):
 def aoi_for(body, lon, lat):
     """~33 km square, shifted (not shrunk) to stay inside one product tile."""
     dlat = math.degrees(SIDE_KM / RADIUS_KM[body])
-    dlon = dlat / max(0.2, math.cos(math.radians(lat)))
+    dlon = dlat / max(0.05, math.cos(math.radians(lat)))
     s, n = lat - dlat / 2, lat + dlat / 2
     w, e = lon - dlon / 2, lon + dlon / 2
     if body == "Earth":                       # terrarium tiles mosaic freely; keep within -180..180 / 84S..84N
@@ -63,6 +63,9 @@ def aoi_for(body, lon, lat):
         w360 = max(t_w + 0.001, min(lon360 - dlon / 2, t_w + 89.999 - dlon))
         w = w360 - 360 if w360 > 180 else w360
         e = w + dlon
+    if body in ("Moon", "Mars") and w < 0 < e:
+        # LOLA/MOLA products use 0..360 east: shift (never shrink) the box so it does not straddle the prime meridian
+        w, e = (0.001, 0.001 + (e - w)) if lon >= 0 else (-0.001 - (e - w), -0.001)
     return AOI(body, round(w, 5), round(s, 5), round(e, 5), round(n, 5), CRS[body])
 
 
