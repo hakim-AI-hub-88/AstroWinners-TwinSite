@@ -1,5 +1,25 @@
 {% extends "base.html" %}
+{#- Served with HTTP 503 by /console/ when frontend/dist/index.html does not exist yet. -#}
 {% block title %}Mission Console{% endblock %}
+{% block description %}The TwinSite Mission Console has not been built on this server yet.{% endblock %}
+{% block head %}<meta name="robots" content="noindex">{% endblock %}
 {% block content %}
-<section class="page-hero"><p class="eyebrow">TwinSite</p><h1>Mission Console</h1><p class="lead">Under construction.</p></section>
+<section class="status-page" aria-labelledby="cm-h">
+  <p class="eyebrow">Mission Console · 503</p>
+  <h1 class="section-title" id="cm-h" style="font-size:clamp(1.7rem,4vw,2.4rem);margin-top:10px">The console is not built on this server yet</h1>
+  <p class="lead">The Mission Console is a React app served from <code>frontend/dist</code>. It needs a one-time build. Everything else on TwinSite works without it.</p>
+
+  <div class="panel">
+    <h2 style="font-size:1.05rem;margin:0 0 6px">Build it</h2>
+    <p class="muted" style="margin:0">From the repository root, with Node.js 22:</p>
+    <pre><code>cd frontend &amp;&amp; npm ci &amp;&amp; npm run build</code></pre>
+    <p class="muted" style="margin:14px 0 0">Then reload this page. Flask serves the build at <code>/console/</code>. For live NASA data and agents, also start the platform API and worker (<code>make dev</code>).</p>
+  </div>
+
+  <div class="page-hero__actions">
+    <a class="btn btn--primary" href="/app#mission">Open Mission Control</a>
+    <a class="btn" href="/auto">Try Auto Mode</a>
+    <a class="btn" href="/resources#guide-local">Setup guide</a>
+  </div>
+</section>
 {% endblock %}
