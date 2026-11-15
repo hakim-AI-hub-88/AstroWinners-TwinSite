@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 200" role="img" aria-labelledby="t d">
+  <title id="t">Agentic Auto Mode pipeline</title>
+  <desc id="d">Six steps light up in sequence: Plan, Acquire data, Clean, Analyze every Earth zone, 13 agents, AI report.</desc>
+  <style>
+    .bg{fill:#0e0a08}
+    .box{fill:#1a120d;stroke:#3b2a1d;stroke-width:1.5}
+    .lbl{font:700 15px 'Segoe UI',Helvetica,Arial,sans-serif;fill:#f0e2c8;text-anchor:middle}
+    .num{font:600 11px 'Segoe UI',Helvetica,Arial,sans-serif;fill:#ff8f4a;text-anchor:middle;letter-spacing:2px}
+    .hint{font:400 11px 'Segoe UI',Helvetica,Arial,sans-serif;fill:#a89478;text-anchor:middle}
+    .lit{fill:none;stroke:#ff8f4a;stroke-width:2.5;opacity:0;animation:lit 9s infinite}
+    .s2{animation-delay:1.5s}.s3{animation-delay:3s}.s4{animation-delay:4.5s}.s5{animation-delay:6s}.s6{animation-delay:7.5s}
+    .wire{stroke:#3b2a1d;stroke-width:2}
+    .pulse{fill:#ffcf8a;animation:move 9s linear infinite}
+    @keyframes lit{0%{opacity:0}4%{opacity:1}16%{opacity:1}24%{opacity:.15}100%{opacity:.15}}
+    @keyframes move{from{transform:translateX(0)}to{transform:translateX(1000px)}}
+    @media (prefers-reduced-motion:reduce){.lit{animation:none;opacity:1}.pulse{animation:none;opacity:0}}
+  </style>
+  <rect class="bg" width="1200" height="200" rx="14"/>
+  <line class="wire" x1="100" y1="100" x2="1100" y2="100"/>
+  <circle class="pulse" cx="100" cy="100" r="5"/>
+  <g>
+    <rect class="box" x="30" y="50" width="160" height="100" rx="12"/><rect class="lit" x="30" y="50" width="160" height="100" rx="12"/>
+    <text class="num" x="110" y="78">STEP 01</text><text class="lbl" x="110" y="104">Plan</text><text class="hint" x="110" y="126">target · zones · options</text>
+    <rect class="box" x="225" y="50" width="160" height="100" rx="12"/><rect class="lit s2" x="225" y="50" width="160" height="100" rx="12"/>
+    <text class="num" x="305" y="78">STEP 02</text><text class="lbl" x="305" y="104">Acquire data</text><text class="hint" x="305" y="126">bundled + live NASA</text>
+    <rect class="box" x="420" y="50" width="160" height="100" rx="12"/><rect class="lit s3" x="420" y="50" width="160" height="100" rx="12"/>
+    <text class="num" x="500" y="78">STEP 03</text><text class="lbl" x="500" y="104">Clean</text><text class="hint" x="500" y="126">raw·standard·strict·robust</text>
+    <rect class="box" x="615" y="50" width="160" height="100" rx="12"/><rect class="lit s4" x="615" y="50" width="160" height="100" rx="12"/>
+    <text class="num" x="695" y="78">STEP 04</text><text class="lbl" x="695" y="104">Analyze</text><text class="hint" x="695" y="126">every Earth zone</text>
+    <rect class="box" x="810" y="50" width="160" height="100" rx="12"/><rect class="lit s5" x="810" y="50" width="160" height="100" rx="12"/>
+    <text class="num" x="890" y="78">STEP 05</text><text class="lbl" x="890" y="104">13 agents</text><text class="hint" x="890" y="126">evidence-cited roles</text>
+    <rect class="box" x="1005" y="50" width="160" height="100" rx="12"/><rect class="lit s6" x="1005" y="50" width="160" height="100" rx="12"/>
+    <text class="num" x="1085" y="78">STEP 06</text><text class="lbl" x="1085" y="104">AI report</text><text class="hint" x="1085" y="126">7-provider router</text>
+  </g>
+</svg>

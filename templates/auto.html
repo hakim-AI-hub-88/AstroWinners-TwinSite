@@ -4,7 +4,7 @@
 {% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/auto.css') }}">{% endblock %}
 {% block content %}
 <section class="page-hero auto-hero">
-  <p class="eyebrow">Agentic Auto Mode</p>
+  <p class="eyebrow">Expedition Mode · Agentic Auto Mode</p>
   <h1>One click, one complete mission</h1>
   <p class="lead">Pick a Moon or Mars target and an objective. TwinSite then plans the mission, acquires NASA data,
     cleans it, ranks Earth analog regions, runs the 13 platform agents and writes a report on its own.
@@ -68,16 +68,16 @@
 
     <fieldset class="auto-seg">
       <legend>Data source</legend>
-      <label><input type="radio" name="data_mode" value="bundled" checked> Bundled</label>
-      <label><input type="radio" name="data_mode" value="auto"> Auto (live NASA)</label>
+      <label><input type="radio" name="data_mode" value="bundled"> Bundled only</label>
+      <label><input type="radio" name="data_mode" value="auto" checked> Bundled + live NASA (Expedition default)</label>
     </fieldset>
 
     <div class="auto-row">
       <label class="field">Cleaning
         <select id="f-cleaning">
-          <option value="standard">Standard (default)</option>
+          <option value="robust" selected>Robust (Expedition default)</option>
           <option value="strict">Strict</option>
-          <option value="robust">Robust</option>
+          <option value="standard">Standard (same as Standard mode)</option>
           <option value="raw">Raw (no cleaning)</option>
         </select>
       </label>

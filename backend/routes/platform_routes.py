@@ -31,9 +31,10 @@ REPO_URL = "https://github.com/hakim-AI-hub-88/AstroWinners-TwinSite"
 PAGES = [
     ("/", "home.html", "Home", "Platform", "Overview of TwinSite and what it does."),
     ("/app", "index.html", "Mission Control", "Platform", "Interactive analog search: twin globes, ranking, science, report."),
-    ("/auto", "auto.html", "Agentic Auto Mode", "Platform", "Autonomous end-to-end missions run by the 13 TwinSite agents."),
-    ("/console/", None, "Mission Console", "Platform", "Advanced console: live NASA characterization, analog matching, portfolios, evidence."),
-    ("/data", "data.html", "Data Hub", "Data & APIs", "Browse, clean, filter and download every TwinSite dataset; live NASA sources."),
+    ("/expedition", "expedition.html", "Expedition Mode", "Expedition Mode", "The upgraded mode: live NASA data, robust cleaning, 13 agents and AI reports in one place."),
+    ("/auto", "auto.html", "Launch Expedition (Agentic Auto Mode)", "Expedition Mode", "Autonomous end-to-end missions run by the 13 TwinSite agents."),
+    ("/console/", None, "Mission Console", "Expedition Mode", "Advanced console: live NASA characterization, analog matching, portfolios, evidence."),
+    ("/data", "data.html", "Data Hub", "Expedition Mode", "Browse, clean, filter and download every TwinSite dataset; live NASA sources."),
     ("/resources", "resources.html", "Resources", "Guides & Docs", "Guides, documentation, architecture, stack, APIs, agents and algorithms."),
     ("/sitemap", "sitemap.html", "Sitemap", "Project", "Every page and endpoint of the platform."),
     ("/policy", "policy.html", "Policy & License", "Project", "Open-source license, data attribution, privacy and acceptable use."),
@@ -57,6 +58,11 @@ def _inject():
 
 def _render(template: str, active: str, **extra):
     return render_template(template, active=active, **extra)
+
+
+@bp.get("/expedition")
+def expedition_page():
+    return _render("expedition.html", "expedition", targets=config.TARGETS, zones=config.EARTH_ZONES)
 
 
 @bp.get("/auto")

@@ -1,6 +1,61 @@
 <a id="top"></a>
 
 <p align="center">
+  <img src="docs/readme/assets/visionary-hero.svg" width="100%" alt="Animated TwinSite banner: Earth, the Moon and Mars orbit the TwinSite wordmark. Agentic Auto Mode, Data Hub, 13 agents, 7 free AI providers.">
+</p>
+
+<p align="center">
+  <a href="https://readme-typing-svg.demolab.com"><img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=20&duration=2800&pause=700&color=FF8F4A&center=true&vCenter=true&width=860&lines=Pick+a+crater+on+Mars+or+a+site+on+the+Moon.;Expedition+Mode+pulls+live+NASA+data+and+cleans+it.;13+agents+rank+every+Earth+zone+and+cite+the+evidence.;A+checked+AI+report+says+where+to+rehearse+on+Earth." alt="Typing animation: Pick a crater on Mars or a site on the Moon. Expedition Mode pulls live NASA data and cleans it. 13 agents rank every Earth zone and cite the evidence. A checked AI report says where to rehearse on Earth."></a>
+</p>
+
+<table align="center">
+  <tr>
+    <th>🌍 You are on the <code>platform-integration</code> branch · <strong>Visionary platform</strong></th>
+    <th>🚀 Production hackathon build · <code>master</code></th>
+  </tr>
+  <tr>
+    <td>Standard mode <strong>+ Expedition Mode</strong>: live NASA data, Robust cleaning, 13 agents, Data Hub, 7-provider AI router, Mission Console, open APIs.</td>
+    <td>The submitted NASA Space Apps app, live at <a href="https://astrowinners-twinsite-1.onrender.com/"><strong>astrowinners-twinsite-1.onrender.com</strong></a>. <a href="https://github.com/hakim-AI-hub-88/AstroWinners-TwinSite/tree/master">Browse master →</a></td>
+  </tr>
+  <tr>
+    <td colspan="2" align="center">📘 <a href="docs/FINAL_REPORT.md"><strong>Full final report — both versions, every detail</strong></a> &nbsp;·&nbsp; ☁️ <a href="docs/deployment/FREE_HOSTING.md"><strong>Free hosting guide</strong></a> &nbsp;·&nbsp; 🧭 <a href="#expedition"><strong>Expedition Mode</strong></a> &nbsp;·&nbsp; 🤝 <a href="#contribute"><strong>Contribute</strong></a></td>
+  </tr>
+</table>
+
+<a id="expedition"></a>
+
+## 🧭 Expedition Mode — the upgrade in one place
+
+<p align="center"><img src="docs/readme/assets/automode-pipeline.svg" width="100%" alt="Animated Auto Mode pipeline: Plan, Acquire data, Clean, Analyze every Earth zone, 13 agents, AI report — each step lights up in turn."></p>
+
+The original analysis stays as **Standard mode** (`/app`). Every new capability lives behind one door — **[`/expedition`](http://127.0.0.1:5050/expedition)** — with its own header: **Overview · Launch Expedition · Data Hub · Mission Console · Docs & APIs**.
+
+| | Standard mode · `/app` | **Expedition Mode** · `/expedition` |
+| :--- | :--- | :--- |
+| **Data** | Bundled harmonized grids | Bundled grids **+ live NASA** (POWER, GIBS, CMR, LOLA, Diviner, MOLA, SRTM, terrain tiles, OSM) |
+| **Cleaning** | Standard | **Robust** by default (median/MAD) · Strict · Standard · Raw, each with a removal report |
+| **Run** | Interactive, one zone at a time | **Autonomous**: plan → acquire → clean → analyze every zone → agents → report |
+| **Agents** | — | **13 roles** (6 deterministic, 7 AI); AI must cite evidence and never changes a score |
+| **AI** | Groq assistant | **7 free providers** with fallback: Groq, Cloudflare, Google, OpenRouter, Mistral, NVIDIA, Ollama |
+| **Data access** | — | **Data Hub** UI + `/api/data/*` REST: filter, page, clean, download CSV/JSON/original |
+
+<details open>
+<summary><strong>✅ Verified on this branch</strong></summary>
+
+| Check | Result |
+| :--- | :--- |
+| Flask test suite | **39 / 39** pass |
+| Mission Console (React) tests | **55 / 55** pass |
+| Production smoke test (`ops/vm/smoke.py`) | **27 / 27** pass, including a real mission through the worker |
+| Live Expedition run · Mars, Jezero · live data · Robust cleaning · AI on | All 6 steps complete · best Earth twins **Atacama 98.3**, **Merzouga 87.0** · 13 agents reported · report written by Groq |
+
+</details>
+
+---
+
+<!-- Original cover -->
+
+<p align="center">
   <a href="#launch"><img src="docs/readme/assets/twinsite-cover.jpg" width="100%" alt="TwinSite cover artwork: an astronaut on a rocky ridge looks toward Earth, the Moon and Mars beneath the TwinSite wordmark and the words Discover, Compare, Prepare."></a>
   <br><sub><em>Cover artwork is illustrative, not an app screenshot. <a href="#what-ships-today">What ships today</a> is the implemented scope.</em></sub>
 </p>
@@ -263,7 +318,9 @@ Copy [`.env.example`](.env.example) to `.env` (git-ignored); `make dev` reads it
 
 ### Deployment
 
-Production is one persistent Linux VM: nginx → gunicorn Flask (5050) for pages and `/api`, `/v1` → platform API (8080), plus the worker, under systemd — [VM runbook](ops/vm/README.md) (`ops/vm/install.sh`, seeding, smoke test, TLS). [Vercel](docs/deployment/VERCEL.md) can front it as the edge (domain, TLS, CDN for `/static`); the worker, SQLite and ~260 MB of data need the VM. Nothing is deployed by this repository.
+**Free one-container deploy:** the repo ships a `Dockerfile` and `render.yaml`; Hugging Face Spaces (Docker, 16 GB RAM free) is the recommended free host — see the [free hosting guide](docs/deployment/FREE_HOSTING.md). **Vercel is not needed**: Flask serves every page and the built console.
+
+A persistent Linux VM also works: nginx → gunicorn Flask (5050) for pages and `/api`, `/v1` → platform API (8080), plus the worker, under systemd — [VM runbook](ops/vm/README.md) (`ops/vm/install.sh`, seeding, smoke test, TLS). [Vercel](docs/deployment/VERCEL.md) can front it as the edge (domain, TLS, CDN for `/static`); the worker, SQLite and ~260 MB of data need the VM.
 
 <details>
 <summary><strong>Flask variables, dependencies and first checks</strong></summary>
@@ -292,10 +349,26 @@ Startup loads the bundled datasets and fits models; time and memory depend on th
 </details>
 
 
+<a id="contribute"></a>
+
+## 🤝 Contribute — the next steps are open
+
+TwinSite was built for the NASA Space Apps Challenge and is open source under MIT. Good first contributions, in the order we would take them:
+
+1. **More Earth analog zones** — Iceland, Hawaiʻi, Devon Island, Antarctic Dry Valleys (zone config + data + validation sites).
+2. **Earth thermal inertia and mineralogy** so iron and TI enter Earth–Mars scoring.
+3. **Earthdata-authenticated downloads** in the live connectors (CMR is discovery-only today).
+4. **User-adjustable feature weights** in Expedition Mode, with constraints and a sensitivity report.
+5. **Visual similarity** — image-model comparison of GIBS / HiRISE / LROC imagery, evaluated against field sites.
+6. **Independent scientific validation** of agent outputs and the release gate.
+
+Open an issue, read [CONTRIBUTING.md](CONTRIBUTING.md), and run `make test-all` before a pull request. The full roadmap is in the [final report](docs/FINAL_REPORT.md).
+
 <a id="docs"></a>
 
 ## Docs, license, contributing
 
+- **Final report (both versions):** [docs/FINAL_REPORT.md](docs/FINAL_REPORT.md)
 - **Documentation index:** [docs/README.md](docs/README.md) — guides, architecture, [integration spec](docs/INTEGRATION_SPEC.md), deployment, [status](docs/status/INTEGRATION_STATUS.md), contracts.
 - **License:** [MIT](LICENSE). Bundled data keeps its original source terms and attribution ([data credits](docs/catalog.md#credits)).
 - **Contributing:** see [CONTRIBUTING.md](CONTRIBUTING.md) — `make test-all` must pass, and every claim must match what the code does. Security issues: [SECURITY.md](SECURITY.md).

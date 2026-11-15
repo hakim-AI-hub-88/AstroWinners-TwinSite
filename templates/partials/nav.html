@@ -1,4 +1,4 @@
-{#- Top navigation shared by every page. Set `active` before including (home, app, auto, data, console, resources ...). -#}
+{#- Top navigation shared by every page. Set `active` before including (home, app, expedition, auto, data, console, resources ...); Expedition pages get their own header. -#}
 <header class="site-nav" data-nav>
   <a class="site-nav__brand" href="/" aria-label="TwinSite home">
     <img src="{{ url_for('static', filename='img/favicon.svg') }}" width="30" height="30" alt="">
@@ -7,14 +7,24 @@
   <button class="site-nav__toggle" type="button" aria-expanded="false" aria-controls="site-nav-links" data-nav-toggle>
     <span class="site-nav__toggle-bars" aria-hidden="true"></span>Menu
   </button>
+  {%- set expedition = active in ['expedition', 'auto', 'data', 'console'] %}
+  {%- if expedition %}
+  <a class="site-nav__mode" href="/expedition" title="Expedition Mode: live NASA data, robust cleaning, 13 agents">Expedition Mode</a>
+  <nav id="site-nav-links" class="site-nav__links" aria-label="Expedition Mode">
+    <a href="/expedition" {% if active == 'expedition' %}aria-current="page"{% endif %}>Overview</a>
+    <a href="/auto" {% if active == 'auto' %}aria-current="page"{% endif %}>Launch Expedition</a>
+    <a href="/data" {% if active == 'data' %}aria-current="page"{% endif %}>Data Hub</a>
+    <a href="/console/" {% if active == 'console' %}aria-current="page"{% endif %}>Mission Console</a>
+    <a href="/resources">Docs &amp; APIs</a>
+    <a class="site-nav__gh" href="/app#mission">← Standard mode</a>
+  {%- else %}
   <nav id="site-nav-links" class="site-nav__links" aria-label="Main">
     <a href="/" {% if active == 'home' %}aria-current="page"{% endif %}>Home</a>
     <a href="/app#mission" {% if active == 'app' %}aria-current="page"{% endif %}>Mission Control</a>
-    <a href="/auto" {% if active == 'auto' %}aria-current="page"{% endif %}>Auto Mode</a>
-    <a href="/data" {% if active == 'data' %}aria-current="page"{% endif %}>Data Hub</a>
-    <a href="/console/" {% if active == 'console' %}aria-current="page"{% endif %}>Console</a>
+    <a class="site-nav__cta" href="/expedition">Expedition Mode</a>
     <a href="/resources" {% if active == 'resources' %}aria-current="page"{% endif %}>Resources</a>
     <a class="site-nav__gh" href="{{ repo_url }}" rel="noopener">GitHub</a>
+  {%- endif %}
   </nav>
 </header>
 <script>
