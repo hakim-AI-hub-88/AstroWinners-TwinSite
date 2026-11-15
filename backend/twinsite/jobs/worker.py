@@ -67,7 +67,7 @@ class _Heartbeat(threading.Thread):
 
 
 class Worker:
-    def __init__(self, settings=None, worker_id=None, engine_loader=None, poll_seconds=0.25):
+    def __init__(self, settings=None, worker_id=None, engine_loader=None, poll_seconds=0.25, retry_base_seconds=2.0):
         self.settings = settings or load_settings()
         self.settings.data_dir.mkdir(parents=True, exist_ok=True)
         self.store = Store(self.settings.db_path, self.settings.queue_limit, self.settings.max_attempts)
@@ -75,6 +75,7 @@ class Worker:
         self.worker_id = worker_id or f'{socket.gethostname()}-{secrets.token_hex(4)}'
         self.engine_loader = engine_loader or science_adapter.load_engine
         self.poll_seconds = poll_seconds
+        self.retry_base_seconds = retry_base_seconds
         self.stop_event = threading.Event()
 
     # ------------------------------------------------------------ loop
@@ -116,7 +117,7 @@ class Worker:
             else:
                 log.warning('run %s: lease lost (%s); another attempt owns it', run['run_id'], error)
         except TRANSIENT as error:
-            delay = float(2 ** run['attempt'])
+            delay = self.retry_base_seconds * 2 ** (run['attempt'] - 1)
             self._safe(lambda: self.store.retry_or_fail(run, 'TRANSIENT_' + error.__class__.__name__.upper(),
                                                         public_message(error), delay))
         except science_adapter.ScienceUnavailable as error:

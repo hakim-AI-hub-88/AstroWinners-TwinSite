@@ -191,18 +191,30 @@ class Handler(BaseHTTPRequestHandler):
     def route_openapi(self, query):
         self.send_json(200, self.app.openapi)
 
+    DRAIN_LIMIT = 8_000_000
+
+    def _discard_body(self, length):
+        """Read and drop an unwanted body (bounded) so the client sees our error, not a reset."""
+        self.close_connection = True
+        remaining = min(length, self.DRAIN_LIMIT)
+        while remaining > 0:
+            chunk = self.rfile.read(min(65536, remaining))
+            if not chunk:
+                break
+            remaining -= len(chunk)
+
     def _read_json_body(self):
+        raw_length = self.headers.get('Content-Length')
+        length = int(raw_length) if raw_length is not None and raw_length.isdigit() else None
         media = (self.headers.get('Content-Type') or '').split(';')[0].strip().lower()
         if media != 'application/json':
-            self.close_connection = True
+            self._discard_body(length or 0)
             raise ApiError(415, 'UNSUPPORTED_MEDIA_TYPE', 'Content-Type must be application/json')
-        raw_length = self.headers.get('Content-Length')
-        if raw_length is None or not raw_length.isdigit():
+        if length is None:
             self.close_connection = True
             raise ApiError(400, 'LENGTH_REQUIRED', 'A valid Content-Length header is required')
-        length = int(raw_length)
         if length > self.app.settings.max_body_bytes:
-            self.close_connection = True
+            self._discard_body(length)
             raise ApiError(413, 'PAYLOAD_TOO_LARGE', f'Request body exceeds {self.app.settings.max_body_bytes} bytes')
         return self.rfile.read(length)
 
