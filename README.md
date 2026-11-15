@@ -5,6 +5,11 @@
   <br><sub><em>Cover artwork is illustrative, not an app screenshot. <a href="#what-ships-today">What ships today</a> is the implemented scope.</em></sub>
 </p>
 
+> [!TIP]
+> **📘 [Read the full final report](https://github.com/hakim-AI-hub-88/AstroWinners-TwinSite/blob/platform-integration/docs/FINAL_REPORT.md)** — every detail of this production build and the visionary platform, side by side.<br>
+> **🌌 Visionary platform:** the [`platform-integration`](https://github.com/hakim-AI-hub-88/AstroWinners-TwinSite/tree/platform-integration) branch adds **Expedition Mode** — live NASA data, Robust cleaning, 13 agents, a Data Hub and a 7-provider AI router.<br>
+> **🚀 Live production app:** [astrowinners-twinsite-1.onrender.com](https://astrowinners-twinsite-1.onrender.com/)
+
 <h3 align="center">Every mission to Mars or the Moon rehearses on Earth first.<br>TwinSite finds where.</h3>
 
 <p align="center">Pick a crater on Mars or a landing site on the Moon. TwinSite scores Earth terrain in the <strong>Atacama Desert</strong> and Morocco's <strong>Merzouga dunes</strong> against it,
