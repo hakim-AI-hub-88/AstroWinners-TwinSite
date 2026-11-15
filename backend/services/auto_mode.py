@@ -407,6 +407,8 @@ def _acquire(m: dict, s: dict) -> str:
             bundled["target_region"] = {"analysable": None, "reason": str(exc)}
     m["result"]["bundled"] = bundled
     if o["data_mode"] == "auto":
+        s["detail"] = " ".join(parts) + " Acquiring live NASA data for the target point (can take a few minutes)..."
+        _save(m)
         live = live_characterize(t["planet"], t["lon"], t["lat"], t["name"])
         m["result"]["live_evidence"] = live
         if live.get("status") == "ok":
