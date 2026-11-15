@@ -64,7 +64,7 @@ function Results({ runId, r, ev, evErr, demo }: { runId: string; r: MissionResul
       {(demo || synthetic) && <DemoBanner>{synthetic ? 'All values and costs in this result are synthetic; scientific release is BLOCKED by design.' : 'Demo run.'}</DemoBanner>}
       <div className="mx-auto max-w-7xl px-4 py-8">
         <PageHeader eyebrow="Analysis results" title={<>Mission <span className="text-ember">{r.mission_id}</span></>}
-          sub="Earth analogue candidates ranked by measured feature similarity to the selected target regions."
+          sub={synthetic ? "Earth analogue candidates ranked by feature similarity to the selected target regions. Values are synthetic." : "Earth analogue candidates ranked by measured feature similarity to the selected target regions."}
           right={<div className="flex gap-2"><Link to={`/portfolios/${runId}`}><Btn>Portfolios</Btn></Link><Link to={`/explorer?run=${runId}`}><Btn>Open on map</Btn></Link><Link to={`/reports/${runId}`}><Btn variant="primary">Report</Btn></Link></div>} />
 
         <div className="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-5" data-testid="context-strip">

@@ -14,7 +14,8 @@ type Mode = '2d' | 'globe'
 export default function Explorer() {
   const [sp, setSp] = useSearchParams()
   const runId = sp.get('run') ?? ''
-  const [body, setBody] = useState<Body>('Earth')
+  const initialBody = (['Earth', 'Moon', 'Mars'] as const).find((b) => b === sp.get('body')) ?? 'Earth'
+  const [body, setBody] = useState<Body>(initialBody)
   const [mode, setMode] = useState<Mode>('2d')
   const [layers, setLayers] = useState({ pins: true, footprints: true, graticule: true, basemap: true })
   const status = useStatus(runId)

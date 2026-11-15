@@ -32,7 +32,7 @@ export default function PlanetMap({ body, pins, footprints, layers }: { body: Bo
     <div>
       <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`${body} equirectangular map, planetocentric east longitude`} className="w-full rounded-md border border-line" style={{ background: `radial-gradient(ellipse at 40% 30%, ${accent}22, #0b0a09 70%)` }}>
         {layers.graticule && <g stroke="#2c2824" strokeWidth="0.7">{lons.map((v) => <g key={'x' + v}><line x1={X(v)} x2={X(v)} y1="0" y2={H} /><text x={X(v) + 3} y={H - 4} fill="#8a8274" fontSize="9" stroke="none">{v}°</text></g>)}{lats.map((v) => <g key={'y' + v}><line y1={Y(v)} y2={Y(v)} x1="0" x2={W} /><text x="4" y={Y(v) - 3} fill="#8a8274" fontSize="9" stroke="none">{v}°</text></g>)}</g>}
-        {layers.footprints && footprints.map((f) => { const x = X(f.bbox[0]), y = Y(f.bbox[3]), w = Math.max(4, X(f.bbox[2]) - x), h = Math.max(4, Y(f.bbox[1]) - y)
+        {layers.footprints && footprints.map((f) => { const x = X(f.bbox[0]), y = Y(f.bbox[3]), w = Math.max(12, X(f.bbox[2]) - x), h = Math.max(12, Y(f.bbox[1]) - y)
           return <g key={f.id}><rect x={x} y={y} width={w} height={h} fill={accent} fillOpacity="0.18" stroke={accent} strokeWidth="1.5" strokeDasharray="4 3" /><text x={x + w + 5} y={y + 10} fill="#efe7d6" fontSize="11">{f.label}</text></g> })}
         {layers.pins && pins.map((p) => <g key={p.id} transform={`translate(${X(p.lon)} ${Y(p.lat)})`}><circle r="8" fill={p.eligible === false ? '#1b1815' : accent} stroke="#efe7d6" strokeWidth="1.3" /><text y="3.5" textAnchor="middle" fontSize="10" fontWeight="600" fill={p.eligible === false ? '#efe7d6' : '#0b0a09'}>{p.rank ?? '×'}</text><text x="12" y="4" fill="#efe7d6" fontSize="11">{p.label}</text></g>)}
       </svg>

@@ -47,14 +47,26 @@ All new under `frontend/`: `package.json`, lockfile, `vite.config.ts`, `tsconfig
 
 ## TESTS RUN + RESULTS
 
-_See "VERIFICATION LOG" below (filled in after the run)._
+| Check | Result |
+| --- | --- |
+| `npm install` (lockfile committed) | OK after the user fixed the network (233 packages). Earlier attempts failed: `EIDLETIMEOUT` / "Exit handler never called" from a ~30–90 KB/s registry. |
+| `tsc --noEmit` | **0 errors** (`vite.config.ts` excluded from tsc: duplicate vite type trees from vitest) |
+| `npm run build` | **PASS** (EarthMap/maplibre chunk 1.06 MB, lazy-loaded) |
+| `npm test` (vitest + Testing Library) | **19 / 19 pass**: analysis helpers (ranking, pros/cons, release gating, stability), demo adapter (labelled replay, raw/cleaned/derived, compare), route smoke for all 10 routes, Workspace Run → progress → results flow, Data Explorer tabs, no login/settings links |
+| **Live API smoke** (C3 `lane/backend` @0383322 run read-only from its worktree, scratch data dir, `:8080`; Vite proxy `:5173`) | `GET /v1/health` via proxy OK; POST of `moon_mission.synthetic.json` → `completed_with_limits`; **UI click-through OK**: Workspace → "Run synthetic fixture" → real P00 event stream → results with `NOT EVALUATED / BLOCK / SYNTHETIC` banner, portfolios, activity, report (screenshots 03–06 are LIVE runs) |
+| Live measured request from the UI | **422 `SCHEMA_VALIDATION_FAILED (sites): [] should be non-empty`**, shown in the UI as "The API rejected this mission". Confirms contract request #1. |
+| Data Explorer against live API | `/v1/data/*` → 501; UI shows explicit banner + DEMO tables (screenshot 08) |
+| Explorer Earth 2D + 3D globe + Moon/Mars | Verified visually in the in-app browser (NASA GIBS tiles, 6 candidate markers, globe projection). Headless-shell file capture of the WebGL map is blank (no GL), so no PNG of the Earth map is committed; Moon map PNG is (09). |
 
 ## BLOCKERS
 
-- npm registry throughput was ~30–90 KB/s and one `npm install` stalled/crashed mid-run ("Exit handler never called"); retried successfully (see log below).
+- None outstanding. Network was a transient blocker (above), now resolved.
+- Real measured end-to-end is blocked on C0 contract request #1 and C1/C2 (no NASA evidence exists yet) — UI is ready to display it.
 
 ## NEXT GATE
 
 G1: C0 merges `lane/backend` + `lane/frontend`, runs `make dev`; verify Live mode end-to-end with the synthetic fixture button. G3: swap Data Explorer adapters to the frozen response schemas once approved.
 
-## VERIFICATION LOG
+## SCREENSHOTS
+
+`frontend/screenshots/`: 01 landing · 02 workspace (live mode) · 03 results · 04 portfolios · 05 activity · 06 report · 07 data catalog · 08 dataset cleaned stage · 09 Moon map · 10 docs · 11 workspace.

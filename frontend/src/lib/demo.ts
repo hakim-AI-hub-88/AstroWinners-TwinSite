@@ -110,7 +110,7 @@ function cleanedRows(f: Fixture): Row[] {
     return {
       record_id: r.record_id, body: r.body, site_id: r.site_id, feature: r.feature,
       value: sentinel ? null : r.raw_value, unit: r.unit, source_id: r.source_id,
-      transformation: tx.get(String(r.record_id)) ?? (sentinel ? 'missing sentinel → null' : 'none (passed through)'),
+      transformation: tx.get(String(r.record_id)) ?? (sentinel ? 'missing sentinel → null' : r.raw_value == null ? 'none (value missing at source; kept null)' : 'none (passed through)'),
     }
   })
 }
