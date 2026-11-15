@@ -18,7 +18,8 @@ It is a **separate deployment**. The `master` service on Render
    service to a larger instance type or use option 2.
 2. **Hugging Face Spaces (16 GB RAM, free) — no data upload.** Create a Docker Space and add only
    `ops/container/hf/Dockerfile` and `ops/container/hf/README.md`. The build clones this branch from GitHub on
-   Hugging Face's network, so `data_ready/` is never uploaded and no LFS is needed. Add AI keys as Space secrets.
+   Hugging Face's network, so `data_ready/` is never uploaded and no LFS is needed. Add AI keys as Space secrets — either one per key, or **one secret named `TWINSITE_AI_ENV`** whose value is the
+   whole `ai-providers.env` file (`KEY=value` lines); the container writes it to a 0600 file for the AI router.
    New commits: Settings → Factory rebuild. (Pushing the whole repo instead needs LFS, see below.)
 3. **Hugging Face Spaces, full-repo push.** Best free fit for the full Mars data, but six files in `data_ready/`
    are 20–48 MB, so they must be pushed with Git LFS/Xet from a **full** clone on a fast connection (see below).

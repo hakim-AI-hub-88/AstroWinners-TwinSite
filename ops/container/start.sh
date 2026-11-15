@@ -38,6 +38,17 @@ WEB_THREADS="${WEB_THREADS:-8}"
 WEB_TIMEOUT="${WEB_TIMEOUT:-180}"
 
 mkdir -p "$TWINSITE_DATA_DIR" "$TWINSITE_SOURCE_DATA_DIR"
+
+# One-secret option: TWINSITE_AI_ENV holds a whole ai-providers.env (KEY=value lines). It is written to an
+# owner-only 0600 file read by the AI router, then removed from the environment of every child process.
+if [ -n "${TWINSITE_AI_ENV:-}" ]; then
+  SECRET_DIR="$TWINSITE_DATA_DIR/secrets"
+  ( umask 077; mkdir -p "$SECRET_DIR"; printf '%s\n' "$TWINSITE_AI_ENV" > "$SECRET_DIR/ai-providers.env" )
+  chmod 600 "$SECRET_DIR/ai-providers.env"
+  export TWINSITE_AI_SECRET_ENV_FILE="$SECRET_DIR/ai-providers.env"
+  unset TWINSITE_AI_ENV
+  echo "[start] AI keys loaded from the TWINSITE_AI_ENV secret ($(grep -c '=' "$TWINSITE_AI_SECRET_ENV_FILE") lines)"
+fi
 cd "$APP_DIR" || exit 1
 
 PIDS=()
