@@ -274,3 +274,37 @@ def mission_context(payload, observations, data_dir, fetch_image=True):
             except (urllib.error.URLError, TimeoutError, ValueError):
                 image = None
     return context, image
+
+
+GEOCODER = 'https://geocoding-api.open-meteo.com/v1/search'
+_PLACE_CACHE = {}
+
+
+def search_places(data_dir, q, count=10):
+    """Search named places worldwide (Open-Meteo Geocoding API, GeoNames-based, free, no key). Cached in memory."""
+    key = q.lower()
+    if key in _PLACE_CACHE:
+        return _PLACE_CACHE[key]
+    url = f"{GEOCODER}?{urllib.parse.urlencode({'name': q, 'count': count, 'language': 'en', 'format': 'json'})}"
+    try:
+        raw, _ = _get(url, timeout=8, limit=2_000_000)
+        results = json.loads(raw).get('results') or []
+    except (urllib.error.URLError, TimeoutError, ValueError):
+        # Fallback: OpenStreetMap Nominatim (ODbL); low volume, identified User-Agent, cached.
+        nurl = 'https://nominatim.openstreetmap.org/search?' + urllib.parse.urlencode({'q': q, 'format': 'jsonv2', 'limit': count})
+        raw, _ = _get(nurl, timeout=8, limit=2_000_000)
+        results = [{'name': r.get('name') or r.get('display_name', '').split(',')[0], 'country': r.get('display_name', '').split(',')[-1].strip(),
+                    'feature_code': r.get('type'), 'latitude': float(r['lat']), 'longitude': float(r['lon']), 'id': r.get('osm_id')}
+                   for r in json.loads(raw)]
+    out = []
+    for r in results:
+        if not isinstance(r.get('latitude'), (int, float)) or not isinstance(r.get('longitude'), (int, float)):
+            continue
+        out.append({'name': r.get('name'), 'admin1': r.get('admin1'), 'country': r.get('country'),
+                    'country_code': r.get('country_code'), 'feature_code': r.get('feature_code'),
+                    'latitude': round(r['latitude'], 5), 'longitude': round(r['longitude'], 5),
+                    'elevation_m': r.get('elevation'), 'geonames_id': r.get('id')})
+    if len(_PLACE_CACHE) > 500:
+        _PLACE_CACHE.clear()
+    _PLACE_CACHE[key] = out
+    return out

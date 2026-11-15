@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Badge, Btn, Notice, Panel, Scroll, Spinner } from '@/components/ui'
+import { LocationPicker } from '@/components/LocationPicker'
 import { ApiError, getCoverage, getSciObservations, getSciSites, postSciSite, sciAssetUrl, type SciObs } from '@/lib/api'
 
 const KIND_TONE: Record<string, 'ok' | 'warn' | 'mute' | 'ember'> = {
@@ -49,6 +50,11 @@ export function ScienceGateway() {
                 onChange={() => setPicked(chosen.includes(s.site_id) ? chosen.filter((x) => x !== s.site_id) : [...chosen, s.site_id].slice(-6))} />
               {s.name} <span className="text-mute">({s.body}, {s.observation_count})</span>
             </label>))}
+        </div>
+        <div className="mb-4 rounded-md border border-line p-3">
+          <div className="mb-2 text-xs uppercase tracking-wide text-ember">Choose any Earth location</div>
+          <LocationPicker value={form.lon && form.lat ? { lon: Number(form.lon), lat: Number(form.lat), name: form.name } : null}
+            onChange={(v) => setForm({ name: v.name, lon: String(v.lon), lat: String(v.lat) })} />
         </div>
         <form className="mb-4 grid gap-2 sm:grid-cols-[1fr_8rem_8rem_auto]" onSubmit={(e) => { e.preventDefault(); add.mutate() }}>
           <div><label className="fld" htmlFor="sn">Add Earth site</label><input id="sn" placeholder="e.g. Atacama (Yungay)" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>

@@ -39,6 +39,7 @@ ROUTES = [
     ('POST', re.compile(r'^/v1/science/sites$'), 'sci_add_site'),
     ('GET', re.compile(r'^/v1/science/observations$'), 'sci_observations'),
     ('GET', re.compile(r'^/v1/science/coverage$'), 'sci_coverage'),
+    ('GET', re.compile(r'^/v1/science/places$'), 'sci_places'),
     ('GET', re.compile(r'^/v1/science/assets/(?P<asset_id>gibs-[0-9a-f]{16})$'), 'sci_asset'),
     # Reserved G3 routes: explicit 501 (contract: response schemas need C0 review first).
     ('POST', re.compile(rf'^/v1/missions/{RUN}/portfolios/alternatives$'), 'not_implemented'),
@@ -342,6 +343,19 @@ class Handler(BaseHTTPRequestHandler):
             raise ApiError(422, 'INVALID_QUERY', 'limit 1-200, offset 0-100000', 'limit')
         total, rows = self._sci().observations(sites, one('domain'), one('body'), one('kind'), limit, offset)
         self.send_json(200, {'total': total, 'limit': limit, 'offset': offset, 'observations': rows})
+
+    def route_sci_places(self, query):
+        """Place search for any Earth location (Open-Meteo Geocoding API, GeoNames data, CC-BY 4.0). Server-side proxy:
+        bounded input, cached, no user data forwarded beyond the search text."""
+        q = ((query.get('q') or [''])[0]).strip()
+        if not 2 <= len(q) <= 80 or any(c in q for c in '<>{}\\'):
+            raise ApiError(422, 'INVALID_QUERY', 'q must be 2-80 characters', 'q')
+        from twinsite.sources import gateway
+        try:
+            places = gateway.search_places(self.app.settings.data_dir, q)
+        except Exception as error:  # noqa: BLE001
+            raise ApiError(502, 'GEOCODER_UNAVAILABLE', 'Place search failed: ' + error.__class__.__name__) from None
+        self.send_json(200, {'query': q, 'attribution': 'Open-Meteo Geocoding API / GeoNames (CC-BY 4.0)', 'places': places})
 
     def route_sci_coverage(self, query):
         from twinsite.sources.coverage import matrix

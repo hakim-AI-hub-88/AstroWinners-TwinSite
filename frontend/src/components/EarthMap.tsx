@@ -11,7 +11,9 @@ function fc(footprints: Footprint[]) {
 }
 
 /** Earth only (WGS84). 2D mercator or 3D globe. Basemap: NASA GIBS Blue Marble; markers still render if tiles fail. */
-export default function EarthMap({ pins, footprints, globe, layers }: { pins: Pin[]; footprints: Footprint[]; globe: boolean; layers: { pins: boolean; footprints: boolean; basemap: boolean } }) {
+export default function EarthMap({ pins, footprints, globe, layers, onPick }: { pins: Pin[]; footprints: Footprint[]; globe: boolean; layers: { pins: boolean; footprints: boolean; basemap: boolean }; onPick?: (lon: number, lat: number) => void }) {
+  const pickRef = useRef(onPick)
+  pickRef.current = onPick
   const el = useRef<HTMLDivElement>(null)
   const map = useRef<maplibregl.Map | null>(null)
   const markers = useRef<maplibregl.Marker[]>([])
@@ -27,6 +29,7 @@ export default function EarthMap({ pins, footprints, globe, layers }: { pins: Pi
     })
     m.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right')
     m.on('load', () => { ready.current = true; m.fire('twinsite-ready' as never) })
+    m.on('click', (e) => { if (pickRef.current) pickRef.current(Math.round(e.lngLat.wrap().lng * 1e4) / 1e4, Math.round(e.lngLat.lat * 1e4) / 1e4) })
     map.current = m
     return () => { markers.current.forEach((k) => k.remove()); m.remove(); map.current = null; ready.current = false }
   }, [])
@@ -56,5 +59,5 @@ export default function EarthMap({ pins, footprints, globe, layers }: { pins: Pi
     if (ready.current) apply(); else m.once('load', apply)
   }, [pins, footprints, layers.pins, layers.footprints, layers.basemap])
 
-  return <div ref={el} role="region" aria-label="Earth map" className="h-[28rem] w-full overflow-hidden rounded-md border border-line" />
+  return <div ref={el} role="region" aria-label="Earth map" className={`h-[28rem] w-full overflow-hidden rounded-md border border-line ${onPick ? 'cursor-crosshair' : ''}`} />
 }

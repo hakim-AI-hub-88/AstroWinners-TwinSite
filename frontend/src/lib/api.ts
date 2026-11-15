@@ -108,3 +108,5 @@ export const getCoverage = (): Promise<{ rows: CoverageRow[] }> => http('/scienc
 export const postSciSite = (name: string, longitude: number, latitude: number): Promise<{ site_id: string; observations: number }> =>
   http('/science/sites', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, longitude, latitude }) })
 export const sciAssetUrl = (assetId: string) => `${BASE}/science/assets/${assetId}`
+export interface Place { name: string; admin1?: string | null; country?: string | null; feature_code?: string | null; latitude: number; longitude: number; elevation_m?: number | null }
+export const searchPlaces = (q: string): Promise<{ places: Place[]; attribution: string }> => http(`/science/places?q=${encodeURIComponent(q)}`)
