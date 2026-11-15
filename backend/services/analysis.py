@@ -18,12 +18,35 @@ from __future__ import annotations
 import re
 from functools import lru_cache
 
+from services import cleaning as cleaning_mod
 from services import data_loader, similarity_engine, validation
 from utils import config
 
 
 class AnalysisInputError(ValueError):
     """Unknown planet / location or invalid slope limit."""
+
+
+#############################################
+# MISSION OPTIONS (accepted by every mission entry point)
+#   cleaning   raw | standard (default) | strict | robust   (services/cleaning.py)
+#   data_mode  bundled (default: data_ready only) | auto (bundled + live NASA
+#              acquisition of the target point, services/live_data.py)
+#############################################
+DATA_MODES = ("bundled", "auto")
+DEFAULT_DATA_MODE = "bundled"
+
+
+def validate_options(cleaning=None, data_mode=None) -> tuple[str, str]:
+    """Validate the optional mission options; defaults keep the historical behaviour."""
+    try:
+        c = cleaning_mod.validate_profile(cleaning)
+    except cleaning_mod.CleaningError as exc:
+        raise AnalysisInputError(str(exc)) from None
+    m = str(data_mode or DEFAULT_DATA_MODE).strip().lower()
+    if m not in DATA_MODES:
+        raise AnalysisInputError(f"Unknown data_mode '{data_mode}'. Choose one of {list(DATA_MODES)}.")
+    return c, m
 
 
 def validate_zone(zone) -> str:
@@ -80,8 +103,15 @@ def validate(planet: str, location: str, rover_mode: bool, max_slope) -> tuple[s
 
 @lru_cache(maxsize=64)
 def run(planet: str, location: str, rover_mode: bool = False, max_slope: float = 15.0,
-        zone: str = config.DEFAULT_ZONE) -> dict:
-    """Full analysis for one target in one Earth zone (default: Atacama). Read-only result (cached)."""
+        zone: str = config.DEFAULT_ZONE, cleaning: str = cleaning_mod.DEFAULT_PROFILE) -> dict:
+    """Full analysis for one target in one Earth zone (default: Atacama). Read-only result (cached).
+
+    `cleaning` (services/cleaning.py) is applied to the two scoring frames only: the target window and
+    the Earth zone (normalized). "standard" leaves them untouched, so the result is exactly the
+    historical one plus the `options` and `cleaning_report` keys. Physical (explanation) and processed
+    (refinement) frames are never cleaned here.
+    """
+    cleaning = cleaning_mod.validate_profile(cleaning)
     body_df = data_loader.LOADERS[planet]()               # role 1: normalized (scoring)
     earth_df = data_loader.load_zone(zone, "normalized")
     body_phys = data_loader.load_physical(planet)          # role 2: physical (explanation)
@@ -92,10 +122,13 @@ def run(planet: str, location: str, rover_mode: bool = False, max_slope: float =
     radius = config.BODY_RADIUS_M[planet]
     window = data_loader.extract_target_window(body_df, t["lat"], t["lon"], t["window_km"], radius)
     window_phys = data_loader.extract_target_window(body_phys, t["lat"], t["lon"], t["window_km"], radius)
+    window, target_report = cleaning_mod.apply(window, cleaning, config.FEATURES, "normalized")
+    earth_df, earth_report = cleaning_mod.apply(earth_df, cleaning, config.FEATURES, "normalized")
     result = similarity_engine.compute(similarity_engine.SimilarityRequest(
         body=planet, location=location, target_window=window, earth=earth_df,
         target_window_physical=window_phys, earth_physical=earth_phys, earth_processed=earth_proc,
-        rover_mode=rover_mode, max_slope=max_slope))
+        rover_mode=rover_mode, max_slope=max_slope,
+        uncertainty_penalty=cleaning_mod.PROFILES[cleaning]["engine"]["uncertainty_penalty"]))
 
     result["target"] = {
         "planet": planet, "location": location, "lat": t["lat"], "lon": t["lon"],
@@ -110,4 +143,13 @@ def run(planet: str, location: str, rover_mode: bool = False, max_slope: float =
                       "bbox": z["bbox"]}
     # Post-hoc check against known NASA analog sites (reads the result, never changes it)
     result["validation"] = validation.evaluate(result)
+    result["options"] = {"cleaning": cleaning}
+    result["cleaning_report"] = {
+        "profile": cleaning, "name": cleaning_mod.PROFILES[cleaning]["name"],
+        "summary": cleaning_mod.PROFILES[cleaning]["summary"],
+        "uncertainty_penalty": (config.SIMILARITY["uncertainty_penalty"]
+                                if cleaning_mod.PROFILES[cleaning]["engine"]["uncertainty_penalty"] is None
+                                else cleaning_mod.PROFILES[cleaning]["engine"]["uncertainty_penalty"]),
+        "target": target_report, "earth": earth_report,
+    }
     return result
