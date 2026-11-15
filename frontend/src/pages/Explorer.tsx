@@ -40,7 +40,7 @@ export default function Explorer() {
     <>
       {synthetic && <DemoBanner>Candidate and target positions on this map come from synthetic fixtures.</DemoBanner>}
       <div className="mx-auto max-w-7xl px-4 py-8">
-        <PageHeader eyebrow="Explorer" title="Planetary map" sub="Each body has its own coordinate system and overlays. Earth shows NASA Blue Marble imagery; Moon and Mars use an imagery-free planetocentric grid, so no Earth data is ever drawn on another body." />
+        <PageHeader eyebrow="Explorer" title="Planetary map" sub="Each body has its own coordinate system and overlays. Earth shows NASA Blue Marble imagery; Moon and Mars show NASA LRO and Viking mosaics of that same body on a planetocentric grid, so no Earth data is ever drawn on another body." />
         <div className="grid gap-5 lg:grid-cols-[1fr_20rem]">
           <div className="space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -50,7 +50,7 @@ export default function Explorer() {
             {body === 'Earth'
               ? <Suspense fallback={<Spinner label="Loading Earth map" />}><EarthMap pins={pins} footprints={footprints} globe={mode === 'globe'} layers={layers} /></Suspense>
               : <PlanetMap body={body} pins={pins} footprints={footprints} layers={layers} />}
-            <p className="text-xs text-mute">Coordinate system: <span className="mono">{CRS[body]}</span>{body === 'Earth' && ' · basemap tiles load from NASA GIBS; markers remain if tiles are unavailable'}</p>
+            <p className="text-xs text-mute">Coordinate system: <span className="mono">{CRS[body]}</span>{body === 'Earth' ? ' · basemap tiles load from NASA GIBS; markers remain if tiles are unavailable' : ' · basemap tiles load from NASA Trek; markers remain if tiles are unavailable'}</p>
           </div>
           <aside className="space-y-4">
             <Panel eyebrow="Run" title={runId ? <span className="mono text-base">{runId}</span> : 'No run selected'}>
@@ -63,7 +63,7 @@ export default function Explorer() {
                 </select></div>
             </Panel>
             <Panel eyebrow="Overlays" title={`${body} layers`}>
-              {([['pins', 'Candidates & ranks'], ['footprints', 'Target / search footprints'], ...(body === 'Earth' ? [['basemap', 'NASA Blue Marble basemap']] : [['graticule', 'Lon/lat graticule']])] as Array<[keyof typeof layers, string]>).map(([k, label]) => (
+              {([['pins', 'Candidates & ranks'], ['footprints', 'Target / search footprints'], ...(body === 'Earth' ? [['basemap', 'NASA Blue Marble basemap']] : [['basemap', body === 'Mars' ? 'NASA Viking colour mosaic' : 'NASA LRO WAC mosaic'], ['graticule', 'Lon/lat graticule']])] as Array<[keyof typeof layers, string]>).map(([k, label]) => (
                 <label key={k} className="flex items-center gap-2 py-1 text-sm"><input className="!w-4" type="checkbox" checked={layers[k]} onChange={(e) => setLayers({ ...layers, [k]: e.target.checked })} /> {label}</label>))}
             </Panel>
             <Panel eyebrow="On this map" title={`${pins.length} candidates · ${footprints.length} footprints`}>
