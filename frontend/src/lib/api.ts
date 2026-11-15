@@ -68,3 +68,8 @@ export const postCompare = (l: string, r: string, stage: Stage, columns: string[
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ schema_version: '1.0', left_dataset_id: l, right_dataset_id: r, left_record_ids: lIds, right_record_ids: rIds, columns, stage }),
   }), () => demo.demoCompare(l, r, stage, columns))
+
+export const postPublishedMission = () => http<MissionAccepted>('/missions/measured', {
+  method: 'POST', headers: { 'Content-Type': 'application/json', 'Idempotency-Key': crypto.randomUUID() },
+  body: JSON.stringify({ schema_version: '1.0', dataset_id: 'zagora-gale-v1' }),
+})

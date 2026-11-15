@@ -69,9 +69,7 @@ def validate(name, value):
         except ValueError as error:
             raise ContractError(str(error)[:500], None) from None
         return True
-    if name == 'mission_request':
-        _minimal_mission_request(value)
-    return False
+    raise ContractError('Full schema validation is unavailable; install integration dependencies')
 
 
 def digest(value):

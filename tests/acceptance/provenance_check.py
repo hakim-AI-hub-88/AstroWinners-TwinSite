@@ -188,6 +188,8 @@ def match_stat(feature_id, stats):
         return 'slope_mean_deg', 1.0, 0.10      # abs deg, rel — method differences (Horn vs central diff)
     if ('relief' in f or 'range' in f) and 'relief_m' in stats:
         return 'relief_m', 2.0, 0.02
+    if f == 'roughness_m' and 'roughness_m' in stats:
+        return 'roughness_m', 0.01, 0.001
     if 'elev' in f and 'elevation_mean_m' in stats:
         return 'elevation_mean_m', 1.0, 0.005
     return None
@@ -283,7 +285,7 @@ def check(evidence, artifact_root, result=None, repo=None, refetch=False):
         if o.get('body') not in {s['body'] for s in srcs}:
             rep.fail('OBS_BODY_NOT_SOURCE_BODY', eid)
         gran = o.get('source_granule_id') or ''
-        if not gran or not any(gran in (s.get('source_url', '') + ' ' + s.get('object_key', '') + ' ' + s.get('product_id', ''))
+        if not gran or not any(gran.lower() in (s.get('source_url', '') + ' ' + s.get('object_key', '') + ' ' + s.get('product_id', '')).lower()
                                for s in srcs):
             rep.fail('GRANULE_ID_NOT_TRACEABLE', f'{eid}: {gran!r} not in any source URL/object key')
         check_url(rep, f'observation {eid}', o.get('source_url'))
@@ -338,17 +340,29 @@ def independent_recompute(rep, o, srcs, root):
     if root is None:
         return
     hgt = [s for s in srcs if re.search(r'(?i)SRTMGL[13]|NASADEM', s.get('product_id', '')) and s.get('body') == 'Earth']
-    if not hgt:
+    from terrain_reference import analysis_stats, mola_grid
+    mola = any('MOLA' in s.get('product_id', '') for s in srcs)
+    if not hgt and not (mola and any(s['source_url'].lower().endswith('.lbl') for s in srcs)):
         rep.add('BLOCKED', 'INDEPENDENT_RECOMPUTE_UNSUPPORTED',
-                f'{o["evidence_id"]}: no independent decoder for {[s.get("product_id") for s in srcs]} (awaiting C1 format notes)')
+                f'{o["evidence_id"]}: no independent decoder or required labels')
         return
-    s = hgt[0]
     try:
-        n, raw = load_hgt(root / s['object_key'])
-        lat0, lon0 = tile_origin(Path(s['object_key']).name + ' ' + s.get('source_url', ''))
         bbox = o['geometry']['coordinates']
-        grid, step, lat_c = hgt_window(n, raw, lat0, lon0, bbox)
-        stats = independent_stats(grid, step, lat_c)
+        if hgt:
+            s = hgt[0]
+            path = (root / s['object_key']).resolve()
+            if not path.is_relative_to(root):
+                raise ValueError('source path escapes root')
+            n, raw = load_hgt(path)
+            lat0, lon0 = tile_origin(Path(s['object_key']).name + ' ' + s.get('source_url', ''))
+            grid, step, lat_c = hgt_window(n, raw, lat0, lon0, bbox)
+            north = lat_c + (len(grid)-1)*step/2
+            stats = analysis_stats(grid, step, north, o['analysis_scale_m'])
+        else:
+            grid, step, north, radius, support = mola_grid(srcs, root, bbox)
+            stats = analysis_stats(grid, step, north, o['analysis_scale_m'], radius, support)
+        if abs(stats['valid_fraction'] - o['valid_coverage_fraction']) > 1e-6:
+            rep.fail('INDEPENDENT_COVERAGE_DISAGREES', o['evidence_id'])
     except Exception as err:
         rep.fail('INDEPENDENT_DECODE_FAILED', f'{o["evidence_id"]}: {err}')
         return
@@ -437,7 +451,7 @@ def main():
           f'{"VERIFIED by re-download" if verified else "NOT VERIFIED (run --refetch)"}')
     if args.json:
         Path(args.json).write_text(json.dumps({'items': rep.items, 'nasa_bytes_verified': verified}, indent=2) + '\n')
-    return 1 if rep.failed else 0
+    return 1 if any(i['level'] in ('FAIL', 'BLOCKED') for i in rep.items) else 0
 
 
 if __name__ == '__main__':

@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation } from '@tanstack/react-query'
 import { Btn, DemoBanner, Notice, PageHeader, Panel } from '@/components/ui'
-import { postMission, ApiError } from '@/lib/api'
+import { postMission, postPublishedMission, ApiError } from '@/lib/api'
 import { useHealth } from '@/lib/hooks'
 import { FIXTURES, pickFixture, demoRunIdFor, demoStart, demoRequest } from '@/lib/demo'
 import { rememberRun } from '@/lib/recent'
@@ -92,6 +92,11 @@ export default function Workspace() {
     onSuccess: (r) => { rememberRun({ runId: r.runId, title: r.title, body: selected.join(' + ') || '—', demo: true, at: Date.now() }); nav(`/analysis/${r.runId}`) },
     onError: (e) => setErr(e instanceof ApiError ? `${e.code}: ${e.message}` : (e as Error).message),
   })
+  const published = useMutation({
+    mutationFn: postPublishedMission,
+    onSuccess: (r) => { rememberRun({ runId: r.run_id, title: 'Measured Zagora–Gale', body: 'Earth + Mars', demo: false, at: Date.now() }); nav(`/analysis/${r.run_id}`) },
+    onError: (e) => setErr((e as Error).message),
+  })
   const problems: string[] = []
   if (!selected.length) problems.push('Select at least one target body (Moon or Mars).')
   if (!feats.some((f) => f.on)) problems.push('Enable at least one feature.')
@@ -104,6 +109,11 @@ export default function Workspace() {
       {!live && !health.isLoading && <DemoBanner>API offline: “Run” opens a pre-computed synthetic fixture. Your parameters are NOT scored.</DemoBanner>}
       <div className="mx-auto max-w-7xl px-4 py-8">
         <PageHeader eyebrow="Mission setup" title="Define your mission" sub="Pick the target region on the Moon or Mars, tell TwinSite which features matter, then run. Nothing is computed until you press Run; costs and effort are only what you provide." />
+        <div className="mb-5"><Notice title="Published Earth / Mars evidence — review pending" tone="mute">
+          Zagora SRTM and Gale MOLA at 1852.3 m scale, using cached NASA LP DAAC and PDS products with recorded source hashes.
+          This preset uses fixed scenario weights and tolerances, unknown access/cost/duration, and keeps missing measurements missing. Scientific release stays blocked.
+          <div className="mt-3"><Btn disabled={!live || published.isPending} onClick={() => published.mutate()}>Analyze measured Zagora–Gale pair</Btn></div>
+        </Notice></div>
         <div className="grid gap-5 lg:grid-cols-[1fr_22rem]">
           <div className="space-y-5">
             <Panel eyebrow="1 · Targets" title="Where are we going?">

@@ -52,6 +52,17 @@ def engine_available():
 
 
 class TempDirCase(unittest.TestCase):
+    def assert_c2_result(self, actual, expected, name):
+        from twinsite.science import ENGINE_VERSION
+        self.assertEqual(actual['algorithm_version'], ENGINE_VERSION)
+        self.assertIn('SYNTHETIC', ' '.join(actual['limitations']))
+        # C2 deliberately identifies its own engine and adds scientific limitations.
+        # Every numerical field must still match the frozen reference exactly.
+        for key in ('algorithm_version', 'limitations'):
+            actual.pop(key)
+            expected.pop(key)
+        self.assertEqual(actual, expected, name)
+
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory(prefix='twinsite-c3-')
         self.settings = dataclasses.replace(load_settings(self.tmp.name), lease_seconds=5)
@@ -134,7 +145,7 @@ class WorkerTests(TempDirCase):
             self.assertEqual(run['status'], 'completed_with_limits')
             committed = worker.store.committed(run_id)
             expected = json.loads((EXAMPLES / f'{name}.result.synthetic.json').read_text())
-            self.assertEqual(json.loads(committed['result']), expected, name)
+            self.assert_c2_result(json.loads(committed['result']), expected, name)
             evidence = json.loads(committed['evidence'])
             self.assertEqual((evidence['data_status'], evidence['release_action']), ('synthetic', 'BLOCK'))
             self.assertEqual(evidence['source_snapshot_id'], run['source_snapshot_id'])
@@ -149,7 +160,7 @@ class WorkerTests(TempDirCase):
         run_id, _ = worker.store.submit(payload, 'measured')
         run = self.drain(worker, run_id)
         self.assertEqual(run['status'], 'failed')
-        self.assertTrue(run['error'].startswith('MEASURED_EVIDENCE_UNAVAILABLE'))
+        self.assertTrue(run['error'].startswith('INVALID_MISSION'))
         self.assertIsNone(worker.store.committed(run_id))
 
     def test_transient_failure_retries(self):
@@ -250,14 +261,15 @@ class HttpTests(TempDirCase):
             _, _, status_body = self.call('GET', f'/v1/missions/{run_id}')
             self.assertEqual(json.loads(status_body)['input_sha256'], digest(json.loads(raw)))
             expected = json.loads((EXAMPLES / f'{name}.result.synthetic.json').read_text())
-            self.assertEqual(json.loads(result), expected, name)
+            self.assert_c2_result(json.loads(result), expected, name)
 
     def test_health_and_reserved_routes(self):
         status, _, body = self.call('GET', '/v1/health')
         self.assertEqual(status, 200)
         self.assertEqual(json.loads(body), {'schema_version': '1.0', 'status': 'ready', 'ai_enabled': False, 'uploads_enabled': False})
-        for method, path in [('GET', '/v1/data/catalog'), ('GET', '/v1/data/x/records'), ('GET', '/v1/data/x/metadata'),
-                             ('POST', '/v1/data/compare'), ('POST', '/v1/uploads'),
+        self.assertEqual(self.call('GET', '/v1/data/catalog')[0], 200)
+        self.assertEqual(self.call('GET', '/v1/data/x/records')[0], 404)
+        for method, path in [('POST', '/v1/uploads'),
                              ('POST', '/v1/missions/run-x/portfolios/alternatives')]:
             status, _, body = self.call(method, path, b'{}', {'Content-Type': 'application/json'})
             self.assertEqual(status, 501, path)

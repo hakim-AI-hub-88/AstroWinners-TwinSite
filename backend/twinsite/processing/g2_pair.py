@@ -2,9 +2,9 @@
 
     PYTHONPATH=backend python -m twinsite.processing.g2_pair [--offline]
 
-Both products are summarised at the SAME physical analysis scale (MOLA's native
-cell, ~463 m) so the slope/roughness values are comparable; SRTM is block-
-averaged to that scale, MOLA is used at native scale.  Writes:
+Both products are summarised at the SAME physical analysis scale (1852.3 m).
+MOLA uses 4x4 cells and SRTM uses 60x69 posts; producer interpolation and
+observation-supported coverage remain explicitly flagged.  Writes:
 
 * ``.runtime/data/cleaned/<sha>.json`` and ``derived/<sha>.json`` (immutable)
 * ``backend/twinsite/processing/published/g2_feature_pair.json`` (small, committed)

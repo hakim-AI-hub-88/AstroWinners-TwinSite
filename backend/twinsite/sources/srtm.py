@@ -53,6 +53,7 @@ from .base import (
     parse_utc,
 )
 from . import fetch
+from .credentials import earthdata_token
 
 TILE_POSTS = 3601
 VOID = -32768
@@ -95,9 +96,11 @@ class SRTMGL1Adapter(SourceAdapter):
     doc_url = "https://www.earthdata.nasa.gov/s3fs-public/2025-05/SRTM_Quick_Guide.pdf"
     approved_rules = ("srtm_void_mask",)
 
-    def __init__(self, root: Optional[Path] = None, offline: bool = False) -> None:
+    def __init__(self, root: Optional[Path] = None, offline: bool = False, request_timeout: float = 120, request_retries: int = 8) -> None:
         self.root = root
         self.offline = offline
+        self.request_timeout = request_timeout
+        self.request_retries = request_retries
 
     # ------------------------------------------------------------------ discover
     def discover(self, aoi: AOI, time: Optional[TimeWindow], product: Optional[str] = None) -> List[Granule]:
@@ -177,6 +180,8 @@ class SRTMGL1Adapter(SourceAdapter):
         for g in granules:
             cached = fetch.find_cached(self.source_id, g.granule_id, "data", self.root)
             for meta in cached:
+                if not self.offline and earthdata_token() and urllib.parse.urlsplit(meta["source_url"]).hostname != "data.lpdaac.earthdatacloud.nasa.gov":
+                    continue  # A mirror cache cannot satisfy an authenticated official acquisition.
                 asset = fetch.asset_from_meta(meta, g.observation, from_cache=True)
                 try:
                     fetch.verify_raw(asset)
@@ -200,9 +205,11 @@ class SRTMGL1Adapter(SourceAdapter):
         tr = fetch.Transcript(self.source_id, self.root)
         errors = []
         for cand in g.candidates:
+            if earthdata_token() and not cand.requires_credential:
+                continue  # An authenticated acquisition must fail rather than silently use the mirror.
             secret = None
             if cand.requires_credential:
-                token = os.environ.get(cand.requires_credential)
+                token = earthdata_token()
                 if not token:
                     err = CredentialMissingError(f"{cand.requires_credential} not set; authoritative source skipped",
                                                  url=cand.url)
@@ -215,14 +222,23 @@ class SRTMGL1Adapter(SourceAdapter):
                         errors.append(getattr(exc, "as_record", lambda: {"error": str(exc)})())
                     continue
                 secret = {"Authorization": f"Bearer {token}"}
-            staging = (self.root or fetch.artifact_root()) / "staging" / self.source_id / (cand.filename + ".part")
+            route = "official" if cand.requires_credential else "mirror"
+            staging = (self.root or fetch.artifact_root()) / "staging" / self.source_id / route / (cand.filename + ".part")
             staging.parent.mkdir(parents=True, exist_ok=True)
             try:
-                data, rec = fetch.http_get(cand.url, tr, max_bytes=budget, timeout=120, retries=8, dest=staging,
+                data, rec = fetch.http_get(cand.url, tr, max_bytes=budget, timeout=self.request_timeout, retries=self.request_retries, dest=staging,
                                            secret_headers=secret)
             except Exception as exc:
                 errors.append(getattr(exc, "as_record", lambda: {"error": str(exc)})())
                 continue
+            # Validate archive identity and full raster size before accepting source bytes.
+            try:
+                with zipfile.ZipFile(io.BytesIO(data)) as archive:
+                    members = [n for n in archive.namelist() if n.lower().endswith(".hgt")]
+                    if len(members) != 1 or Path(members[0]).name not in (g.granule_id, g.granule_id.split(".")[0] + ".hgt") or len(archive.read(members[0])) != TILE_POSTS * TILE_POSTS * 2:
+                        raise DecodeError("SRTM archive identity or decoded size mismatch")
+            except zipfile.BadZipFile as exc:
+                raise DecodeError("SRTM response is not a valid product archive") from exc
             meta = {
                 "asset_id": f"srtmgl1-{g.granule_id.split('.')[0].lower()}-{rec['sha256'][:12]}",
                 "source_id": self.source_id, "product_id": self.product_id, "product_version": self.product_version,

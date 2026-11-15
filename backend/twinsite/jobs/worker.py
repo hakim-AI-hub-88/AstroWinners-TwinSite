@@ -43,7 +43,7 @@ _PATH = re.compile(r'(?:[A-Za-z]:)?(?:/[\w.\-~ ]+){2,}')
 
 
 def public_message(error):
-    text = str(error) or error.__class__.__name__
+    text = error.__class__.__name__ + ': operation failed; inspect protected diagnostics'
     text = _PATH.sub('<path>', text)
     return text.replace('\n', ' ')[:300]
 
@@ -125,7 +125,7 @@ class Worker:
         except PERMANENT_INPUT as error:
             self._safe(lambda: self.store.fail(run, 'INVALID_MISSION', public_message(error)))
         except Exception as error:  # noqa: BLE001 — permanent: never retried
-            log.exception('run %s failed', run['run_id'])
+            log.error('run %s failed (%s)', run['run_id'], error.__class__.__name__)
             self._safe(lambda: self.store.fail(run, 'INTERNAL_ERROR', error.__class__.__name__))
 
     @staticmethod
@@ -137,28 +137,40 @@ class Worker:
 
     def _pipeline(self, run):
         payload = run['payload']
-        if payload.get('data_status') != 'synthetic':
-            # Client-asserted measurements are not science. No C1 resolver is integrated yet.
-            self.store.fail(run, 'MEASURED_EVIDENCE_UNAVAILABLE',
-                            'Measured runs require observations resolved from approved C1 asset manifests; '
-                            'no resolver is integrated, so no measured result is published.', phase='P10')
-            return
-        snapshot_id, _ = evidence_mod.snapshot([])
+        pair = None
+        if payload.get('data_status') == 'measured':
+            from .measured import evidence_for
+            pair = evidence_for(payload)
+        snapshot_id = pair['source_snapshot_id'] if pair else evidence_mod.snapshot([])[0]
+        count = len(pair['assets']) if pair else 0
         self._advance(run, 'acquiring', 'P10', 'succeeded',
-                      'No remote acquisition: request carries inline SYNTHETIC observations; 0 source assets fetched.',
-                      'acquire', 0, 0, source_snapshot_id=snapshot_id)
-        self._advance(run, 'decoding', 'P20', 'succeeded', 'No source products to decode (0 assets).', 'decode', 0, 0)
+                      'Resolved published measured evidence; no new network acquisition.' if pair else
+                      'Inline SYNTHETIC observations; no source assets fetched.',
+                      'acquire', count, count, source_snapshot_id=snapshot_id)
+        self._advance(run, 'decoding', 'P20', 'succeeded',
+                      'Loaded published features with product lineage.' if pair else 'No source products to decode.',
+                      'decode', count, count)
         engine = self.engine_loader()
 
         def progress(stage, completed):
             for phase, status, state, summary in ENGINE_STAGES.get(stage, []):
                 self._advance(run, status, phase, state, summary, 'engine-' + phase.lower(), completed, None)
 
-        result = engine.analyze(payload, progress=progress)
+        if pair:
+            from twinsite.science import analyze_mission
+            from .measured import sidecar as measured_sidecar
+            progress('P30_CLEAN', 0)
+            progress('P40_QUALITY', 0)
+            output = analyze_mission(payload, evidence=pair['observations'], mode='strict')
+            result = output['result']
+            for stage in ('P60_ANALYZE', 'P70_PORTFOLIO', 'P80_REVIEW'):
+                progress(stage, 1)
+        else:
+            result = engine.analyze(payload, progress=progress)
         if result.get('input_sha256') != run['input_sha256']:
             raise ValueError('Engine input hash does not match the canonical original input')
         validate('mission_result', result)
-        sidecar = evidence_mod.synthetic_evidence(run['run_id'], run['input_sha256'], result, engine)
+        sidecar = measured_sidecar(run, output, pair) if pair else evidence_mod.synthetic_evidence(run['run_id'], run['input_sha256'], result, engine)
         validate('release_evidence', sidecar)
         final_status = 'completed' if sidecar['release_action'] == 'RELEASE' else 'completed_with_limits'
         self._advance(run, 'publishing', 'P90', 'running',

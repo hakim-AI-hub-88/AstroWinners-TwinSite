@@ -25,6 +25,7 @@ ROUTES = [
     ('GET', re.compile(r'^/v1/health$'), 'health'),
     ('GET', re.compile(r'^/v1/openapi\.json$'), 'openapi'),
     ('POST', re.compile(r'^/v1/missions$'), 'submit'),
+    ('POST', re.compile(r'^/v1/missions/measured$'), 'submit_measured'),
     ('GET', re.compile(rf'^/v1/missions/{RUN}$'), 'status'),
     ('GET', re.compile(rf'^/v1/missions/{RUN}/events$'), 'events'),
     ('GET', re.compile(rf'^/v1/missions/{RUN}/result$'), 'result'),
@@ -33,10 +34,10 @@ ROUTES = [
     ('POST', re.compile(rf'^/v1/missions/{RUN}/cancel$'), 'cancel'),
     # Reserved G3 routes: explicit 501 (contract: response schemas need C0 review first).
     ('POST', re.compile(rf'^/v1/missions/{RUN}/portfolios/alternatives$'), 'not_implemented'),
-    ('GET', re.compile(r'^/v1/data/catalog$'), 'not_implemented'),
-    ('GET', re.compile(r'^/v1/data/(?P<dataset_id>[A-Za-z0-9_.\-]{1,128})/records$'), 'not_implemented'),
-    ('GET', re.compile(r'^/v1/data/(?P<dataset_id>[A-Za-z0-9_.\-]{1,128})/metadata$'), 'not_implemented'),
-    ('POST', re.compile(r'^/v1/data/compare$'), 'not_implemented'),
+    ('GET', re.compile(r'^/v1/data/catalog$'), 'data_catalog'),
+    ('GET', re.compile(r'^/v1/data/(?P<dataset_id>[A-Za-z0-9_.\-]{1,128})/records$'), 'data_records'),
+    ('GET', re.compile(r'^/v1/data/(?P<dataset_id>[A-Za-z0-9_.\-]{1,128})/metadata$'), 'data_metadata'),
+    ('POST', re.compile(r'^/v1/data/compare$'), 'data_compare'),
     ('POST', re.compile(r'^/v1/uploads$'), 'uploads_disabled'),
 ]
 
@@ -95,7 +96,7 @@ class Handler(BaseHTTPRequestHandler):
 
     # ------------------------------------------------------------ plumbing
     def log_message(self, fmt, *args):
-        log.info('%s %s', self.address_string(), fmt % args)
+        log.info('HTTP %s', self.command)
 
     def _cors(self):
         origin = self.headers.get('Origin')
@@ -145,7 +146,7 @@ class Handler(BaseHTTPRequestHandler):
         except ApiError as error:
             self.send_json(error.status, error_body(error.code, error.message, error.field), error.headers)
         except Exception:  # noqa: BLE001 — never leak internals
-            log.exception('unhandled error on %s %s', method, parts.path)
+            log.error('unhandled HTTP error (%s)', method)
             self.close_connection = True
             self.send_json(500, error_body('INTERNAL_ERROR', 'Internal server error'))
 
@@ -218,7 +219,10 @@ class Handler(BaseHTTPRequestHandler):
             raise ApiError(413, 'PAYLOAD_TOO_LARGE', f'Request body exceeds {self.app.settings.max_body_bytes} bytes')
         return self.rfile.read(length)
 
-    def route_submit(self, query):
+    def route_submit_measured(self, query):
+        self.route_submit(query, measured=True)
+
+    def route_submit(self, query, measured=False):
         raw = self._read_json_body()
         key = self.headers.get('Idempotency-Key')
         if key is None or not 1 <= len(key) <= 128 or not key.isprintable():
@@ -228,6 +232,14 @@ class Handler(BaseHTTPRequestHandler):
             payload = json.loads(raw.decode('utf-8'), parse_constant=_reject_constant)
         except (UnicodeDecodeError, ValueError) as error:
             raise ApiError(422, 'INVALID_JSON', 'Body is not valid UTF-8 JSON: ' + str(error)[:200]) from None
+        if measured:
+            from twinsite.jobs.measured import resolve_request
+            try:
+                payload = resolve_request(payload)
+            except ValueError as error:
+                raise ApiError(422, 'MEASURED_RESOLUTION_FAILED', str(error)) from None
+        elif isinstance(payload, dict) and payload.get('data_status') == 'measured':
+            raise ApiError(422, 'SERVER_RESOLUTION_REQUIRED', 'Use /v1/missions/measured with a published dataset_id')
         try:
             validate('mission_request', payload)
         except ContractError as error:
@@ -271,6 +283,41 @@ class Handler(BaseHTTPRequestHandler):
         if self.app.store.request_cancel(run_id) is None:
             raise ApiError(404, 'RUN_NOT_FOUND', 'Unknown run_id')
         self.send_json(202, self.app.status_body(self.app.store.get(run_id)))
+
+    def _data_response(self, action):
+        try:
+            self.send_json(200, action())
+        except KeyError:
+            raise ApiError(404, 'DATASET_NOT_FOUND', 'Unknown dataset or required field') from None
+        except ValueError:
+            raise ApiError(422, 'INVALID_DATA_QUERY', 'Invalid stage, column, record selection or comparison request') from None
+
+    def route_data_catalog(self, query):
+        from .data import catalog
+        def read():
+            limit = int(query.get('limit', ['100'])[-1])
+            if not 1 <= limit <= 100:
+                raise ValueError('limit')
+            return {'items': catalog()['items'][:limit]}
+        self._data_response(read)
+
+    def route_data_records(self, query, dataset_id):
+        from .data import records
+        def read():
+            limit = int(query.get('limit', ['100'])[-1])
+            if not 1 <= limit <= 100:
+                raise ValueError('limit')
+            return records(dataset_id, query.get('stage', ['cleaned'])[-1], limit)
+        self._data_response(read)
+
+    def route_data_metadata(self, query, dataset_id):
+        from .data import metadata
+        self._data_response(lambda: metadata(dataset_id))
+
+    def route_data_compare(self, query):
+        from .data import compare
+        raw = self._read_json_body()
+        self._data_response(lambda: compare(json.loads(raw.decode('utf-8'), parse_constant=_reject_constant)))
 
     def route_not_implemented(self, query, **_):
         raise ApiError(501, 'NOT_IMPLEMENTED', 'Reserved G3 endpoint: response schema awaiting C0 review; no simulated data is served.')

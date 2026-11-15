@@ -97,6 +97,23 @@ def build_openapi():
         paths[path] = {method: {'operationId': 'reserved_' + path.strip('/').replace('/', '_').replace('{', '').replace('}', ''),
                                 'summary': 'RESERVED, returns 501: ' + summary, 'x-twinsite-status': 'reserved',
                                 'parameters': params, 'responses': {'501': _err('Not implemented / disabled')}}}
+    paths['/v1/missions/measured'] = {'post': {
+        'operationId': 'submitPublishedMeasuredMission',
+        'summary': 'Resolve the published Zagora/Gale pair server-side; scientific release remains BLOCK',
+        'parameters': copy.deepcopy(paths['/v1/missions']['post']['parameters']),
+        'requestBody': {'required': True, 'content': {'application/json': {'schema': {
+            'type': 'object', 'additionalProperties': False, 'required': ['schema_version', 'dataset_id'],
+            'properties': {'schema_version': {'const': '1.0'}, 'dataset_id': {'const': 'zagora-gale-v1'}}}}}},
+        'responses': copy.deepcopy(paths['/v1/missions']['post']['responses'])}}
+    for path, method in [('/v1/data/catalog', 'get'), ('/v1/data/{dataset_id}/records', 'get'),
+                         ('/v1/data/{dataset_id}/metadata', 'get'), ('/v1/data/compare', 'post')]:
+        operation = paths[path][method]
+        operation.update(summary='Read-only published terrain evidence preview; review pending',
+                         **{'x-twinsite-status': 'provisional'})
+        operation['responses'] = {'200': {'description': 'Published evidence view (see docs/release/C0_API_EXTENSIONS.md)'},
+                                  '404': _err('Unknown dataset'), '422': _err('Invalid selection')}
+        if method == 'post':
+            operation['requestBody'] = {'required': True, 'content': {'application/json': {'schema': _ref('data_compare_request')}}}
     return {
         'openapi': '3.1.0',
         'info': {'title': 'TwinSite API', 'version': '1.0',

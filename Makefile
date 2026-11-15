@@ -23,3 +23,7 @@ types:
 check:
 	$(VENV_PYTHON) scripts/integration/checkpoint.py
 checkpoint: check
+
+.PHONY: verify
+verify:
+	$(VENV_PYTHON) ops/verify_current.py

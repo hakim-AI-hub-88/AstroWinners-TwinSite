@@ -3,24 +3,24 @@
   "assets": [
     {
       "adapter_version": "twinsite-data/1.0.0",
-      "asset_id": "srtmgl1-n30w006-a9c6dd5d6e41",
+      "asset_id": "srtmgl1-n30w006-2493d4ce40b0",
       "body": "Earth",
-      "byte_size": 9369604,
+      "byte_size": 10595645,
       "coordinate_conventions": "WGS84 geodetic lon/lat, east-positive; point-registered 1 arc-second posts; EGM96 heights",
       "crs": "EPSG:4326",
       "format": "zip(HGT int16 big-endian)",
       "license_url": "https://lpdaac.usgs.gov/data/data-citation-and-policies/",
-      "object_key": "raw/SRTMGL1/a9c6dd5d6e41a8d8e8f4f51d905acdfa99a72384c66d5617799abfd5a333947f/N30W006.SRTMGL1.hgt.zip",
+      "object_key": "raw/SRTMGL1/2493d4ce40b0405ee1926365533faf3b04d8c84a765fc5add763e1c0ebd13c82/N30W006.SRTMGL1.hgt.zip",
       "observation_end": "2000-02-21T23:59:59Z",
       "observation_start": "2000-02-11T00:00:00Z",
       "parent_asset_ids": [],
       "product_id": "SRTMGL1",
       "product_version": "003",
-      "retrieved_at": "2026-11-15T04:00:30Z",
+      "retrieved_at": "2026-11-15T08:31:39Z",
       "schema_version": "1.0",
-      "sha256": "a9c6dd5d6e41a8d8e8f4f51d905acdfa99a72384c66d5617799abfd5a333947f",
+      "sha256": "2493d4ce40b0405ee1926365533faf3b04d8c84a765fc5add763e1c0ebd13c82",
       "source_id": "SRTMGL1",
-      "source_url": "https://step.esa.int/auxdata/dem/SRTMGL1/N30W006.SRTMGL1.hgt.zip"
+      "source_url": "https://data.lpdaac.earthdatacloud.nasa.gov/lp-prod-protected/SRTMGL1.003/N30W006.SRTMGL1.hgt/N30W006.SRTMGL1.hgt.zip"
     },
     {
       "adapter_version": "twinsite-data/1.0.0",
@@ -113,17 +113,17 @@
   ],
   "comparison_pairs": [
     {
-      "earth_evidence_id": "ev-earth-zagora-draa-slope_deg-3f2bb6430161e48f",
+      "earth_evidence_id": "ev-earth-zagora-draa-slope_deg-304b73090a700585",
       "feature_id": "slope_deg",
       "mars_evidence_id": "ev-mars-gale-aeolis-slope_deg-164109cd32a9b22a"
     },
     {
-      "earth_evidence_id": "ev-earth-zagora-draa-roughness_m-b5fcf29c053122a0",
+      "earth_evidence_id": "ev-earth-zagora-draa-roughness_m-ad5024390946a3a6",
       "feature_id": "roughness_m",
       "mars_evidence_id": "ev-mars-gale-aeolis-roughness_m-14c3e59c911b8558"
     },
     {
-      "earth_evidence_id": "ev-earth-zagora-draa-local_relief_m-437aea82fe8acc62",
+      "earth_evidence_id": "ev-earth-zagora-draa-local_relief_m-d711fc422b473960",
       "feature_id": "local_relief_m",
       "mars_evidence_id": "ev-mars-gale-aeolis-local_relief_m-f76821d077242461"
     }
@@ -134,7 +134,7 @@
       "analysis_scale_m": 1852.3,
       "body": "Earth",
       "data_status": "measured",
-      "evidence_id": "ev-earth-zagora-draa-slope_deg-3f2bb6430161e48f",
+      "evidence_id": "ev-earth-zagora-draa-slope_deg-304b73090a700585",
       "evidence_kind": "derived_measurement",
       "feature_id": "slope_deg",
       "geometry": {
@@ -153,21 +153,20 @@
         "start": "2000-02-11T00:00:00Z"
       },
       "processing_version": "twinsite-data/1.0.0; terrain/1.0.0 (block-mean, Horn-1981 slope, 3x3 SD roughness)",
-      "provenance_id": "prov-earth-zagora-draa-d8f1ddc6378ac64b",
+      "provenance_id": "prov-earth-zagora-draa-371658dad691977d",
       "qa_status": "ACCEPT",
       "quality_flags": [
-        "MIRROR_NOT_VERIFIED_AGAINST_LPDAAC",
         "SRTM_C_BAND_SURFACE_INCLUDES_CANOPY_AND_STRUCTURES"
       ],
       "schema_version": "1.0",
       "site_id": "earth-zagora-draa",
       "source_asset_ids": [
-        "srtmgl1-n30w006-a9c6dd5d6e41"
+        "srtmgl1-n30w006-2493d4ce40b0"
       ],
-      "source_checksum": "a9c6dd5d6e41a8d8e8f4f51d905acdfa99a72384c66d5617799abfd5a333947f",
+      "source_checksum": "2493d4ce40b0405ee1926365533faf3b04d8c84a765fc5add763e1c0ebd13c82",
       "source_granule_id": "N30W006.SRTMGL1.hgt",
       "source_product": "SRTMGL1",
-      "source_url": "https://step.esa.int/auxdata/dem/SRTMGL1/N30W006.SRTMGL1.hgt.zip",
+      "source_url": "https://data.lpdaac.earthdatacloud.nasa.gov/lp-prod-protected/SRTMGL1.003/N30W006.SRTMGL1.hgt/N30W006.SRTMGL1.hgt.zip",
       "spatial_resolution_m": 30.794,
       "uncertainty": {
         "basis": "10th-90th percentile of per-cell values within the AOI at analysis scale (spatial variability, not instrument error). SRTM product spec: absolute vertical error < 16 m (90%); not propagated.",
@@ -184,7 +183,7 @@
       "analysis_scale_m": 1852.3,
       "body": "Earth",
       "data_status": "measured",
-      "evidence_id": "ev-earth-zagora-draa-roughness_m-b5fcf29c053122a0",
+      "evidence_id": "ev-earth-zagora-draa-roughness_m-ad5024390946a3a6",
       "evidence_kind": "derived_measurement",
       "feature_id": "roughness_m",
       "geometry": {
@@ -203,21 +202,20 @@
         "start": "2000-02-11T00:00:00Z"
       },
       "processing_version": "twinsite-data/1.0.0; terrain/1.0.0 (block-mean, Horn-1981 slope, 3x3 SD roughness)",
-      "provenance_id": "prov-earth-zagora-draa-d8f1ddc6378ac64b",
+      "provenance_id": "prov-earth-zagora-draa-371658dad691977d",
       "qa_status": "ACCEPT",
       "quality_flags": [
-        "MIRROR_NOT_VERIFIED_AGAINST_LPDAAC",
         "SRTM_C_BAND_SURFACE_INCLUDES_CANOPY_AND_STRUCTURES"
       ],
       "schema_version": "1.0",
       "site_id": "earth-zagora-draa",
       "source_asset_ids": [
-        "srtmgl1-n30w006-a9c6dd5d6e41"
+        "srtmgl1-n30w006-2493d4ce40b0"
       ],
-      "source_checksum": "a9c6dd5d6e41a8d8e8f4f51d905acdfa99a72384c66d5617799abfd5a333947f",
+      "source_checksum": "2493d4ce40b0405ee1926365533faf3b04d8c84a765fc5add763e1c0ebd13c82",
       "source_granule_id": "N30W006.SRTMGL1.hgt",
       "source_product": "SRTMGL1",
-      "source_url": "https://step.esa.int/auxdata/dem/SRTMGL1/N30W006.SRTMGL1.hgt.zip",
+      "source_url": "https://data.lpdaac.earthdatacloud.nasa.gov/lp-prod-protected/SRTMGL1.003/N30W006.SRTMGL1.hgt/N30W006.SRTMGL1.hgt.zip",
       "spatial_resolution_m": 30.794,
       "uncertainty": {
         "basis": "10th-90th percentile of per-cell values within the AOI at analysis scale (spatial variability, not instrument error). SRTM product spec: absolute vertical error < 16 m (90%); not propagated.",
@@ -234,7 +232,7 @@
       "analysis_scale_m": 1852.3,
       "body": "Earth",
       "data_status": "measured",
-      "evidence_id": "ev-earth-zagora-draa-local_relief_m-437aea82fe8acc62",
+      "evidence_id": "ev-earth-zagora-draa-local_relief_m-d711fc422b473960",
       "evidence_kind": "derived_measurement",
       "feature_id": "local_relief_m",
       "geometry": {
@@ -253,21 +251,20 @@
         "start": "2000-02-11T00:00:00Z"
       },
       "processing_version": "twinsite-data/1.0.0; terrain/1.0.0 (block-mean, Horn-1981 slope, 3x3 SD roughness)",
-      "provenance_id": "prov-earth-zagora-draa-d8f1ddc6378ac64b",
+      "provenance_id": "prov-earth-zagora-draa-371658dad691977d",
       "qa_status": "ACCEPT",
       "quality_flags": [
-        "MIRROR_NOT_VERIFIED_AGAINST_LPDAAC",
         "SRTM_C_BAND_SURFACE_INCLUDES_CANOPY_AND_STRUCTURES"
       ],
       "schema_version": "1.0",
       "site_id": "earth-zagora-draa",
       "source_asset_ids": [
-        "srtmgl1-n30w006-a9c6dd5d6e41"
+        "srtmgl1-n30w006-2493d4ce40b0"
       ],
-      "source_checksum": "a9c6dd5d6e41a8d8e8f4f51d905acdfa99a72384c66d5617799abfd5a333947f",
+      "source_checksum": "2493d4ce40b0405ee1926365533faf3b04d8c84a765fc5add763e1c0ebd13c82",
       "source_granule_id": "N30W006.SRTMGL1.hgt",
       "source_product": "SRTMGL1",
-      "source_url": "https://step.esa.int/auxdata/dem/SRTMGL1/N30W006.SRTMGL1.hgt.zip",
+      "source_url": "https://data.lpdaac.earthdatacloud.nasa.gov/lp-prod-protected/SRTMGL1.003/N30W006.SRTMGL1.hgt/N30W006.SRTMGL1.hgt.zip",
       "spatial_resolution_m": 30.794,
       "uncertainty": {
         "basis": "range statistic; SRTM product spec: absolute vertical error < 16 m (90%); not propagated.",
@@ -449,24 +446,7 @@
     {
       "body": "Earth",
       "provenance": {
-        "acquisition_errors_preserved": [
-          {
-            "code": "CREDENTIAL_MISSING",
-            "evidence": {
-              "url": "https://data.lpdaac.earthdatacloud.nasa.gov/lp-prod-protected/SRTMGL1.003/N30W006.SRTMGL1.hgt/N30W006.SRTMGL1.hgt.zip"
-            },
-            "message": "EARTHDATA_TOKEN not set; authoritative source skipped"
-          },
-          {
-            "code": "ACQUISITION_FAILED",
-            "evidence": {
-              "location": "https://urs.earthdata.nasa.gov/oauth/authorize",
-              "status": "302",
-              "url": "https://data.lpdaac.earthdatacloud.nasa.gov/lp-prod-protected/SRTMGL1.003/N30W006.SRTMGL1.hgt/N30W006.SRTMGL1.hgt.zip"
-            },
-            "message": "HTTP 302 from data.lpdaac.earthdatacloud.nasa.gov"
-          }
-        ],
+        "acquisition_errors_preserved": [],
         "adapter": {
           "adapter_version": "twinsite-data/1.0.0",
           "approved_rules": [
@@ -487,8 +467,8 @@
           1842.796,
           1847.639
         ],
-        "cleaned_object_key": "cleaned/7cb0d2b91e8657fd9324683ae802210b66c0a2db4d91600793ef7a5b419ea058.json",
-        "cleaned_sha256": "7cb0d2b91e8657fd9324683ae802210b66c0a2db4d91600793ef7a5b419ea058",
+        "cleaned_object_key": "cleaned/773100aabc63bdc882f6c42200dc11c9c82cf2ebadad155404dcaad3b6ffba1f.json",
+        "cleaned_sha256": "773100aabc63bdc882f6c42200dc11c9c82cf2ebadad155404dcaad3b6ffba1f",
         "description": "Draa valley / Jbel Bani foothills near Zagora, Morocco (arid terrain)",
         "feature_definitions": {
           "local_relief_m": "max - min of block-mean elevation within the AOI at analysis scale",
@@ -556,9 +536,9 @@
             ],
             "hits": 1,
             "query": "https://cmr.earthdata.nasa.gov/search/granules.umm_json?short_name=SRTMGL1&version=003&readable_granule_name=N30W006.SRTMGL1.hgt&page_size=5",
-            "restored_from_cached_asset": "srtmgl1-n30w006-a9c6dd5d6e41",
+            "restored_from_cached_asset": "srtmgl1-n30w006-2493d4ce40b0",
             "revision_date": "2023-12-20T20:14:42.490Z",
-            "sha256": "9d73c2d8cddf4b7ffc2aa061b633db88938c8378b069b9270002a2f06eafa6c7",
+            "sha256": "a5f90226bc59019df32547fa73027d8fb35b1f3410a0bf4d113c2b6ab0d8daa7",
             "size": [
               {
                 "Name": "Not provided",
@@ -566,7 +546,7 @@
                 "SizeUnit": "MB"
               }
             ],
-            "transcript": "transcripts/SRTMGL1/20261115T034947605724Z.jsonl"
+            "transcript": "transcripts/SRTMGL1/20261115T083132369711Z.jsonl"
           },
           "footprint": [
             -6.0001388888888885,
@@ -617,7 +597,7 @@
         },
         "site_id": "earth-zagora-draa",
         "transcripts": [
-          "transcripts/SRTMGL1/20261115T034948318991Z.jsonl"
+          "transcripts/SRTMGL1/20261115T083133110689Z.jsonl"
         ],
         "transformations": [
           "subset posts rows 1800..2880, cols 180..1260 of 3601x3601",
@@ -629,14 +609,6 @@
         ],
         "validation": {
           "issues": [
-            {
-              "code": "MIRROR_NOT_VERIFIED_AGAINST_LPDAAC",
-              "evidence": [
-                "bytes from public mirror; LP DAAC checksum comparison needs Earthdata Login"
-              ],
-              "rule_id": null,
-              "severity": "warning"
-            },
             {
               "code": "SURFACE_IS_RADAR_PHASE_CENTRE",
               "evidence": [
@@ -656,21 +628,13 @@
         },
         "vertical_datum": "EGM96 geoid"
       },
-      "provenance_id": "prov-earth-zagora-draa-d8f1ddc6378ac64b",
-      "provenance_object_key": "derived/d8f1ddc6378ac64b1e694734c6ef522d2e3aa1e4f364ca13c18447efb23e01b2.json",
+      "provenance_id": "prov-earth-zagora-draa-371658dad691977d",
+      "provenance_object_key": "derived/371658dad691977db7894f232589761579c748cf1a7033bb1acd71eb6914bdec.json",
       "quality_verdict": {
-        "asset_id": "srtmgl1-n30w006-a9c6dd5d6e41",
+        "asset_id": "srtmgl1-n30w006-2493d4ce40b0",
         "attempt_count": 0,
-        "cleaned_checksum": "7cb0d2b91e8657fd9324683ae802210b66c0a2db4d91600793ef7a5b419ea058",
+        "cleaned_checksum": "773100aabc63bdc882f6c42200dc11c9c82cf2ebadad155404dcaad3b6ffba1f",
         "issues": [
-          {
-            "code": "MIRROR_NOT_VERIFIED_AGAINST_LPDAAC",
-            "evidence": [
-              "bytes from public mirror; LP DAAC checksum comparison needs Earthdata Login"
-            ],
-            "rule_id": null,
-            "severity": "warning"
-          },
           {
             "code": "SURFACE_IS_RADAR_PHASE_CENTRE",
             "evidence": [
@@ -681,7 +645,7 @@
           }
         ],
         "method_version": "c1-qa/1.0.0",
-        "raw_checksum": "a9c6dd5d6e41a8d8e8f4f51d905acdfa99a72384c66d5617799abfd5a333947f",
+        "raw_checksum": "2493d4ce40b0405ee1926365533faf3b04d8c84a765fc5add763e1c0ebd13c82",
         "source_product_id": "SRTMGL1.003",
         "verdict": "ACCEPT"
       },
@@ -915,6 +879,6 @@
       "site_id": "mars-gale-aeolis"
     }
   ],
-  "source_snapshot_id": "c1-g2-8e99d2afad638414",
-  "source_snapshot_sha256": "8e99d2afad638414febd3c9a8f4721ae2421ab48a2982695ad291702baf5b835"
+  "source_snapshot_id": "c1-g2-c3715a06a69fc4a0",
+  "source_snapshot_sha256": "c3715a06a69fc4a0f1854b69962f62890cc96c32853943785803033773e3c356"
 }

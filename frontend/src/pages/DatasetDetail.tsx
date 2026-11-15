@@ -33,7 +33,7 @@ function Records({ id, stage }: { id: string; stage: Stage }) {
   const q = useQuery({ queryKey: ['records', id, stage], queryFn: () => getRecords(id, stage, MAX_ROWS) })
   if (q.isLoading) return <Spinner />
   const d = q.data!.data
-  const blurb = { raw: 'Source records as received. No transformation.', cleaned: 'After documented cleaning rules; the transformation column explains each change.', derived: 'Values computed from cleaned records (similarity, weighted contributions).' }[stage]
+  const blurb = { raw: 'Source asset metadata (raster bytes are not rendered).', cleaned: 'Published terrain summaries after documented cleaning.', derived: 'Derived terrain features with evidence lineage.' }[stage]
   return (
     <Panel eyebrow={`${stage} stage`} title={blurb} action={<Btn disabled={!d.rows.length} onClick={() => download(`${id}-${stage}-sample.csv`, toCsv(d.columns, d.rows), 'text/csv')}>Download sample CSV (≤ {MAX_ROWS} rows)</Btn>}>
       {d.sampled && <div className="mb-3"><Notice tone="mute" title="Sampled view">Showing {d.rows.length}{d.total ? ` of ${d.total.toLocaleString()}` : ''} rows. Large raw files are never rendered in full.</Notice></div>}
@@ -88,6 +88,21 @@ function Compare({ id, with0 }: { id: string; with0: string | null }) {
       {!other ? <Empty>Pick a second dataset to compare approved records. Comparison is server-controlled — no expressions or SQL.</Empty> : cmp.isLoading ? <Spinner /> : cmp.data && (
         <Panel eyebrow={`${stage} stage`} title={`${id} ↔ ${other}`}>
           {cmp.data.demo && <p className="mb-2 text-xs text-warn">{cmp.data.note}</p>}
+          {stage !== 'raw' && <div className="mb-5 space-y-3" aria-label="Measured feature differences">
+            {cmp.data.data.rows.map((r) => {
+              const a = r.left?.value, b = r.right?.value
+              if (typeof a !== 'number' || typeof b !== 'number' || r.left?.unit !== r.right?.unit || r.left?.analysis_scale_m !== r.right?.analysis_scale_m) return null
+              const max = Math.max(Math.abs(a), Math.abs(b), 0.00001)
+              return <div key={r.key}>
+                <p className="text-xs">{r.key}: left {a}, right {b} {String(r.left?.unit)} · right − left = {(b-a).toFixed(4)}. Each feature uses its own scale.</p>
+                <svg viewBox="0 0 400 32" className="h-8 w-full" role="img" aria-label={`${r.key}: left ${a}, right ${b}`}>
+                  <rect x="0" y="2" width={Math.abs(a)/max*390} height="10" fill="#e79d61" />
+                  <rect x="0" y="18" width={Math.abs(b)/max*390} height="10" fill="#70b5b2" />
+                </svg>
+              </div>
+            })}
+            <p className="text-xs text-mute">Orange: left. Teal: right. Spatial summaries only; these differences do not establish scientific equivalence.</p>
+          </div>}
           {common.length === 0 ? <Empty>These datasets share no comparable columns at this stage.</Empty> : (
             <Scroll><table className="tbl"><thead><tr><th rowSpan={2}>Record</th>{use.map((c) => <th key={c} colSpan={2} className="text-center">{c}</th>)}</tr><tr>{use.map((c) => <Fragment key={c}><th>left</th><th>right</th></Fragment>)}</tr></thead>
               <tbody>{cmp.data.data.rows.map((r) => <tr key={r.key}><td className="mono text-xs">{r.key}</td>{use.map((c) => { const a = r.left?.[c], b = r.right?.[c], diff = r.left && r.right && a !== b; const f = (v: unknown, has: boolean) => (!has ? <span className="text-mute">absent</span> : v == null ? <span className="text-mute">null</span> : String(v))

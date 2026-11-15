@@ -1,0 +1,25 @@
+[Unit]
+Description=TwinSite deterministic worker
+After=network.target
+[Service]
+Type=simple
+User=twinsite
+Group=twinsite
+WorkingDirectory=/opt/twinsite
+Environment=PYTHONPATH=/opt/twinsite/backend:/opt/twinsite
+Environment=TWINSITE_DATA_DIR=/var/lib/twinsite
+Environment=TWINSITE_SOURCE_DATA_DIR=/var/lib/twinsite/source-cache
+Environment=TWINSITE_AI_ENABLED=false
+# Root-owned 0600 file, provisioned separately. Never included in source/image.
+EnvironmentFile=/etc/twinsite/worker.env
+ExecStart=/opt/twinsite/.venv/bin/python -m twinsite.jobs
+Restart=on-failure
+RestartSec=3
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/twinsite
+[Install]
+WantedBy=multi-user.target

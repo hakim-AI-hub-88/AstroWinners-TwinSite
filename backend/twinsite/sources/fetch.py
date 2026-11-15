@@ -40,7 +40,7 @@ from .base import (
 )
 
 USER_AGENT = "TwinSite-data/1.0 (NASA Space Apps research prototype)"
-_SAFE_HEADERS = ("content-type", "content-length", "content-range", "last-modified", "etag", "accept-ranges", "location")
+_SAFE_HEADERS = ("content-type", "content-length", "content-range", "last-modified", "etag", "accept-ranges")
 
 
 def artifact_root() -> Path:
@@ -132,8 +132,20 @@ class _NoRedirect(urllib.request.HTTPRedirectHandler):
         return None
 
 
+class _SafeRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        old, new = urllib.parse.urlsplit(req.full_url), urllib.parse.urlsplit(newurl)
+        if new.scheme != "https":
+            raise AcquisitionError("Non-HTTPS redirect refused")
+        redirected = super().redirect_request(req, fp, code, msg, headers, newurl)
+        if redirected is not None and (old.hostname, old.port) != (new.hostname, new.port):
+            for key in ("Authorization", "Cookie", "Proxy-authorization"):
+                redirected.remove_header(key)
+        return redirected
+
+
 def _open(url: str, headers: Dict[str, str], timeout: float, follow_redirects: bool):
-    handlers = [urllib.request.HTTPSHandler(context=ssl_context())]
+    handlers = [urllib.request.HTTPSHandler(context=ssl_context()), _SafeRedirect()]
     if not follow_redirects:
         handlers.append(_NoRedirect())
     opener = urllib.request.build_opener(*handlers)
@@ -159,6 +171,8 @@ def http_get(
     resume with a Range request.  Returns (bytes, final transcript record).
     """
     assert_credential_free(url)
+    if secret_headers and (urllib.parse.urlsplit(url).scheme != "https" or urllib.parse.urlsplit(url).hostname != "data.lpdaac.earthdatacloud.nasa.gov"):
+        raise AcquisitionError("Credential destination is not the approved NASA host")
     host = urllib.parse.urlsplit(url).hostname
     want_first = byte_range[0] if byte_range else 0
     want_last = byte_range[1] if byte_range else None
@@ -245,9 +259,9 @@ def http_get(
         except (urllib.error.URLError, socket.timeout, TimeoutError, ConnectionError, OSError) as exc:
             if isinstance(exc, (ByteBudgetExceededError, AcquisitionError)):
                 raise
-            transcript.log(event="network_error", url=url, host=host, error=f"{type(exc).__name__}: {exc}",
+            transcript.log(event="network_error", url=url, host=host, error=type(exc).__name__,
                            attempt=attempt, bytes_total=len(buf), elapsed_s=round(time.monotonic() - t0, 3))
-            last_error = f"{type(exc).__name__}: {exc}"
+            last_error = type(exc).__name__
         time.sleep(min(2 ** attempt, 20))
     raise AcquisitionError(f"giving up on {host} after {attempt} attempts: {last_error}", url=url, bytes=len(buf))
 
