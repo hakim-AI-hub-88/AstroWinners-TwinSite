@@ -356,6 +356,17 @@ class Reproducibility(unittest.TestCase):
         self.assertEqual(base, run(request, records)["science_evidence"]["observations"])
 
 
+class Bridge(unittest.TestCase):
+    def test_request_from_evidence_roundtrip(self):
+        from twinsite.science.bridge import request_from_evidence
+        request, records = build()
+        rebuilt = request_from_evidence(
+            {k: v for k, v in request["mission"].items() if k != "scope"},
+            [{k: s[k] for k in ("id", "name", "longitude", "latitude", "access", "cost", "days")} for s in request["sites"]],
+            request["target_profiles"][0]["location"], records)
+        self.assertEqual(run(rebuilt, records)["result"]["sites"], run(request, records)["result"]["sites"])
+
+
 class IntegrationLineage(unittest.TestCase):
     """Run C0's fail-closed measured_release_issues on engine output (engineering fixture)."""
 
