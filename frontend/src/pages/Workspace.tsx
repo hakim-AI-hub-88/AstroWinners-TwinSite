@@ -178,9 +178,13 @@ export default function Workspace() {
               </dl>
               {problems.length > 0 && <ul className="mt-3 list-disc pl-5 text-sm text-bad">{problems.map((p) => <li key={p}>{p}</li>)}</ul>}
               {err && <div className="mt-3"><Notice tone="bad" title="The API rejected this mission">{err}</Notice></div>}
-              <Btn variant="primary" className="mt-4 w-full py-3" disabled={problems.length > 0 || run.isPending} onClick={() => { setErr(null); run.mutate() }}>{run.isPending ? 'Submitting…' : live ? 'Run analysis →' : 'Open demo result →'}</Btn>
-              {live && <Btn className="mt-2 w-full" disabled={runFixture.isPending} onClick={() => { setErr(null); runFixture.mutate() }}>Run synthetic fixture (DEMO data)</Btn>}
-              <p className="mt-2 text-xs text-mute">Run is the only action that starts a job. Page loads never do.{live && ' Measured runs fail closed until approved NASA evidence is wired; the fixture button exercises the real pipeline with labelled synthetic values.'}</p>
+              {live ? (<>
+                <Btn variant="primary" className="mt-4 w-full py-3" disabled={problems.length > 0 || runFixture.isPending} onClick={() => { setErr(null); runFixture.mutate() }}>{runFixture.isPending ? 'Submitting…' : 'Run synthetic fixture (DEMO data) →'}</Btn>
+                <Btn className="mt-2 w-full" disabled={problems.length > 0 || run.isPending} onClick={() => { setErr(null); run.mutate() }}>{run.isPending ? 'Submitting…' : 'Submit my parameters as a measured run'}</Btn>
+              </>) : (
+                <Btn variant="primary" className="mt-4 w-full py-3" disabled={problems.length > 0 || run.isPending || health.isLoading} onClick={() => { setErr(null); run.mutate() }}>{health.isLoading ? 'Checking API…' : 'Open demo result →'}</Btn>
+              )}
+              <p className="mt-2 text-xs text-mute">Run is the only action that starts a job. Page loads never do.{live && ' The fixture button exercises the real pipeline with labelled synthetic values. A measured run fails closed (MEASURED_EVIDENCE_UNAVAILABLE) until approved NASA evidence is wired.'}</p>
             </Panel>
             {!live && (
               <Panel eyebrow="Demo fixtures" title="Pre-computed synthetic runs">

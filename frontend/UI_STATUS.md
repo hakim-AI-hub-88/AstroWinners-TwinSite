@@ -19,7 +19,7 @@ Owner paths: `frontend/` only. Checkpoint written 2026-11-15 (submission cutoff 
 
 | Mode | When | What the user sees |
 | --- | --- | --- |
-| **Live** | `GET /v1/health` returns ready (Vite proxies `/v1` → `http://127.0.0.1:8000`, override with `TWINSITE_API_URL`) | Real `POST /v1/missions`, real events/result/evidence/report. "Run synthetic fixture (DEMO data)" button posts a frozen synthetic request so the real pipeline can be exercised (C3 fails measured requests closed with `MEASURED_EVIDENCE_UNAVAILABLE`). |
+| **Live** | `GET /v1/health` returns ready (Vite proxies `/v1` → `http://127.0.0.1:8080`, override with `TWINSITE_API_URL`) | Real `POST /v1/missions`, real events/result/evidence/report. "Run synthetic fixture (DEMO data)" button posts a frozen synthetic request so the real pipeline can be exercised (C3 fails measured requests closed with `MEASURED_EVIDENCE_UNAVAILABLE`). |
 | **Demo** | API unreachable, or `VITE_FORCE_DEMO=1`, or runId starts `demo-` | Frozen contract fixtures. Amber DEMO / SYNTHETIC banner on every affected page; header says "API offline · demo fixtures"; P00–P90 lifecycle is a labelled `[DEMO REPLAY]`. Workspace "Run" opens a fixture and says the parameters are not scored. |
 | **Data Explorer fallback** | `/v1/data/*` returns 501/404/network error | DEMO tables derived from the synthetic fixtures (raw = request observations, cleaned = + result transformations, derived = contributions). Banner states why. |
 
