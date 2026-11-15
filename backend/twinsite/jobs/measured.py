@@ -70,12 +70,38 @@ def evidence_for(payload):
             raise ValueError("Source bytes checksum mismatch")
     return pair
 
+AOI_EXTENT_TOLERANCE = 1.25
+
+
+def extent_mismatches(pair):
+    """Compare analysis-block counts per site (same 1852.3 m scale, so counts scale with AOI area).
+
+    Equal angular bounding boxes are not equal areas across bodies; extent-dependent statistics
+    such as max-min relief and the sample size behind slope/roughness distributions are then not
+    comparable. Reported, never corrected here: fixing it requires matched metric AOIs from C1.
+    """
+    counts = {}
+    for site in pair["sites"]:
+        stats = site.get("provenance", {}).get("feature_details", {}).get("local_relief_m", {}).get("stats", {})
+        if stats.get("n"):
+            counts[site["site_id"]] = stats["n"]
+    if len(counts) < 2:
+        return ["AOI_EXTENT_UNVERIFIED"]
+    ratio = max(counts.values()) / min(counts.values())
+    if ratio <= AOI_EXTENT_TOLERANCE:
+        return []
+    detail = "/".join(f"{k}={v}" for k, v in sorted(counts.items()))
+    return [f"AOI_EXTENT_MISMATCH:{ratio:.2f}x({detail} analysis blocks)"]
+
+
 def sidecar(run, output, pair):
     value = dict(output["science_evidence"])
     value.update(run_id=run["run_id"], assets=pair["assets"], source_snapshot_id=pair["source_snapshot_id"],
                  source_snapshot_sha256=pair["source_snapshot_sha256"], release_action="BLOCK", strict_gate_status="BLOCK")
     value["observations"] = pair["observations"]
     value["blocking_issues"] = sorted(set(value["blocking_issues"] + ["C5_INDEPENDENT_REVIEW_REQUIRED"] +
-        [flag for obs in pair["observations"] for flag in obs["quality_flags"] if "MIRROR" in flag]))
+        [flag for obs in pair["observations"] for flag in obs["quality_flags"] if "MIRROR" in flag] +
+        extent_mismatches(pair)))
     value["assumptions"].append("Preset weights and tolerances are scenario assumptions, not measured quantities. Spatial p10-p90 intervals describe variability, not instrument uncertainty.")
+    value["assumptions"].append("Earth and Mars areas of interest share an angular size, not a metric area; extent-dependent statistics (relief, distribution sample sizes) are not directly comparable until matched metric AOIs are produced.")
     return value

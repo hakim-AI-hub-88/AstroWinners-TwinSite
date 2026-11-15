@@ -133,4 +133,17 @@ class IntegrationTests(unittest.TestCase):
         from twinsite.api.openapi import build_openapi
         self.assertEqual(json.loads((ROOT / 'backend/twinsite/api/openapi.json').read_text()), build_openapi())
 
+    def test_aoi_extent_mismatch_blocks_release(self):
+        from twinsite.jobs.measured import extent_mismatches
+        pair = load_pair()
+        issues = extent_mismatches(pair)
+        self.assertEqual(len(issues), 1)
+        self.assertTrue(issues[0].startswith('AOI_EXTENT_MISMATCH:3.33x'), issues)
+        matched = copy.deepcopy(pair)
+        for site in matched['sites']:
+            site['provenance']['feature_details']['local_relief_m']['stats']['n'] = 100
+        self.assertEqual(extent_mismatches(matched), [])
+        del matched['sites'][1]['provenance']['feature_details']['local_relief_m']
+        self.assertEqual(extent_mismatches(matched), ['AOI_EXTENT_UNVERIFIED'])
+
 if __name__ == '__main__': unittest.main()
