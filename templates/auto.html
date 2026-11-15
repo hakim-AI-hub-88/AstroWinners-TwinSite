@@ -1,5 +1,131 @@
 {% extends "base.html" %}
 {% block title %}Agentic Auto Mode{% endblock %}
+{% block description %}Launch an autonomous TwinSite mission: data acquisition, cleaning, Earth analog analysis, the 13 platform agents and a facts-anchored report, in one click.{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/auto.css') }}">{% endblock %}
 {% block content %}
-<section class="page-hero"><p class="eyebrow">TwinSite</p><h1>Agentic Auto Mode</h1><p class="lead">Under construction.</p></section>
+<section class="page-hero auto-hero">
+  <p class="eyebrow">Agentic Auto Mode</p>
+  <h1>One click, one complete mission</h1>
+  <p class="lead">Pick a Moon or Mars target and an objective. TwinSite then plans the mission, acquires NASA data,
+    cleans it, ranks Earth analog regions, runs the 13 platform agents and writes a report on its own.
+    You follow every step live. Each step either completes, is skipped or fails with its reason. No result is invented.</p>
+  <p class="auto-badges"><span id="ai-badge" class="tag" aria-live="polite">AI status…</span>
+    <span id="api-badge" class="tag">Platform API…</span></p>
+</section>
+
+<ol class="auto-flow" aria-label="What auto mode does">
+  <li><b>Plan</b><span>Objective → rover filter, slope limit, zones</span></li>
+  <li><b>Acquire</b><span>Bundled NASA datasets + optional live NASA acquisition</span></li>
+  <li><b>Clean</b><span>Standard, strict, robust or raw profile</span></li>
+  <li><b>Analyze</b><span>Similarity ranking in each Earth zone</span></li>
+  <li><b>Agents</b><span>A01–A13 on the platform, AI or deterministic</span></li>
+  <li><b>Report</b><span>Facts plus a narrative checked against them</span></li>
+</ol>
+
+<div class="auto-layout">
+  <form id="auto-form" class="panel auto-form" novalidate>
+    <h2 class="auto-h2">Mission setup</h2>
+
+    <fieldset class="auto-seg">
+      <legend>Target body</legend>
+      <label><input type="radio" name="planet" value="mars" checked> Mars</label>
+      <label><input type="radio" name="planet" value="moon"> Moon</label>
+    </fieldset>
+
+    <label class="field">Target
+      <select id="f-target" name="target"></select>
+    </label>
+    <p id="target-note" class="auto-hint"></p>
+
+    <div id="custom-fields" class="auto-row" hidden>
+      <label class="field">Latitude (°)<input id="f-lat" type="number" step="0.001" min="-88" max="88" inputmode="decimal"></label>
+      <label class="field">Longitude (° east)<input id="f-lon" type="number" step="0.001" min="-180" max="180" inputmode="decimal"></label>
+      <label class="field">Name<input id="f-name" type="text" maxlength="60" placeholder="e.g. Utopia test point"></label>
+      <label class="field">Radius
+        <select id="f-radius">{% for r in [25, 50, 100] %}<option value="{{ r }}"{% if r == 50 %} selected{% endif %}>{{ r }} km</option>{% endfor %}</select>
+      </label>
+    </div>
+
+    <div class="auto-row">
+      <label class="field">Objective
+        <select id="f-objective">
+          <option value="rover_test">Rover mobility test</option>
+          <option value="eva_training">EVA / crew training</option>
+          <option value="habitat">Habitat / long-duration analog</option>
+          <option value="instrument_calibration">Instrument calibration</option>
+          <option value="general">General analog search</option>
+        </select>
+      </label>
+      <label class="field">Slope limit (°)<input id="f-slope" type="number" min="5" max="30" step="1" value="15"></label>
+    </div>
+
+    <fieldset class="auto-checks">
+      <legend>Earth zones</legend>
+      {% for zid, z in zones.items() %}
+      <label><input type="checkbox" name="zones" value="{{ zid }}" checked> {{ z.full_name }}</label>
+      {% endfor %}
+    </fieldset>
+
+    <fieldset class="auto-seg">
+      <legend>Data source</legend>
+      <label><input type="radio" name="data_mode" value="bundled" checked> Bundled</label>
+      <label><input type="radio" name="data_mode" value="auto"> Auto (live NASA)</label>
+    </fieldset>
+
+    <div class="auto-row">
+      <label class="field">Cleaning
+        <select id="f-cleaning">
+          <option value="standard">Standard (default)</option>
+          <option value="strict">Strict</option>
+          <option value="robust">Robust</option>
+          <option value="raw">Raw (no cleaning)</option>
+        </select>
+      </label>
+      <label class="auto-switch"><input id="f-ai" type="checkbox" checked> <span>AI agents &amp; narrative</span></label>
+    </div>
+
+    <p id="form-error" class="auto-error" role="alert" hidden></p>
+    <div class="auto-actions">
+      <button id="btn-launch" class="btn btn--primary" type="submit">Launch autonomous mission</button>
+      <button id="btn-stop" class="btn" type="button" disabled>Stop following</button>
+      <button id="btn-new" class="btn" type="button">New mission</button>
+    </div>
+    <p class="auto-hint">Missions keep running on the server if you leave this page. Reopen them from <a href="#recent">Recent missions</a>.</p>
+  </form>
+
+  <section class="panel auto-timeline" aria-labelledby="tl-title">
+    <div class="auto-tl-head">
+      <h2 id="tl-title" class="auto-h2">Mission timeline</h2>
+      <span id="mission-state" class="tag">idle</span>
+    </div>
+    <p id="mission-meta" class="auto-hint">No mission yet. Configure the setup and press <b>Launch autonomous mission</b>.</p>
+    <ol id="steps" class="auto-steps"></ol>
+    <div id="links" class="auto-links" hidden></div>
+  </section>
+</div>
+
+<section class="auto-section" aria-labelledby="agents-title">
+  <div class="auto-section__head">
+    <h2 id="agents-title" class="auto-h2">Agent roster · A01–A13</h2>
+    <p id="agents-meta" class="auto-hint">The platform runs these agents on the mission. Deterministic agents compute; AI agents interpret and are checked. AI never changes scores or the release decision.</p>
+  </div>
+  <div id="agents" class="auto-agents"></div>
+</section>
+
+<section class="auto-section" aria-labelledby="results-title">
+  <h2 id="results-title" class="auto-h2">Results</h2>
+  <div id="results" class="auto-results"><p class="auto-hint">Results appear here as each step completes.</p></div>
+</section>
+
+<section class="auto-section" id="recent" aria-labelledby="recent-title">
+  <div class="auto-section__head">
+    <h2 id="recent-title" class="auto-h2">Recent missions</h2>
+    <button id="btn-refresh" class="btn" type="button">Refresh</button>
+  </div>
+  <div id="recent-list"><p class="auto-hint">Loading…</p></div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script>window.TWINSITE_TARGETS = {{ targets|tojson }};</script>
+<script src="{{ url_for('static', filename='js/auto.js') }}" defer></script>
 {% endblock %}
