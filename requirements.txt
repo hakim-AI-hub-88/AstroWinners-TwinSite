@@ -1,0 +1,6 @@
+flask>=3.0
+pandas>=2.2
+numpy>=1.26
+groq>=1.0          # AI Mission Assistant (LLM API)
+scikit-learn>=1.4  # machine-learning models (PCA, K-means)
+Pillow>=10.1      # mission report map images

@@ -1,0 +1,25 @@
+{
+  "body": "earth",
+  "resolution": "0.1 deg (~11.1 km) Atacama box (30 x 40)",
+  "sources": {
+    "elevation": "NASADEM 30 m averaged to 120x120 px (~3.7 km), 3x3 px cells",
+    "slope": "NASADEM 30 m averaged to 120x120 px (~3.7 km), 3x3 px cells",
+    "roughness": "NASADEM 30 m averaged to 120x120 px (~3.7 km), 3x3 px cells",
+    "relief": "NASADEM 30 m averaged to 120x120 px (~3.7 km), 3x3 px cells",
+    "temperature_day": "MODIS MOD11A2 LST day (~10:30 local), via Earth pipeline, degC -> K",
+    "temperature_night": "MODIS MOD11A2 LST night (~22:30 local), via Earth pipeline, degC -> K",
+    "albedo": "NASA POWER ALLSKY_SRF_ALB annual climatology (1 deg)",
+    "thermal_inertia": "MISSING - no dataset yet",
+    "mineral_index": "MISSING - no dataset yet"
+  },
+  "steps": [
+    "Read atacama_unified.h5 (cleaned, QA-masked, gap-filled 0.01 deg grid from the Earth pipeline)",
+    "LST degC -> K",
+    "NASA POWER albedo: 1 deg cell value assigned to each 0.01 deg cell",
+    "HARMONIZED: NASADEM block-mean x120 -> 3.7 km pixels; slope at that baseline; roughness/relief over 3x3 px; other features = mean of 10x10 fine cells"
+  ],
+  "notes": [
+    "thermal_inertia: no Earth product yet (could be derived from albedo + LST amplitude)",
+    "mineral_index: needs an Fe abundance source; ASTER GED (silica) still not downloaded"
+  ]
+}

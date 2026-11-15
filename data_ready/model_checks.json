@@ -1,0 +1,29 @@
+{
+  "mars": {
+    "site": "jezero_Ls90.txt (18.4 N, 77.5 E)",
+    "reference": "Mars Climate Database v6.2, Ls 90 (validation only, not an input)",
+    "model_day_max_K": 276.1,
+    "model_night_min_K": 179.2,
+    "tes_albedo": 0.183,
+    "tes_thermal_inertia": 301.9,
+    "reference_day_max_K": 276.0,
+    "reference_night_min_K": 193.8,
+    "reference_albedo": 0.171,
+    "reference_thermal_inertia": 275.1
+  },
+  "moon": {
+    "temperature_sources_pct": {
+      "day_measured_pct": 11.11,
+      "night_gcp_pct": 11.11,
+      "night_l3_pct": 39.34,
+      "night_constant_pct": 21.78
+    },
+    "day_max_check": {
+      "reference": "Diviner GCP measured daily maximum, |lat| <= 10 deg",
+      "cells": 14400,
+      "measured_mean_K": 391.5,
+      "constant_model_mean_K": 391.5,
+      "mean_abs_difference_K": 2.0
+    }
+  }
+}

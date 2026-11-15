@@ -1,0 +1,635 @@
+<!doctype html>
+<!--
+#############################################################################
+# TWINSITE - PLANETARY ANALOG DISCOVERY SYSTEM (single Jinja2 template)
+#
+# Design: "space mission control" theme (starfield, Earth horizon, Mars limb,
+# glass panels, orange accents) taken from the project's design template.
+# The previous single-page version is kept in app/legacy/v1/.
+#
+# Four pages in ONE document (client-side views, see app.js "PAGES"), so the
+# analysis results stay in memory when the user changes page:
+#   1. Mission Control      target, scenarios, mission brief, score, candidates
+#   2. Site Explorer        Atacama + Merzouga maps, target map, radar, zone benchmark
+#   3. Science & Validation cross-planet pattern analysis, field validation, method
+#   4. Applications & Report mission applications (photo cards) + mission report
+# A persistent left panel holds the mission target form; the bottom mission bar
+# shows the key numbers and the report button; the AI assistant floats on top.
+#
+# Jinja2 variables (backend/app.py): targets, features, zones, default_zone
+# Every element id used by static/js/app.js is preserved.
+#############################################################################
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TWINSITE – Planetary Analog Discovery</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@500;600;700;900&display=swap" rel="stylesheet">
+  <!-- Leaflet (interactive maps). Pinned version from cdnjs. -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+  <!-- CesiumJS (3D / 2D globes of the Moon, Mars and Earth). Pinned version from jsDelivr. -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cesium@1.140.0/Build/Cesium/Widgets/widgets.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+  <!-- ===================================================================
+       BACKGROUND (template): starfield canvas + Earth horizon + Mars limb
+       ================================================================= -->
+  <canvas id="starfield" aria-hidden="true"></canvas>
+  <div class="earth-arc" aria-hidden="true"></div>
+  <div class="mars-limb" aria-hidden="true"></div>
+
+  <div class="shell">
+
+    <!-- =================================================================
+         HEADER: logo, page navigation, data status
+         ================================================================= -->
+    <header class="header glass">
+      <a class="logo" href="/" aria-label="TWINSITE home page">
+        <svg width="36" height="36" viewBox="0 0 36 36" fill="none" aria-hidden="true">
+          <circle cx="18" cy="18" r="16" stroke="#ffffff" stroke-width="1" fill="none" />
+          <path d="M6 18 A14 6 -30 0 1 30 16" stroke="#ffffff" stroke-width="0.7" fill="none" opacity="0.6" />
+          <circle cx="28" cy="15" r="2.4" fill="#f97316" />
+        </svg>
+        <span class="logo-text">TWINSITE</span>
+      </a>
+
+      <nav class="header-nav" aria-label="Pages">
+        <a href="#mission" class="nav-link active" data-page="mission">Mission Control</a>
+        <a href="#explorer" class="nav-link" data-page="explorer">Site Explorer</a>
+        <a href="#science" class="nav-link" data-page="science">Science &amp; Validation</a>
+        <a href="#applications" class="nav-link" data-page="applications">Applications &amp; Report</a>
+      </nav>
+
+      <div class="header-status">
+        <span class="status-pill"><span class="status-dot"></span><span id="system-status">System Status: Ready</span></span>
+        <!-- Filled by app.js from GET /api/status -->
+        <ul class="status" id="dataset-status" aria-live="polite">
+          <li class="status__item status__item--pending">Loading datasets…</li>
+        </ul>
+      </div>
+    </header>
+
+    <!-- =================================================================
+         LEFT PANEL (all pages): mission target + quick scenarios
+         ================================================================= -->
+    <aside class="sidebar">
+      <section class="card controls" aria-labelledby="controls-title">
+        <h3 id="controls-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+            <circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="6" /><circle cx="12" cy="12" r="2" />
+          </svg>
+          Mission Target
+        </h3>
+        <form id="search-form" class="controls__form">
+          <label class="field">
+            <span class="field__label">Planetary body</span>
+            <select id="planet-select" name="planet" required>
+              {% for planet in targets %}
+                <option value="{{ planet }}">{{ planet|capitalize }}</option>
+              {% endfor %}
+            </select>
+          </label>
+
+          <label class="field">
+            <span class="field__label">Target site</span>
+            <select id="location-select" name="location" required></select>
+          </label>
+
+          <!-- Earth analog zone (Atacama = default). Both zones are analysed at every search. -->
+          <label class="field">
+            <span class="field__label">Earth analog zone</span>
+            <select id="zone-select" name="zone">
+              {% for zid, z in zones.items() %}
+                <option value="{{ zid }}"{% if zid == default_zone %} selected{% endif %}>{{ z.full_name }}</option>
+              {% endfor %}
+            </select>
+          </label>
+
+          <!-- Mission planner filter: only propose regions a rover can drive -->
+          <div class="rover">
+            <label class="switch">
+              <input type="checkbox" id="rover-mode" checked>
+              <span class="switch__ui" aria-hidden="true"></span>
+              <span>Rover-accessible sites only</span>
+            </label>
+            <label class="slope">
+              <span>Max slope</span>
+              <input type="range" id="max-slope" class="slider" min="5" max="30" step="1" value="15">
+              <output id="max-slope-value">15°</output>
+            </label>
+            <span class="card__hint rover__hint">A region qualifies when ≥ 50 % of its 1 km cells are below the slope limit.</span>
+          </div>
+
+          <button type="submit" id="search-button" class="button button--primary">Find Earth Analogs</button>
+        </form>
+        <p id="target-note" class="controls__note"></p>
+        <p id="message" class="message" role="status" hidden></p>
+      </section>
+
+      <!-- Mission scenarios - one click = full analysis (data-* read by app.js) -->
+      <section class="card scenarios" aria-labelledby="scenarios-title">
+        <h3 id="scenarios-title">Mission Scenarios</h3>
+        <div class="scenarios__grid">
+          <button type="button" class="scenario" data-planet="mars" data-location="Jezero Crater" data-rover="1" data-slope="15">
+            <span class="scenario__tag scenario__tag--mars">Mars</span>
+            <span class="scenario__title">Perseverance-class rover test</span>
+            <span class="scenario__text">Where to rehearse driving and sampling for Jezero Crater?</span>
+          </button>
+          <button type="button" class="scenario" data-planet="mars" data-location="Gale Crater" data-rover="1" data-slope="15">
+            <span class="scenario__tag scenario__tag--mars">Mars</span>
+            <span class="scenario__title">Curiosity-class drive &amp; drill</span>
+            <span class="scenario__text">Terrain and thermal analog for Gale Crater operations.</span>
+          </button>
+          <button type="button" class="scenario" data-planet="moon" data-location="Apollo 15" data-rover="1" data-slope="10">
+            <span class="scenario__tag scenario__tag--moon">Moon</span>
+            <span class="scenario__title">Astronaut EVA + lunar rover training</span>
+            <span class="scenario__text">Hadley Rille-like relief, gentle enough for a crewed rover (≤ 10°).</span>
+          </button>
+          <button type="button" class="scenario" data-planet="moon" data-location="Mare Tranquillitatis" data-rover="1" data-slope="8">
+            <span class="scenario__tag scenario__tag--moon">Moon</span>
+            <span class="scenario__title">Lander site rehearsal</span>
+            <span class="scenario__text">Flat mare-like plains for landing and deployment drills (≤ 8°).</span>
+          </button>
+        </div>
+      </section>
+    </aside>
+
+    <!-- =================================================================
+         MAIN: four pages (only one visible at a time)
+         ================================================================= -->
+    <main class="main">
+
+      <!-- ===============================================================
+           PAGE 1 - MISSION CONTROL
+           =============================================================== -->
+      <section class="page is-active" id="page-mission" data-page="mission" aria-labelledby="page-mission-title">
+        <div class="page-head">
+          <p class="eyebrow">NASA Space Apps Challenge · Mission planner</p>
+          <h1 id="page-mission-title">Mission Control</h1>
+          <p class="lead">An agency is preparing a rover for Jezero. <strong>Where should it test it on Earth?</strong>
+            One click, with evidence — from NASA data on Earth, Mars and the Moon.</p>
+        </div>
+
+        <!-- Interactive globes (static/js/twinmap.js, CesiumJS): Moon / Mars target + Earth analogue.
+             3D when zoomed out, flat 2D map when zoomed in. Previous visual cards: legacy/v1 + git history. -->
+        <div class="twin" id="twin">
+          <article class="globe-panel" id="globe-target" aria-label="Target globe: select a region on the Moon or Mars">
+            <header class="gp-head">
+              <span class="gp-dot gp-dot--moon" id="gp-target-dot"></span>
+              <strong class="gp-title" id="vc-target-title">Moon target</strong>
+              <div class="gp-seg" id="gp-body" role="group" aria-label="Target body">
+                <button type="button" data-body="moon" class="is-on">Moon</button>
+                <button type="button" data-body="mars">Mars</button>
+              </div>
+              <span class="gp-src" id="gp-target-src">NASA Moon Trek · LRO</span>
+            </header>
+            <div class="gp-view">
+              <div class="gp-cesium"></div>
+              <div class="gp-tools">
+                <button type="button" class="gp-btn" id="gp-target-layers-btn" aria-controls="gp-target-layers">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></svg>
+                  Layers</button>
+                <button type="button" class="gp-btn gp-btn--mode" id="gp-target-mode" title="Flat 2D map">2D</button>
+              </div>
+              <div class="gp-layers" id="gp-target-layers" hidden></div>
+              <div class="gp-legend" id="gp-target-legend" hidden></div>
+              <div class="gp-info" id="gp-target-info">
+                <p class="gp-info__title">Select a region</p>
+                <p>Click anywhere on the globe to draw a square region, or click a NASA landing site.</p>
+              </div>
+              <span id="vc-target-name" hidden>Select a mission scenario</span>
+              <span id="vc-target-coords" hidden></span>
+              <p class="gp-fallback" hidden>The 3D globe needs WebGL and an internet connection (CesiumJS + NASA tiles).</p>
+            </div>
+          </article>
+
+          <article class="globe-panel" id="globe-earth" aria-label="Earth globe: analogue zones and best matches">
+            <header class="gp-head">
+              <span class="gp-dot gp-dot--earth"></span>
+              <strong class="gp-title">Earth analogue</strong>
+              <span class="gp-zone">— <span id="vc-earth-name">Atacama Desert (Chile)</span></span>
+              <span class="gp-src" id="gp-earth-src">Esri World Imagery</span>
+            </header>
+            <div class="gp-view">
+              <div class="gp-cesium"></div>
+              <div class="gp-tools">
+                <button type="button" class="gp-btn" id="gp-earth-layers-btn" aria-controls="gp-earth-layers">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></svg>
+                  Layers</button>
+                <button type="button" class="gp-btn gp-btn--mode" id="gp-earth-mode" title="Flat 2D map">2D</button>
+              </div>
+              <div class="gp-layers" id="gp-earth-layers" hidden></div>
+              <div class="gp-legend gp-legend--earth" id="gp-earth-legend" hidden></div>
+              <div class="gp-matches" id="gp-matches" hidden></div>
+              <div class="gp-info gp-info--earth" id="gp-earth-info" hidden>
+                <p class="gp-info__title gp-info__title--earth"><span id="vc-earth-zone-name"></span>Best match</p>
+                <p id="gp-earth-region"></p>
+                <span class="similarity-badge" id="vc-earth-score">Similarity —</span>
+              </div>
+              <p class="gp-fallback" hidden>The 3D globe needs WebGL and an internet connection (CesiumJS + NASA tiles).</p>
+            </div>
+          </article>
+        </div>
+
+        <!-- Mission brief - the answer a mission team can act on -->
+        <section class="card brief" id="brief" hidden aria-labelledby="brief-question">
+          <div class="brief__main">
+            <p class="eyebrow">Mission brief</p>
+            <h2 class="brief__question" id="brief-question"></h2>
+            <p class="brief__answer" id="brief-answer"></p>
+            <div class="brief__actions">
+              <a class="button button--ghost" id="brief-worldview" target="_blank" rel="noopener">Open in NASA Worldview</a>
+              <a class="button button--ghost" id="brief-gmaps" target="_blank" rel="noopener">Open in Google Maps</a>
+              <button type="button" class="button button--ghost" id="brief-copy">Copy brief</button>
+            </div>
+          </div>
+          <div class="brief__evidence">
+            <h3 class="why__title why__title--match">Evidence</h3>
+            <ul class="why__list" id="brief-evidence"></ul>
+            <h3 class="why__title why__title--differ">Limits to plan for</h3>
+            <ul class="why__list" id="brief-limits"></ul>
+          </div>
+        </section>
+
+        <div class="grid grid--score">
+          <!-- Analog similarity index (progress ring from the template) -->
+          <article class="card card--score">
+            <h3>Analog Similarity Index</h3>
+            <div class="progress-ring-container">
+              <svg class="progress-ring" viewBox="0 0 160 160" aria-hidden="true">
+                <circle class="ring-bg" cx="80" cy="80" r="70" />
+                <circle class="ring-fill" id="ring-fill" cx="80" cy="80" r="70" />
+              </svg>
+              <div class="ring-label">
+                <span class="ring-score" id="score-value">—</span>
+                <span class="ring-pct">/ 100</span>
+                <span class="ring-text" id="ring-text">Awaiting analysis</span>
+              </div>
+            </div>
+            <div class="meter" aria-hidden="true"><span class="meter__fill" id="confidence-fill"></span></div>
+            <p class="card__hint" id="confidence-text">Confidence: —</p>
+            <dl class="facts" id="score-facts">
+              <div><dt>Region (≈11 km)</dt><dd id="fact-region">—</dd></div>
+              <div><dt>Exact point (≈1 km)</dt><dd id="fact-point">—</dd></div>
+            </dl>
+          </article>
+
+          <!-- Selection rationale -->
+          <article class="card card--why">
+            <h3>Selection Rationale</h3>
+            <div class="why">
+              <div>
+                <h4 class="why__title why__title--match">Closest match</h4>
+                <ul class="why__list" id="why-matches"><li class="muted">Run a search to see the explanation.</li></ul>
+              </div>
+              <div>
+                <h4 class="why__title why__title--differ">Biggest differences</h4>
+                <ul class="why__list" id="why-differs"></ul>
+              </div>
+            </div>
+            <!-- Explainable score: where the points are lost (filled by app.js) -->
+            <div class="explain" id="score-explain" hidden>
+              <div class="explain__head">
+                <h4 class="explain__title">How the score is built</h4>
+                <span class="explain__formula" id="explain-formula"></span>
+              </div>
+              <ul class="explain__list" id="explain-list"></ul>
+              <p class="card__hint" id="explain-note"></p>
+            </div>
+            <p class="card__hint" id="why-refinement"></p>
+            <p class="card__hint" id="why-skipped"></p>
+          </article>
+        </div>
+
+        <div class="grid grid--two">
+          <!-- Candidate sites (rows are clickable) -->
+          <article class="card card--ranking">
+            <h3>Candidate Sites — <span class="zn">Atacama</span></h3>
+            <div class="table-wrap">
+              <table class="table">
+                <thead><tr><th>#</th><th>Region centre</th><th>Score</th><th>Conf.</th><th>Drivable</th><th>Exact point</th></tr></thead>
+                <tbody id="ranking-body">
+                  <tr><td colspan="6" class="table__empty">Results will appear here.</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="card__hint">Regions are at least 25 km apart. Drivable = share of the region's 1 km cells under the slope limit. Click a row to inspect it.</p>
+          </article>
+
+          <!-- Parameter comparison: normalized bars + physical values -->
+          <article class="card card--features">
+            <h3>Parameter Comparison</h3>
+            <div class="legend">
+              <span class="legend__item legend__item--target">Target</span>
+              <span class="legend__item legend__item--earth">Selected <span class="zn">Atacama</span> region</span>
+            </div>
+            <ul class="bars" id="feature-bars">
+              {% for f in features %}
+                <li class="bars__row" data-feature="{{ f }}">
+                  <span class="bars__label">{{ f|replace('_', ' ') }}</span>
+                  <span class="bars__track">
+                    <span class="bars__fill bars__fill--target" style="width:0"></span>
+                    <span class="bars__fill bars__fill--earth" style="width:0"></span>
+                  </span>
+                  <span class="bars__value">—</span>
+                </li>
+              {% endfor %}
+            </ul>
+            <p class="card__hint">Bars: normalized 0–1 scale shared by Earth, Mars and Moon (used for scoring).
+              Values: physical units (used for explanation only).</p>
+          </article>
+        </div>
+      </section>
+
+      <!-- ===============================================================
+           PAGE 2 - SITE EXPLORER (maps, radar, zone benchmark)
+           =============================================================== -->
+      <section class="page" id="page-explorer" data-page="explorer" aria-labelledby="page-explorer-title">
+        <div class="page-head">
+          <p class="eyebrow">Interactive maps · NASA GIBS &amp; NASA Trek</p>
+          <h1 id="page-explorer-title">Site Explorer</h1>
+          <p class="lead">Every ~11 km cell of both Earth analog zones is scored against the target. Red = most similar.
+            Click a cell or a number to inspect it.</p>
+        </div>
+
+        <section class="maps" aria-label="Interactive maps">
+          <article class="card card--earthmap">
+            <div class="map-head">
+              <h3>Atacama Desert — Similarity Map <span class="zone-badge" id="badge-atacama" hidden>analysed zone</span></h3>
+              <div class="map-legend" title="Colour = rank of the score among Atacama cells (red = most similar)">
+                <span id="legend-min">—</span>
+                <span class="map-legend__ramp"></span>
+                <span id="legend-max">—</span>
+                <span class="map-legend__na">no data</span>
+              </div>
+            </div>
+            <div class="leaflet-box leaflet-box--earth" id="earth-map">
+              <p class="map-empty" id="map-empty">Run a search to colour every ~11 km Atacama cell by similarity.</p>
+            </div>
+            <p class="card__hint">Colour = rank among Atacama cells (red = most similar, blue = least). Numbers = ranked regions,
+              ★ = exact point, ▲ = NASA analog sites. Basemap: NASA GIBS Blue Marble.</p>
+          </article>
+
+          <div class="maps__side">
+            <article class="card">
+              <h3 id="target-map-title">Target</h3>
+              <div class="leaflet-box leaflet-box--target" id="target-map">
+                <p class="map-empty">The target appears here after a search.</p>
+              </div>
+              <p class="card__hint" id="target-map-hint">Basemap: NASA Trek. Circle = 50 km area averaged into the target profile.</p>
+            </article>
+
+            <article class="card">
+              <h3>Environmental Signature — target vs <span class="zn">Atacama</span> site</h3>
+              <div class="radar-box"><canvas id="radar-canvas" aria-label="Radar chart comparing the target and the selected Earth site"></canvas></div>
+              <p class="card__hint" id="radar-hint">Normalized 0–1 scale (same as the score). Hover for physical values.</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="zones" aria-label="Earth analog zones compared">
+          <article class="card">
+            <div class="map-head">
+              <h3>Merzouga – Erg Chebbi — Similarity Map <span class="zone-badge" id="badge-merzouga" hidden>analysed zone</span></h3>
+              <div class="map-legend" title="Colour = rank of the score among Merzouga cells (red = most similar)">
+                <span id="mz-legend-min">—</span>
+                <span class="map-legend__ramp"></span>
+                <span id="mz-legend-max">—</span>
+              </div>
+            </div>
+            <div class="leaflet-box leaflet-box--zone" id="merzouga-map">
+              <p class="map-empty" id="mz-map-empty">Run a search to colour every ~11 km Merzouga cell by similarity.</p>
+            </div>
+            <p class="card__hint">Merzouga – Erg Chebbi, Morocco (30–32° N, 5–3° W), same pipeline and scale as the Atacama.
+              Click a square or a number to analyse this zone in detail. ▲ = MARS2013 Mars-simulation camps.</p>
+          </article>
+
+          <article class="card compare" id="compare">
+            <h3>Analog Zone Benchmark</h3>
+            <p class="card__hint" id="compare-target">Run a search to compare the Atacama and Merzouga for the same target.</p>
+            <div class="compare__scores" id="compare-scores"></div>
+            <p class="compare__verdict" id="compare-verdict"></p>
+            <div class="table-wrap">
+              <table class="table compare__table">
+                <thead><tr><th>Parameter</th><th>Target</th><th>Atacama #1</th><th>Merzouga #1</th></tr></thead>
+                <tbody id="compare-body"><tr><td colspan="4" class="table__empty">—</td></tr></tbody>
+              </table>
+            </div>
+            <p class="card__hint">Physical values of each zone's best region. ✓ = closer to the target on the scoring scale.</p>
+          </article>
+        </section>
+      </section>
+
+      <!-- ===============================================================
+           PAGE 3 - SCIENCE & VALIDATION
+           =============================================================== -->
+      <section class="page" id="page-science" data-page="science" aria-labelledby="ml-title">
+        <!-- Cross-planet pattern analysis (data-driven models, GET /api/ml) -->
+        <section class="ml" id="ml">
+          <div class="page-head">
+            <p class="eyebrow">Independent cross-check · data-driven models</p>
+            <h1 id="ml-title">Cross-Planet Pattern Analysis</h1>
+            <p class="lead">Two data-driven models built on Earth, Mars and Moon cells together — independent of the similarity
+              score. When they point to the same places, two different methods agree.</p>
+          </div>
+
+          <div class="kpis" id="ml-stats">
+            <div class="kpi"><span class="kpi__value" id="ml-stat-ratio">—</span>
+              <span class="kpi__label">The <span class="zn">Atacama</span> environment is closer to Mars than to the Moon<br><small id="ml-stat-ratio-detail">6 shared parameters, normalized</small></span></div>
+            <div class="kpi"><span class="kpi__value" id="ml-stat-agree">—</span>
+              <span class="kpi__label" id="ml-stat-agree-label">top-10 regions share the target's terrain class<br><small>pattern analysis vs similarity ranking</small></span></div>
+            <div class="kpi"><span class="kpi__value" id="ml-stat-var">—</span>
+              <span class="kpi__label">of the information kept in the 2-D atlas<br><small>principal component analysis</small></span></div>
+          </div>
+
+          <div class="ml__grid">
+            <article class="card">
+              <div class="map-head">
+                <h3>Planetary Environment Atlas</h3>
+                <div class="seg" role="group" aria-label="Colour points by">
+                  <button type="button" class="seg__btn is-active" data-color="body">By body</button>
+                  <button type="button" class="seg__btn" data-color="type">By terrain class</button>
+                </div>
+              </div>
+              <div class="scatter-box">
+                <canvas id="pca-canvas" aria-label="Atlas of Earth, Mars and Moon cells on two principal axes"></canvas>
+                <p class="map-empty" id="pca-empty">Run a search to project Earth, Mars and Moon on the same map.</p>
+              </div>
+              <p class="card__hint" id="pca-axes">Each point is an ~11 km cell. Click a <span class="zn">Atacama</span> point to inspect it in the radar and on the map.</p>
+            </article>
+
+            <article class="card">
+              <h3>Terrain Signature Classes</h3>
+              <p class="card__hint" id="types-hint">Classes learned from terrain shape (slope, roughness, relief) shared by the three bodies.</p>
+              <ul class="types" id="types-list"></ul>
+              <p class="ml__agree" id="ml-agree-text"></p>
+              <button type="button" class="button button--ghost" id="types-reset" hidden>Back to similarity colours on the map</button>
+            </article>
+          </div>
+          <p class="card__hint" id="ml-method"></p>
+        </section>
+
+        <!-- Field validation against published analog sites -->
+        <section class="card validation" aria-labelledby="validation-title">
+          <div class="section-head">
+            <h2 id="validation-title">Field Validation — Published Analog Sites</h2>
+            <p class="card__hint" id="validation-target">Run a search to compare our ranking with sites NASA already studied.</p>
+          </div>
+          <p class="validation__intro">
+            <strong>How we validate.</strong> We do not change the model and we add no data to the calculation.
+            After each analysis, we look up where sites that space-agency teams already studied as <em>Mars analogs</em>
+            fall in our ranking — NASA and NASA-funded teams in the Atacama, the Austrian Space Forum's MARS2013 Mars
+            simulation in Merzouga. A site picked at random would sit at the 50th percentile;
+            a higher percentile means our system independently points to places those teams already chose.
+          </p>
+          <p class="validation__summary" id="validation-summary"></p>
+          <div class="table-wrap">
+            <table class="table validation__table">
+              <thead>
+                <tr><th>Reference site</th><th>Why it was studied</th><th>Our score</th>
+                    <th>Percentile</th><th>Nearest top-10 region</th><th>Verdict</th></tr>
+              </thead>
+              <tbody id="validation-body">
+                <tr><td colspan="6" class="table__empty">Results will appear here after a search.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="card__hint validation__note" id="validation-note">
+            <strong>How to read it.</strong> Each NASA site stands for a different kind of Martian terrain, so agreement
+            depends on the target: Licancabur (cold, high, rugged volcanic crater) should match rugged targets such as
+            Gale Crater; Salar de Pajonales (high salt-flat basin) should match lake-basin targets such as Jezero Crater.
+            Yungay was chosen for its extreme dryness, which our Earth–Mars–Moon features do not compare: a low rank there
+            marks a limit of the method, not an error. Sites just outside the study area use the closest ~11 km cell.
+          </p>
+          <p class="card__hint" id="validation-sources"></p>
+        </section>
+
+        <!-- Methodology -->
+        <section class="card method" id="method" hidden>
+          <h3>Methodology</h3>
+          <p id="method-text" class="card__hint"></p>
+        </section>
+      </section>
+
+      <!-- ===============================================================
+           PAGE 4 - APPLICATIONS & REPORT
+           =============================================================== -->
+      <section class="page" id="page-applications" data-page="applications" aria-labelledby="usecases-title">
+        <div class="page-head">
+          <p class="eyebrow">From similarity to decisions</p>
+          <h1 id="usecases-title">Mission Applications</h1>
+          <p class="lead" id="usecases-target">Run a search: every answer below is then computed for the selected target.</p>
+        </div>
+        <ol class="usecases__list" id="usecases-list"></ol>
+        <p class="card__hint usecases__legend">✅ answered with today's data · 🟡 partial answer (data missing on one body) ·
+          ⛔ not applicable / no data for this target</p>
+
+        <!-- Mission report generated with the AI assistant -->
+        <section class="card report" aria-labelledby="report-title">
+          <div class="report__text">
+            <p class="eyebrow">AI mission assistant</p>
+            <h2 id="report-title">Mission Report</h2>
+            <p class="lead">A complete, printable report for the current analysis: executive summary and recommendations
+              written by the AI assistant from the computed results, similarity maps of both Earth zones, environmental
+              signature, candidate sites, parameter tables, mission applications, field validation with sources, and
+              methodology.</p>
+            <label class="switch">
+              <input type="checkbox" id="report-ai" checked>
+              <span class="switch__ui" aria-hidden="true"></span>
+              <span>Include the AI-written narrative (Groq LLM)</span>
+            </label>
+            <p class="card__hint" id="report-status">Run a search first, then generate the report.</p>
+          </div>
+          <button type="button" class="report-btn report-btn--big" id="report-generate">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><polyline points="14 2 14 8 20 8" />
+            </svg>
+            Generate Mission Report
+          </button>
+        </section>
+      </section>
+
+      <footer class="footer">
+        Data: NASADEM, MODIS, NASA POWER (Earth) · MGS MOLA / TES, Mars Odyssey GRS (Mars) ·
+        LRO LOLA / Diviner / LROC (Moon). Harmonized at ~11 km. Photos: NASA Image and Video Library (public domain).
+      </footer>
+    </main>
+
+    <!-- =================================================================
+         MISSION BAR (template): key numbers + report button
+         ================================================================= -->
+    <div class="mission-bar glass">
+      <div class="mission-gauge">
+        <svg class="mini-gauge" viewBox="0 0 40 40" aria-hidden="true">
+          <circle cx="20" cy="20" r="16" class="gauge-bg" />
+          <circle cx="20" cy="20" r="16" class="gauge-fill" id="gauge-fill" />
+        </svg>
+        <span>Mission confidence <strong id="mb-confidence">—</strong></span>
+      </div>
+      <div class="mission-stats">
+        <div class="mstat"><span class="mstat-label">Target</span><span class="mstat-value" id="mb-target">—</span></div>
+        <div class="stat-divider"></div>
+        <div class="mstat"><span class="mstat-label">Analysed zone</span><span class="mstat-value" id="mb-zone">—</span></div>
+        <div class="stat-divider"></div>
+        <div class="mstat"><span class="mstat-label">Best similarity</span><span class="mstat-value orange" id="mb-score">—</span></div>
+        <div class="stat-divider"></div>
+        <div class="mstat"><span class="mstat-label">Validation</span><span class="mstat-value green" id="mb-validation">—</span></div>
+      </div>
+      <button class="report-btn" id="report-open" type="button">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><polyline points="14 2 14 8 20 8" />
+        </svg>
+        Generate Mission Report
+      </button>
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       AI MISSION ASSISTANT (floating chat panel, all pages)
+       Questions go to POST /api/assistant; the LLM (Groq) answers by calling
+       the project's own analysis tools. The API key stays on the server.
+       =================================================================== -->
+  <button type="button" class="assistant-fab" id="assistant-open" aria-expanded="false" aria-controls="assistant">
+    🛰️ Mission Assistant
+  </button>
+  <aside class="assistant" id="assistant" hidden aria-label="Mission assistant">
+    <header class="assistant__head">
+      <div>
+        <strong>TWINSITE Mission Assistant</strong>
+        <span class="assistant__model" id="assistant-model">AI · grounded in this project's results</span>
+      </div>
+      <button type="button" class="assistant__close" id="assistant-close" aria-label="Close the assistant">×</button>
+    </header>
+    <div class="assistant__log" id="assistant-log" aria-live="polite">
+      <div class="msg msg--bot">Hi! Ask me anything about the results — in English or French.
+        I answer only with numbers computed by this tool. I can also write a full mission report.</div>
+    </div>
+    <div class="assistant__chips" id="assistant-chips">
+      <button type="button" class="chip" data-q="Why is site #1 better than site #3?">Why is #1 better than #3?</button>
+      <button type="button" class="chip" data-q="__ROVER__">Can my rover drive at the exact point?</button>
+      <button type="button" class="chip" data-q="Explain this score like I'm 10 years old.">Explain it like I'm 10</button>
+      <button type="button" class="chip" data-q="What are the main limits of this result?">What are the limits?</button>
+      <button type="button" class="chip chip--report" id="assistant-report">📄 Generate mission report</button>
+    </div>
+    <form class="assistant__form" id="assistant-form">
+      <textarea id="assistant-input" rows="2" maxlength="1500" placeholder="Ask about the results…" aria-label="Your question"></textarea>
+      <button type="submit" class="button button--primary" id="assistant-send">Send</button>
+    </form>
+    <p class="assistant__note">AI-generated (Groq LLM) from this project's analysis tools. Check key numbers in the dashboard.</p>
+  </aside>
+
+  <!-- Leaflet + Chart.js (pinned versions, cdnjs), then the app logic -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" defer></script>
+  <script>window.CESIUM_BASE_URL = "https://cdn.jsdelivr.net/npm/cesium@1.140.0/Build/Cesium/";
+          window.TWIN_TARGETS = {{ targets|tojson }};</script>
+  <script src="https://cdn.jsdelivr.net/npm/cesium@1.140.0/Build/Cesium/Cesium.js" defer></script>
+  <script src="{{ url_for('static', filename='js/app.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/twinmap.js') }}" defer></script>
+</body>
+</html>

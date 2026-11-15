@@ -1,0 +1,24 @@
+{
+  "body": "merzouga",
+  "resolution": "0.01 deg Merzouga - Erg Chebbi (Morocco) box (200 x 200)",
+  "sources": {
+    "elevation": "NASADEM_HGT (30 m) via Earth pipeline",
+    "slope": "NASADEM_HGT (30 m) via Earth pipeline",
+    "roughness": "NASADEM_HGT (30 m) via Earth pipeline",
+    "relief": "NASADEM_HGT (30 m) via Earth pipeline",
+    "temperature_day": "MODIS MOD11A2 LST day (~10:30 local), via Earth pipeline, degC -> K",
+    "temperature_night": "MODIS MOD11A2 LST night (~22:30 local), via Earth pipeline, degC -> K",
+    "albedo": "NASA POWER ALLSKY_SRF_ALB annual climatology (1 deg)",
+    "thermal_inertia": "MISSING - no dataset yet",
+    "mineral_index": "MISSING - no dataset yet"
+  },
+  "steps": [
+    "Read atacama_unified.h5 (cleaned, QA-masked, gap-filled 0.01 deg grid from the Earth pipeline)",
+    "LST degC -> K",
+    "NASA POWER albedo: 1 deg cell value assigned to each 0.01 deg cell"
+  ],
+  "notes": [
+    "thermal_inertia: no Earth product yet (could be derived from albedo + LST amplitude)",
+    "mineral_index: needs an Fe abundance source; ASTER GED (silica) still not downloaded"
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "earth": {
+    "nasa_id": "GSFC_20171208_Archive_e001386",
+    "title": "Blue Marble 2012 (Suomi NPP VIIRS)",
+    "credit": "NASA/NOAA/GSFC/Suomi NPP/VIIRS/Norman Kuring",
+    "source": "https://images.nasa.gov/details/GSFC_20171208_Archive_e001386"
+  },
+  "moon": {
+    "nasa_id": "GSFC_20171208_Archive_e001861",
+    "title": "Full Moon",
+    "credit": "NASA/Goddard Space Flight Center Scientific Visualization Studio",
+    "source": "https://images.nasa.gov/details/GSFC_20171208_Archive_e001861"
+  },
+  "mars": {
+    "nasa_id": "PIA00407",
+    "title": "Global Color Views of Mars (Viking)",
+    "credit": "NASA/JPL/USGS",
+    "source": "https://images.nasa.gov/details/PIA00407"
+  },
+  "terrain": {
+    "nasa_id": "PIA21718",
+    "title": "Ireson Hill on Mount Sharp (Curiosity Mastcam), cropped",
+    "credit": "NASA/JPL-Caltech/MSSS",
+    "source": "https://images.nasa.gov/details/PIA21718"
+  }
+}

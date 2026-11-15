@@ -1,0 +1,7 @@
+# secrets: real API keys stay local (copy .env.example to .env)
+.env
+# local Python virtual environment (recreate with: python3 -m venv .venv)
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/

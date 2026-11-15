@@ -1,0 +1,113 @@
+{
+  "_comment": "Reference analog sites studied by space-agency / research teams in or next to each Earth zone. Used ONLY to check results after they are computed: never an input of the similarity model. Coordinates: decimal degrees (south and west negative). 'zone' = Earth zone id in config.EARTH_ZONES.",
+  "sites": [
+    {
+      "id": "licancabur",
+      "name": "Licancabur summit lake",
+      "lat": -22.8339,
+      "lon": -67.8836,
+      "program": "NASA Ames / SETI Institute - High Lakes Project (2002-2006)",
+      "studied_for": "Lake in a 5,900 m volcanic crater: thin air, intense UV, cold - analog of martian crater paleolakes",
+      "analog_type": "terrain_thermal",
+      "sources": [
+        {
+          "label": "NASA NTRS 20030110696",
+          "url": "https://ntrs.nasa.gov/citations/20030110696"
+        },
+        {
+          "label": "Coordinates: Licancabur Lake (Wikipedia)",
+          "url": "https://en.wikipedia.org/wiki/Licancabur_Lake"
+        }
+      ],
+      "zone": "atacama"
+    },
+    {
+      "id": "yungay",
+      "name": "Yungay hyperarid site",
+      "lat": -24.1,
+      "lon": -70.01,
+      "program": "NASA Ames - ARADS rover drilling tests (2015-2019); McKay et al. 2003",
+      "studied_for": "Extreme dryness of the hyperarid core: life detection and rover drilling rehearsal",
+      "analog_type": "aridity",
+      "sources": [
+        {
+          "label": "NASA Astrobiology: life-detection drill tested in the Atacama",
+          "url": "https://astrobiology.nasa.gov/news/nasa-tests-life-detection-drill-in-the-atacama-desert/"
+        },
+        {
+          "label": "Coordinates: PANGAEA 10.1594/PANGAEA.929564",
+          "url": "https://doi.pangaea.de/10.1594/PANGAEA.929564"
+        }
+      ],
+      "zone": "atacama"
+    },
+    {
+      "id": "pajonales",
+      "name": "Salar de Pajonales",
+      "lat": -25.1444,
+      "lon": -68.82,
+      "program": "SETI Institute - NASA Astrobiology Institute team (N. A. Cabrol, PI)",
+      "studied_for": "High-altitude Ca-sulfate salt flat: analog of early-Mars evaporite / paleolake basins",
+      "analog_type": "terrain_thermal",
+      "sources": [
+        {
+          "label": "Frontiers in Astronomy and Space Sciences (2022), doi 10.3389/fspas.2021.797591",
+          "url": "https://www.frontiersin.org/articles/10.3389/fspas.2021.797591/full"
+        },
+        {
+          "label": "Coordinates: Salar de Pajonales (Wikipedia)",
+          "url": "https://en.wikipedia.org/wiki/Salar_de_Pajonales"
+        }
+      ],
+      "zone": "atacama"
+    },
+    {
+      "id": "mars2013_weyprecht",
+      "zone": "merzouga",
+      "name": "MARS2013 base camp 'Weyprecht'",
+      "lat": 31.3653,
+      "lon": -4.0708,
+      "program": "Austrian Space Forum (OeWF) - MARS2013 Mars analog field simulation (Feb 2013), listed by ESA",
+      "studied_for": "Northern Sahara near Erfoud chosen as a proxy for Martian desert geology: one-month crewed Mars simulation with spacesuit tests and rovers",
+      "analog_type": "terrain_thermal",
+      "sources": [
+        {
+          "label": "Groemer et al. 2014, Astrobiology 14:360 - The MARS2013 Mars Analog Mission",
+          "url": "https://journals.sagepub.com/doi/10.1089/ast.2013.1062"
+        },
+        {
+          "label": "Coordinates: IAC 2013 paper 'The MARS2013 Analog Field Mission in Morocco'",
+          "url": "https://iafastro.directory/iac/archive/browse/IAC-13/A3/3B/19513/"
+        },
+        {
+          "label": "ESA exploration portal: MARS2013 Mars Analog Field Simulation",
+          "url": "https://exploration.esa.int/j/50537"
+        }
+      ]
+    },
+    {
+      "id": "mars2013_payer",
+      "zone": "merzouga",
+      "name": "MARS2013 forward camp 'Payer'",
+      "lat": 30.8997,
+      "lon": -3.8747,
+      "program": "Austrian Space Forum (OeWF) - MARS2013 extended rover exploration scenario",
+      "studied_for": "Temporary camp for a long-range rover exploration rehearsal in the Tafilalt desert",
+      "analog_type": "terrain_thermal",
+      "sources": [
+        {
+          "label": "Groemer et al. 2014, Astrobiology 14:360 - The MARS2013 Mars Analog Mission",
+          "url": "https://journals.sagepub.com/doi/10.1089/ast.2013.1062"
+        },
+        {
+          "label": "Coordinates: IAC 2013 paper 'The MARS2013 Analog Field Mission in Morocco'",
+          "url": "https://iafastro.directory/iac/archive/browse/IAC-13/A3/3B/19513/"
+        },
+        {
+          "label": "ESA exploration portal: MARS2013 Mars Analog Field Simulation",
+          "url": "https://exploration.esa.int/j/50537"
+        }
+      ]
+    }
+  ]
+}

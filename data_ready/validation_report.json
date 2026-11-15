@@ -1,0 +1,397 @@
+{
+  "created_utc": "2026-11-14T19:55:45+00:00",
+  "bodies": {
+    "earth": {
+      "cells_in_grid": 120000,
+      "rows_written": 120000,
+      "resolution": "0.01 deg Atacama box (300 x 400)",
+      "available_features": [
+        "elevation",
+        "slope",
+        "roughness",
+        "relief",
+        "temperature_day",
+        "temperature_night",
+        "albedo"
+      ],
+      "missing_features": [
+        "thermal_inertia",
+        "mineral_index"
+      ],
+      "features": {
+        "elevation": {
+          "units": "m",
+          "valid_pct": 91.67,
+          "source": "NASADEM_HGT (30 m) via Earth pipeline",
+          "min": 624.5085,
+          "mean": 3279.3086,
+          "max": 6387.5024
+        },
+        "slope": {
+          "units": "degree",
+          "valid_pct": 91.67,
+          "source": "NASADEM_HGT (30 m) via Earth pipeline",
+          "min": 0.0,
+          "mean": 7.3722,
+          "max": 38.5669
+        },
+        "roughness": {
+          "units": "m",
+          "valid_pct": 91.67,
+          "source": "NASADEM_HGT (30 m) via Earth pipeline",
+          "min": 0.0,
+          "mean": 27.9622,
+          "max": 215.0235
+        },
+        "relief": {
+          "units": "m",
+          "valid_pct": 91.67,
+          "source": "NASADEM_HGT (30 m) via Earth pipeline",
+          "min": 0.0,
+          "mean": 124.6207,
+          "max": 883.0
+        },
+        "temperature_day": {
+          "units": "K",
+          "valid_pct": 99.81,
+          "source": "MODIS MOD11A2 LST day (~10:30 local), via Earth pipeline, degC -> K",
+          "min": 269.32,
+          "mean": 298.6627,
+          "max": 315.15
+        },
+        "temperature_night": {
+          "units": "K",
+          "valid_pct": 99.81,
+          "source": "MODIS MOD11A2 LST night (~22:30 local), via Earth pipeline, degC -> K",
+          "min": 256.9,
+          "mean": 277.3307,
+          "max": 296.44
+        },
+        "albedo": {
+          "units": "1",
+          "valid_pct": 100.0,
+          "source": "NASA POWER ALLSKY_SRF_ALB annual climatology (1 deg)",
+          "min": 0.16,
+          "mean": 0.2033,
+          "max": 0.23
+        },
+        "thermal_inertia": {
+          "units": "J m-2 K-1 s-1/2",
+          "valid_pct": 0.0,
+          "source": "MISSING - no dataset yet"
+        },
+        "mineral_index": {
+          "units": "wt%",
+          "valid_pct": 0.0,
+          "source": "MISSING - no dataset yet"
+        }
+      },
+      "quality_flag_counts": {
+        "TEMP_DAY_ESTIMATED": 0,
+        "TEMP_NIGHT_ESTIMATED": 0,
+        "TEMP_FIXED_LOCAL_TIME": 119772,
+        "GAP_FILLED": 7162,
+        "ALBEDO_PROXY": 0,
+        "COARSE_SOURCE": 120000,
+        "WATER": 184
+      },
+      "processing_steps": [
+        "Read atacama_unified.h5 (cleaned, QA-masked, gap-filled 0.01 deg grid from the Earth pipeline)",
+        "LST degC -> K",
+        "NASA POWER albedo: 1 deg cell value assigned to each 0.01 deg cell"
+      ],
+      "notes": [
+        "thermal_inertia: no Earth product yet (could be derived from albedo + LST amplitude)",
+        "mineral_index: needs an Fe abundance source; ASTER GED (silica) still not downloaded"
+      ]
+    },
+    "mars": {
+      "cells_in_grid": 259200,
+      "rows_written": 259200,
+      "resolution": "0.5 deg global (360 x 720)",
+      "available_features": [
+        "elevation",
+        "slope",
+        "roughness",
+        "relief",
+        "temperature_day",
+        "temperature_night",
+        "albedo",
+        "thermal_inertia",
+        "mineral_index"
+      ],
+      "missing_features": [],
+      "features": {
+        "elevation": {
+          "units": "m",
+          "valid_pct": 100.0,
+          "source": "MGS MOLA MEGDR megt90n000eb (16 ppd, ~3.7 km)",
+          "min": -7694.5469,
+          "mean": -721.1071,
+          "max": 20890.6406
+        },
+        "slope": {
+          "units": "degree",
+          "valid_pct": 99.44,
+          "source": "MGS MOLA MEGDR megt90n000eb (16 ppd, ~3.7 km)",
+          "min": 0.0054,
+          "mean": 1.1977,
+          "max": 23.454
+        },
+        "roughness": {
+          "units": "m",
+          "valid_pct": 100.0,
+          "source": "MGS MOLA MEGDR megt90n000eb (16 ppd, ~3.7 km)",
+          "min": 0.4319,
+          "mean": 117.4317,
+          "max": 3211.6616
+        },
+        "relief": {
+          "units": "m",
+          "valid_pct": 100.0,
+          "source": "MGS MOLA MEGDR megt90n000eb (16 ppd, ~3.7 km)",
+          "min": 2.0,
+          "mean": 463.8893,
+          "max": 9489.0
+        },
+        "temperature_day": {
+          "units": "K",
+          "valid_pct": 61.67,
+          "source": "ESTIMATED: linearised diurnal heat model from TES albedo + thermal inertia (equinox, no atmosphere)",
+          "min": 217.7118,
+          "mean": 271.8316,
+          "max": 302.666
+        },
+        "temperature_night": {
+          "units": "K",
+          "valid_pct": 61.67,
+          "source": "ESTIMATED: linearised diurnal heat model from TES albedo + thermal inertia (equinox, no atmosphere)",
+          "min": 135.351,
+          "mean": 166.1694,
+          "max": 201.5602
+        },
+        "albedo": {
+          "units": "1",
+          "valid_pct": 100.0,
+          "source": "MGS TES bolometric albedo (8 ppd)",
+          "min": 0.06,
+          "mean": 0.1987,
+          "max": 0.32
+        },
+        "thermal_inertia": {
+          "units": "J m-2 K-1 s-1/2",
+          "valid_pct": 61.67,
+          "source": "MGS TES thermal inertia (8 ppd, 60 N - 50 S only)",
+          "min": 32.7143,
+          "mean": 224.1953,
+          "max": 795.75
+        },
+        "mineral_index": {
+          "units": "wt%",
+          "valid_pct": 58.18,
+          "source": "Mars Odyssey GRS Fe (5 deg smoothed, wt%)",
+          "min": 10.632,
+          "mean": 14.4668,
+          "max": 19.301
+        }
+      },
+      "quality_flag_counts": {
+        "TEMP_DAY_ESTIMATED": 159840,
+        "TEMP_NIGHT_ESTIMATED": 159840,
+        "TEMP_FIXED_LOCAL_TIME": 0,
+        "GAP_FILLED": 0,
+        "ALBEDO_PROXY": 0,
+        "COARSE_SOURCE": 150800,
+        "WATER": 0
+      },
+      "processing_steps": [
+        "MOLA: big-endian int16 metres -> mean/std/max-min per 0.5 deg cell; slope at 16 ppd",
+        "TES: float32 maps, out-of-range values (TI = 0) -> NaN, mean per cell",
+        "GRS: 9999.999 -> NaN, 5 deg bins copied to the 0.5 deg cells they contain",
+        "Temperatures: modelled where both albedo and thermal inertia exist"
+      ],
+      "notes": [
+        "Silicon (si_sr_5x5) downloaded but not in the schema; keep for later mineral ratios."
+      ]
+    },
+    "moon": {
+      "cells_in_grid": 259200,
+      "rows_written": 259200,
+      "resolution": "0.5 deg global (360 x 720)",
+      "available_features": [
+        "elevation",
+        "slope",
+        "roughness",
+        "relief",
+        "temperature_day",
+        "temperature_night",
+        "albedo"
+      ],
+      "missing_features": [
+        "thermal_inertia",
+        "mineral_index"
+      ],
+      "features": {
+        "elevation": {
+          "units": "m",
+          "valid_pct": 100.0,
+          "source": "LRO LOLA LDEM_16 (16 ppd, ~1.9 km)",
+          "min": -8269.5938,
+          "mean": -519.2021,
+          "max": 9690.1406
+        },
+        "slope": {
+          "units": "degree",
+          "valid_pct": 99.44,
+          "source": "LRO LOLA LDEM_16 (16 ppd, ~1.9 km)",
+          "min": 0.0334,
+          "mean": 5.3577,
+          "max": 28.014
+        },
+        "roughness": {
+          "units": "m",
+          "valid_pct": 100.0,
+          "source": "LRO LOLA LDEM_16 (16 ppd, ~1.9 km)",
+          "min": 1.2624,
+          "mean": 283.5551,
+          "max": 1714.536
+        },
+        "relief": {
+          "units": "m",
+          "valid_pct": 100.0,
+          "source": "LRO LOLA LDEM_16 (16 ppd, ~1.9 km)",
+          "min": 6.0,
+          "mean": 1067.1068,
+          "max": 6391.5
+        },
+        "temperature_day": {
+          "units": "K",
+          "valid_pct": 100.0,
+          "source": "Diviner GCP daily max where downloaded (bands: 00n10n, 90s80s); elsewhere ESTIMATED 392 K x cos(lat)^0.25",
+          "min": 40.2316,
+          "mean": 337.4879,
+          "max": 405.1021
+        },
+        "temperature_night": {
+          "units": "K",
+          "valid_pct": 72.22,
+          "source": "Diviner GCP nightly min > Diviner L3 regolith T at 00:30 > constant 95 K (|lat| <= 60)",
+          "min": 20.1596,
+          "mean": 91.4444,
+          "max": 143.1945
+        },
+        "albedo": {
+          "units": "1",
+          "valid_pct": 100.0,
+          "source": "PROXY: LROC WAC 643 nm normalised reflectance (16 ppd), rescaled to a global mean of 0.12 (bolometric albedo)",
+          "min": 0.0004,
+          "mean": 0.12,
+          "max": 0.6963
+        },
+        "thermal_inertia": {
+          "units": "J m-2 K-1 s-1/2",
+          "valid_pct": 0.0,
+          "source": "MISSING - no dataset yet"
+        },
+        "mineral_index": {
+          "units": "wt%",
+          "valid_pct": 0.0,
+          "source": "MISSING - no dataset yet"
+        }
+      },
+      "quality_flag_counts": {
+        "TEMP_DAY_ESTIMATED": 230400,
+        "TEMP_NIGHT_ESTIMATED": 56443,
+        "TEMP_FIXED_LOCAL_TIME": 101957,
+        "GAP_FILLED": 0,
+        "ALBEDO_PROXY": 259200,
+        "COARSE_SOURCE": 0,
+        "WATER": 0
+      },
+      "processing_steps": [
+        "LOLA: int16 x 0.5 + 1737.4 km (label) - 1737.4 km = height; stats per 0.5 deg cell",
+        "WAC: float32 with attached label, ISIS nulls/negatives -> NaN, mean per cell, rescaled",
+        "Temperatures: GCP tbol (-9999 -> NaN) max over 10-14 h / min over 18-06 h; fall-backs flagged"
+      ],
+      "notes": [
+        "Temperature source coverage (% of cells): {'day_measured_pct': 11.11, 'night_gcp_pct': 11.11, 'night_l3_pct': 39.34, 'night_constant_pct': 21.78}"
+      ]
+    }
+  },
+  "validations": {
+    "mars": {
+      "site": "jezero_Ls90.txt (18.4 N, 77.5 E)",
+      "reference": "Mars Climate Database v6.2, Ls 90 (validation only, not an input)",
+      "model_day_max_K": 276.1,
+      "model_night_min_K": 179.2,
+      "tes_albedo": 0.183,
+      "tes_thermal_inertia": 301.9,
+      "reference_day_max_K": 276.0,
+      "reference_night_min_K": 193.8,
+      "reference_albedo": 0.171,
+      "reference_thermal_inertia": 275.1
+    },
+    "moon": {
+      "temperature_sources_pct": {
+        "day_measured_pct": 11.11,
+        "night_gcp_pct": 11.11,
+        "night_l3_pct": 39.34,
+        "night_constant_pct": 21.78
+      },
+      "day_max_check": {
+        "reference": "Diviner GCP measured daily maximum, |lat| <= 10 deg",
+        "cells": 14400,
+        "measured_mean_K": 391.5,
+        "constant_model_mean_K": 391.5,
+        "mean_abs_difference_K": 2.0
+      }
+    }
+  },
+  "joint_normalization": {
+    "elevation": {
+      "lo": -4957.7659375,
+      "hi": 4982.550996093751
+    },
+    "slope": {
+      "lo": 0.13596559375524522,
+      "hi": 16.471995239257808
+    },
+    "roughness": {
+      "lo": 3.3796557760238644,
+      "hi": 809.6593017578126
+    },
+    "relief": {
+      "lo": 18.0,
+      "hi": 2821.0
+    },
+    "temperature_day": {
+      "lo": 204.52813720703125,
+      "hi": 391.84228515625
+    },
+    "temperature_night": {
+      "lo": 60.26565872192383,
+      "hi": 286.219970703125
+    },
+    "albedo": {
+      "lo": 0.03319670066237449,
+      "hi": 0.30418353378772756
+    },
+    "thermal_inertia": {
+      "lo": 54.75,
+      "hi": 511.375
+    },
+    "mineral_index": {
+      "lo": 11.744000434875488,
+      "hi": 17.590999603271484
+    }
+  },
+  "quality_flag_bits": {
+    "TEMP_DAY_ESTIMATED": 1,
+    "TEMP_NIGHT_ESTIMATED": 2,
+    "TEMP_FIXED_LOCAL_TIME": 4,
+    "GAP_FILLED": 8,
+    "ALBEDO_PROXY": 16,
+    "COARSE_SOURCE": 32,
+    "WATER": 64
+  }
+}

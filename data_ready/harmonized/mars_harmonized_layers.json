@@ -1,0 +1,25 @@
+{
+  "body": "mars",
+  "resolution": "0.1875 deg (~11.1 km) global (960 x 1920)",
+  "sources": {
+    "elevation": "MGS MOLA MEGDR megt90n000eb (16 ppd, ~3.7 km)",
+    "slope": "MGS MOLA MEGDR megt90n000eb (16 ppd, ~3.7 km)",
+    "roughness": "MGS MOLA MEGDR megt90n000eb (16 ppd, ~3.7 km)",
+    "relief": "MGS MOLA MEGDR megt90n000eb (16 ppd, ~3.7 km)",
+    "albedo": "MGS TES bolometric albedo (8 ppd)",
+    "thermal_inertia": "MGS TES thermal inertia (8 ppd, 60 N - 50 S only)",
+    "mineral_index": "Mars Odyssey GRS Fe (5 deg smoothed, wt%)",
+    "temperature_day": "ESTIMATED: linearised diurnal heat model from TES albedo + thermal inertia (equinox, no atmosphere)",
+    "temperature_night": "ESTIMATED: linearised diurnal heat model from TES albedo + thermal inertia (equinox, no atmosphere)"
+  },
+  "steps": [
+    "MOLA: big-endian int16 metres -> mean/std/max-min per 0.5 deg cell; slope at 16 ppd",
+    "TES: float32 maps, out-of-range values (TI = 0) -> NaN, mean per cell",
+    "GRS: 9999.999 -> NaN, 5 deg bins copied to the 0.5 deg cells they contain",
+    "Temperatures: modelled where both albedo and thermal inertia exist",
+    "HARMONIZED: DEM block-mean x1 -> 3.7 km pixels; slope at that baseline; roughness/relief over 3x3 px"
+  ],
+  "notes": [
+    "Silicon (si_sr_5x5) downloaded but not in the schema; keep for later mineral ratios."
+  ]
+}

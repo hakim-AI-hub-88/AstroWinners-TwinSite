@@ -1,0 +1,24 @@
+{
+  "body": "moon",
+  "resolution": "0.375 deg (~11.4 km) global (480 x 960)",
+  "sources": {
+    "elevation": "LRO LOLA LDEM_16 (16 ppd, ~1.9 km)",
+    "slope": "LRO LOLA LDEM_16 (16 ppd, ~1.9 km)",
+    "roughness": "LRO LOLA LDEM_16 (16 ppd, ~1.9 km)",
+    "relief": "LRO LOLA LDEM_16 (16 ppd, ~1.9 km)",
+    "albedo": "PROXY: LROC WAC 643 nm normalised reflectance (16 ppd), rescaled to a global mean of 0.12 (bolometric albedo)",
+    "temperature_day": "Diviner GCP daily max where downloaded (bands: 00n10n, 90s80s); elsewhere ESTIMATED 392 K x cos(lat)^0.25",
+    "temperature_night": "Diviner GCP nightly min > Diviner L3 regolith T at 00:30 > constant 95 K (|lat| <= 60)",
+    "thermal_inertia": "MISSING - no dataset yet",
+    "mineral_index": "MISSING - no dataset yet"
+  },
+  "steps": [
+    "LOLA: int16 x 0.5 + 1737.4 km (label) - 1737.4 km = height; stats per 0.5 deg cell",
+    "WAC: float32 with attached label, ISIS nulls/negatives -> NaN, mean per cell, rescaled",
+    "Temperatures: GCP tbol (-9999 -> NaN) max over 10-14 h / min over 18-06 h; fall-backs flagged",
+    "HARMONIZED: DEM block-mean x2 -> 3.79 km pixels; slope at that baseline; roughness/relief over 3x3 px"
+  ],
+  "notes": [
+    "Temperature source coverage (% of cells): {'day_measured_pct': 11.25, 'night_gcp_pct': 11.25, 'night_l3_pct': 33.99, 'night_constant_pct': 27.05}"
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "analogs": {
+    "nasa_id": "PIA24542",
+    "title": "Perseverance's selfie with Ingenuity",
+    "credit": "NASA/JPL-Caltech/MSSS",
+    "size": "medium",
+    "source": "https://images.nasa.gov/details/PIA24542"
+  },
+  "traverse": {
+    "nasa_id": "PIA17755",
+    "title": "Curiosity trekking, viewed from orbit",
+    "credit": "NASA/JPL-Caltech/Univ. of Arizona",
+    "size": "medium",
+    "source": "https://images.nasa.gov/details/PIA17755"
+  },
+  "thermal": {
+    "nasa_id": "PIA23262",
+    "title": "The Mars 2020 spacecraft readies for environmental testing",
+    "credit": "NASA/JPL-Caltech",
+    "size": "medium",
+    "source": "https://images.nasa.gov/details/PIA23262"
+  },
+  "soil": {
+    "nasa_id": "PIA19928",
+    "title": "Curiosity rover will study dunes on route up Mount Sharp",
+    "credit": "NASA/JPL-Caltech/MSSS",
+    "size": "medium",
+    "source": "https://images.nasa.gov/details/PIA19928"
+  },
+  "ice": {
+    "nasa_id": "PIA13523",
+    "title": "The lunar south pole",
+    "credit": "NASA/GSFC/Arizona State University",
+    "size": "medium",
+    "source": "https://images.nasa.gov/details/PIA13523"
+  },
+  "base": {
+    "nasa_id": "PIA23302",
+    "title": "First humans on Mars (artist's concept)",
+    "credit": "NASA/JPL-Caltech",
+    "size": "medium",
+    "source": "https://images.nasa.gov/details/PIA23302"
+  },
+  "outreach": {
+    "nasa_id": "PIA23420",
+    "title": "Salar de Atacama, Chile",
+    "credit": "NASA/JPL-Caltech",
+    "size": "medium",
+    "source": "https://images.nasa.gov/details/PIA23420"
+  }
+}

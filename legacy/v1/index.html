@@ -1,0 +1,493 @@
+<!doctype html>
+<!--
+#############################################################################
+# PLANETARY ANALOG DISCOVERY SYSTEM - SINGLE PAGE INTERFACE
+#
+# Why this file exists:
+#   The whole user interface in ONE Jinja2 template (no base.html, no
+#   inheritance). Flask renders it with render_template("index.html").
+#
+# Jinja2 variables received from backend/app.py:
+#   targets  -> {planet: {location: {lat, lon, window_km, note}}}
+#   features -> list of feature names of the common schema
+#
+# Sections:
+#   1. Header             title + description + live dataset status
+#   2. Mission scenarios  one-click presets (mission planner framing)
+#      Target selection   planet / location dropdowns, rover filter, search
+#   3. Mission brief      question -> answer (exact site) + evidence + links
+#   4. Results dashboard
+#        a. Similarity score  (best region, confidence, exact point)
+#        b. Why this site?    (matching / differing features, refinement)
+#        c. Ranking           (top regions of the selected Earth zone, clickable)
+#        d. Feature comparison (normalized bars + physical values)
+#        e. Interactive maps  (Leaflet: Atacama + Merzouga similarity maps on NASA GIBS,
+#                              target on Mars/Moon on NASA Trek, radar chart)
+#   4. Method note          which data is used for what
+#
+# Behaviour lives in static/js/app.js, styling in static/css/style.css.
+#############################################################################
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Planetary Analog Discovery System</title>
+  <!-- Leaflet (interactive maps). Pinned version from cdnjs. -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+  <!-- ===================================================================
+       1. HEADER
+       ================================================================= -->
+  <header class="header">
+    <div class="container header__inner">
+      <div>
+        <p class="eyebrow">NASA Space Apps Challenge · Mission planner</p>
+        <h1>Planetary Analog Discovery System</h1>
+        <p class="lead">Discover Earth locations similar to Moon and Mars environments using NASA planetary data.</p>
+        <p class="pitch">An agency is preparing a rover for Jezero. <strong>Where should it test it on Earth?</strong>
+          One click, with evidence.</p>
+      </div>
+      <!-- Filled by app.js from GET /api/status -->
+      <ul class="status" id="dataset-status" aria-live="polite">
+        <li class="status__item status__item--pending">Loading datasets…</li>
+      </ul>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- =================================================================
+         2. TARGET SELECTION
+         Planet options are rendered server-side (Jinja2); location options
+         are filled dynamically by app.js from GET /api/targets.
+         =============================================================== -->
+    <!-- =================================================================
+         2a. MISSION SCENARIOS - one click = full analysis
+         data-* attributes are read by app.js (planet, location, rover, slope)
+         =============================================================== -->
+    <section class="scenarios" aria-labelledby="scenarios-title">
+      <h2 id="scenarios-title" class="section-title">Plan a field test</h2>
+      <div class="scenarios__grid">
+        <button type="button" class="scenario" data-planet="mars" data-location="Jezero Crater" data-rover="1" data-slope="15">
+          <span class="scenario__tag scenario__tag--mars">Mars</span>
+          <span class="scenario__title">Perseverance-class rover test</span>
+          <span class="scenario__text">Where to rehearse driving and sampling for Jezero Crater?</span>
+        </button>
+        <button type="button" class="scenario" data-planet="mars" data-location="Gale Crater" data-rover="1" data-slope="15">
+          <span class="scenario__tag scenario__tag--mars">Mars</span>
+          <span class="scenario__title">Curiosity-class drive &amp; drill</span>
+          <span class="scenario__text">Terrain and thermal analog for Gale Crater operations.</span>
+        </button>
+        <button type="button" class="scenario" data-planet="moon" data-location="Apollo 15" data-rover="1" data-slope="10">
+          <span class="scenario__tag scenario__tag--moon">Moon</span>
+          <span class="scenario__title">Astronaut EVA + lunar rover training</span>
+          <span class="scenario__text">Hadley Rille-like relief, gentle enough for a crewed rover (≤ 10°).</span>
+        </button>
+        <button type="button" class="scenario" data-planet="moon" data-location="Mare Tranquillitatis" data-rover="1" data-slope="8">
+          <span class="scenario__tag scenario__tag--moon">Moon</span>
+          <span class="scenario__title">Lander site rehearsal</span>
+          <span class="scenario__text">Flat mare-like plains for landing and deployment drills (≤ 8°).</span>
+        </button>
+      </div>
+    </section>
+
+    <section class="panel controls" aria-labelledby="controls-title">
+      <h2 id="controls-title" class="panel__title">Select a planetary target</h2>
+      <form id="search-form" class="controls__form">
+        <label class="field">
+          <span class="field__label">Planet</span>
+          <select id="planet-select" name="planet" required>
+            {% for planet in targets %}
+              <option value="{{ planet }}">{{ planet|capitalize }}</option>
+            {% endfor %}
+          </select>
+        </label>
+
+        <label class="field">
+          <span class="field__label">Target location</span>
+          <select id="location-select" name="location" required></select>
+        </label>
+
+        <!-- Earth analog zone (Atacama = default). Both zones are analysed at every search;
+             this choice decides which one drives the ranking, brief, radar, ML and assistant. -->
+        <label class="field">
+          <span class="field__label">Earth analog zone</span>
+          <select id="zone-select" name="zone">
+            {% for zid, z in zones.items() %}
+              <option value="{{ zid }}"{% if zid == default_zone %} selected{% endif %}>{{ z.full_name }}</option>
+            {% endfor %}
+          </select>
+        </label>
+
+        <button type="submit" id="search-button" class="button">Find Earth Analogs</button>
+
+        <!-- Mission planner filter: only propose regions a rover can drive -->
+        <div class="rover">
+          <label class="switch">
+            <input type="checkbox" id="rover-mode" checked>
+            <span class="switch__ui" aria-hidden="true"></span>
+            <span>Rover-accessible sites only</span>
+          </label>
+          <label class="slope">
+            <span>Max slope</span>
+            <input type="range" id="max-slope" min="5" max="30" step="1" value="15">
+            <output id="max-slope-value">15°</output>
+          </label>
+          <span class="card__hint rover__hint">A region qualifies when ≥ 50 % of its 1 km cells are below the slope limit.</span>
+        </div>
+      </form>
+      <p id="target-note" class="controls__note"></p>
+      <p id="message" class="message" role="status" hidden></p>
+    </section>
+
+    <!-- =================================================================
+         3. MISSION BRIEF - the answer a mission team can act on
+         =============================================================== -->
+    <section class="panel brief" id="brief" hidden aria-labelledby="brief-question">
+      <div class="brief__main">
+        <p class="eyebrow">Mission brief</p>
+        <h2 class="brief__question" id="brief-question"></h2>
+        <p class="brief__answer" id="brief-answer"></p>
+        <div class="brief__actions">
+          <a class="button button--ghost" id="brief-worldview" target="_blank" rel="noopener">Open in NASA Worldview</a>
+          <a class="button button--ghost" id="brief-gmaps" target="_blank" rel="noopener">Open in Google Maps</a>
+          <button type="button" class="button button--ghost" id="brief-copy">Copy brief</button>
+        </div>
+      </div>
+      <div class="brief__evidence">
+        <h3 class="why__title why__title--match">Evidence</h3>
+        <ul class="why__list" id="brief-evidence"></ul>
+        <h3 class="why__title why__title--differ">Limits to plan for</h3>
+        <ul class="why__list" id="brief-limits"></ul>
+      </div>
+    </section>
+
+    <!-- =================================================================
+         4. RESULTS DASHBOARD
+         =============================================================== -->
+    <section class="dashboard" aria-label="Results">
+
+      <!-- 3a. Similarity score of the selected (default: best) region -->
+      <article class="panel card card--score">
+        <h2 class="panel__title">Similarity Score</h2>
+        <div class="score">
+          <span class="score__value" id="score-value">—</span>
+          <span class="score__unit">/ 100</span>
+        </div>
+        <div class="meter" aria-hidden="true"><span class="meter__fill" id="confidence-fill"></span></div>
+        <p class="card__hint" id="confidence-text">Confidence: —</p>
+        <dl class="facts" id="score-facts">
+          <div><dt>Region (≈11 km)</dt><dd id="fact-region">—</dd></div>
+          <div><dt>Exact point (≈1 km)</dt><dd id="fact-point">—</dd></div>
+        </dl>
+      </article>
+
+      <!-- 3b. Why this site? -->
+      <article class="panel card card--why">
+        <h2 class="panel__title">Why this site?</h2>
+        <div class="why">
+          <div>
+            <h3 class="why__title why__title--match">Closest match</h3>
+            <ul class="why__list" id="why-matches"><li class="muted">Run a search to see the explanation.</li></ul>
+          </div>
+          <div>
+            <h3 class="why__title why__title--differ">Biggest differences</h3>
+            <ul class="why__list" id="why-differs"></ul>
+          </div>
+        </div>
+        <p class="card__hint" id="why-refinement"></p>
+        <p class="card__hint" id="why-skipped"></p>
+      </article>
+
+      <!-- 3c. Ranking of Atacama locations (rows are clickable) -->
+      <article class="panel card card--ranking">
+        <h2 class="panel__title">Ranking of <span class="zn">Atacama</span> locations</h2>
+        <div class="table-wrap">
+          <table class="table">
+            <thead><tr><th>#</th><th>Region centre</th><th>Score</th><th>Conf.</th><th>Drivable</th><th>Exact point</th></tr></thead>
+            <tbody id="ranking-body">
+              <tr><td colspan="6" class="table__empty">Results will appear here.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="card__hint">Regions are at least 25 km apart. Drivable = share of the region's 1 km cells under the slope limit. Click a row to inspect it.</p>
+      </article>
+
+      <!-- 3d. Feature comparison: normalized bars + physical values -->
+      <article class="panel card card--features">
+        <h2 class="panel__title">Feature comparison</h2>
+        <div class="legend">
+          <span class="legend__item legend__item--target">Target</span>
+          <span class="legend__item legend__item--earth">Selected <span class="zn">Atacama</span> region</span>
+        </div>
+        <ul class="bars" id="feature-bars">
+          {% for f in features %}
+            <li class="bars__row" data-feature="{{ f }}">
+              <span class="bars__label">{{ f|replace('_', ' ') }}</span>
+              <span class="bars__track">
+                <span class="bars__fill bars__fill--target" style="width:0"></span>
+                <span class="bars__fill bars__fill--earth" style="width:0"></span>
+              </span>
+              <span class="bars__value">—</span>
+            </li>
+          {% endfor %}
+        </ul>
+        <p class="card__hint">Bars: normalized 0–1 scale shared by Earth, Mars and Moon (used for scoring).
+          Values: physical units (used for explanation only).</p>
+      </article>
+
+    </section>
+
+    <!-- =================================================================
+         3e. INTERACTIVE MAPS + RADAR  (the "wow" section)
+         Left : Atacama (Earth) - Leaflet + NASA GIBS basemap, one square per
+                ~11 km cell coloured by similarity (red = most similar).
+         Right: target on Mars / Moon - Leaflet + NASA Trek basemap.
+                Radar: target vs the clicked Atacama cell (normalized axes,
+                physical values in tooltips).
+         =============================================================== -->
+    <section class="maps" aria-label="Interactive maps">
+      <article class="panel card card--earthmap">
+        <div class="map-head">
+          <h2 class="panel__title">Earth · Atacama similarity map <span class="zone-badge" id="badge-atacama" hidden>analysed zone</span></h2>
+          <div class="map-legend" title="Colour = rank of the score among Atacama cells (red = most similar)">
+            <span id="legend-min">—</span>
+            <span class="map-legend__ramp"></span>
+            <span id="legend-max">—</span>
+            <span class="map-legend__na">no data</span>
+          </div>
+        </div>
+        <div class="leaflet-box leaflet-box--earth" id="earth-map">
+          <p class="map-empty" id="map-empty">Run a search to colour every ~11 km Atacama cell by similarity.</p>
+        </div>
+        <p class="card__hint">Colour = rank among Atacama cells (red = most similar, blue = least). Click any square to
+          compare it with the target on the radar. Numbers = ranked regions, ★ = exact point. Basemap: NASA GIBS Blue Marble.</p>
+      </article>
+
+      <div class="maps__side">
+        <article class="panel card">
+          <h2 class="panel__title" id="target-map-title">Target</h2>
+          <div class="leaflet-box leaflet-box--target" id="target-map">
+            <p class="map-empty">The target appears here after a search.</p>
+          </div>
+          <p class="card__hint" id="target-map-hint">Basemap: NASA Trek. Circle = 50 km area averaged into the target profile.</p>
+        </article>
+
+        <article class="panel card">
+          <h2 class="panel__title">Radar · target vs selected <span class="zn">Atacama</span> site</h2>
+          <div class="radar-box"><canvas id="radar-canvas" aria-label="Radar chart comparing the target and the selected Atacama site"></canvas></div>
+          <p class="card__hint" id="radar-hint">Normalized 0–1 scale (same as the score). Hover for physical values.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- =================================================================
+         3e-bis. SECOND EARTH ZONE: MERZOUGA (Morocco) + ZONE COMPARISON
+         Left : Merzouga similarity map (Leaflet + NASA GIBS), same colours,
+                numbered top regions and reference sites (▲) as the Atacama map.
+         Right: Atacama vs Merzouga for the selected target.
+         Both zones are analysed at every search (same pipeline, same scale).
+         =============================================================== -->
+    <section class="zones" aria-label="Earth analog zones compared">
+      <article class="panel card">
+        <div class="map-head">
+          <h2 class="panel__title">Earth · Merzouga similarity map <span class="zone-badge" id="badge-merzouga" hidden>analysed zone</span></h2>
+          <div class="map-legend" title="Colour = rank of the score among Merzouga cells (red = most similar)">
+            <span id="mz-legend-min">—</span>
+            <span class="map-legend__ramp"></span>
+            <span id="mz-legend-max">—</span>
+          </div>
+        </div>
+        <div class="leaflet-box leaflet-box--zone" id="merzouga-map">
+          <p class="map-empty" id="mz-map-empty">Run a search to colour every ~11 km Merzouga cell by similarity.</p>
+        </div>
+        <p class="card__hint">Merzouga – Erg Chebbi, Morocco (30–32° N, 5–3° W), same pipeline and scale as the Atacama.
+          Click a square or a number to analyse this zone in detail. ▲ = MARS2013 Mars-simulation camps.</p>
+      </article>
+
+      <article class="panel card compare" id="compare">
+        <h2 class="panel__title">Earth analog zones compared</h2>
+        <p class="card__hint" id="compare-target">Run a search to compare the Atacama and Merzouga for the same target.</p>
+        <div class="compare__scores" id="compare-scores"></div>
+        <p class="compare__verdict" id="compare-verdict"></p>
+        <div class="table-wrap">
+          <table class="table compare__table">
+            <thead><tr><th>Feature</th><th>Target</th><th>Atacama #1</th><th>Merzouga #1</th></tr></thead>
+            <tbody id="compare-body"><tr><td colspan="4" class="table__empty">—</td></tr></tbody>
+          </table>
+        </div>
+        <p class="card__hint">Physical values of each zone's best region. ✓ = closer to the target on the scoring scale.</p>
+      </article>
+    </section>
+
+    <!-- =================================================================
+         3f. MACHINE LEARNING MODELS (unsupervised, scikit-learn)
+         Filled by app.js from GET /api/ml (services/ml_models.py).
+         A: PCA "planetary environment space"  B: K-means terrain types.
+         Independent of the similarity score -> do the methods agree?
+         =============================================================== -->
+    <section class="ml" id="ml" aria-labelledby="ml-title">
+      <div class="ml__head">
+        <div>
+          <p class="eyebrow">Machine learning · unsupervised (scikit-learn)</p>
+          <h2 id="ml-title" class="ml__title">What do machine-learning models see?</h2>
+          <p class="card__hint">Two models trained on Earth, Mars and Moon cells together — independent of the similarity
+            score. If they point to the same places, two different methods agree.</p>
+        </div>
+      </div>
+
+      <div class="ml__stats" id="ml-stats">
+        <div class="stat"><span class="stat__value" id="ml-stat-ratio">—</span>
+          <span class="stat__label">The <span class="zn">Atacama</span> environment is closer to Mars than to the Moon<br><small id="ml-stat-ratio-detail">6 shared features, normalized</small></span></div>
+        <div class="stat"><span class="stat__value" id="ml-stat-agree">—</span>
+          <span class="stat__label" id="ml-stat-agree-label">top-10 regions share the target's terrain type<br><small>ML clustering vs similarity ranking</small></span></div>
+        <div class="stat"><span class="stat__value" id="ml-stat-var">—</span>
+          <span class="stat__label">of the information kept in the 2-D map<br><small>PCA explained variance</small></span></div>
+      </div>
+
+      <div class="ml__grid">
+        <!-- Model A: PCA scatter -->
+        <article class="panel card">
+          <div class="map-head">
+            <h3 class="panel__title">A · Planetary environment space (PCA)</h3>
+            <div class="seg" role="group" aria-label="Colour points by">
+              <button type="button" class="seg__btn is-active" data-color="body">Colour by body</button>
+              <button type="button" class="seg__btn" data-color="type">Colour by terrain type</button>
+            </div>
+          </div>
+          <div class="scatter-box">
+            <canvas id="pca-canvas" aria-label="PCA scatter plot of Earth, Mars and Moon cells"></canvas>
+            <p class="map-empty" id="pca-empty">Run a search to project Earth, Mars and Moon on the same map.</p>
+          </div>
+          <p class="card__hint" id="pca-axes">Each point is an ~11 km cell. Click a <span class="zn">Atacama</span> point to inspect it in the radar and on the map.</p>
+        </article>
+
+        <!-- Model B: terrain types -->
+        <article class="panel card">
+          <h3 class="panel__title">B · Terrain types learned (K-means)</h3>
+          <p class="card__hint" id="types-hint">Types learned from terrain shape (slope, roughness, relief) shared by the three bodies.</p>
+          <ul class="types" id="types-list"></ul>
+          <p class="ml__agree" id="ml-agree-text"></p>
+          <button type="button" class="button button--ghost" id="types-reset" hidden>Back to similarity colours on the map</button>
+        </article>
+      </div>
+      <p class="card__hint" id="ml-method"></p>
+    </section>
+
+    <!-- =================================================================
+         4. METHOD NOTE
+         =============================================================== -->
+    <section class="panel method" id="method" hidden>
+      <h2 class="panel__title">Method</h2>
+      <p id="method-text" class="card__hint"></p>
+    </section>
+  </main>
+
+  <!-- =====================================================================
+       5. PROBLEMS THIS STUDY CAN SOLVE
+       Static list before a search; after every "Find Earth Analogs" each
+       question gets an answer computed for the selected target by app.js
+       (physical values only - the explanation role of the data).
+       =================================================================== -->
+  <section class="container usecases" aria-labelledby="usecases-title">
+    <div class="panel">
+      <div class="usecases__head">
+        <h2 id="usecases-title" class="panel__title">Problems this study can solve</h2>
+        <p class="card__hint" id="usecases-target">Run a search: every answer below is then computed for the selected target.</p>
+      </div>
+      <ol class="usecases__list" id="usecases-list"></ol>
+      <p class="card__hint usecases__legend">✅ answered with today's data · 🟡 partial answer (data missing on one body) ·
+        ⛔ not applicable / no data for this target</p>
+    </div>
+  </section>
+
+  <!-- =====================================================================
+       5b. VALIDATION AGAINST KNOWN NASA ANALOG SITES
+       Filled by app.js from result.validation (services/validation.py).
+       The model is never tuned on these sites: they are only compared with
+       results already computed.
+       =================================================================== -->
+  <section class="container validation" aria-labelledby="validation-title">
+    <div class="panel">
+      <div class="usecases__head">
+        <h2 id="validation-title" class="panel__title">Validation against known analog sites</h2>
+        <p class="card__hint" id="validation-target">Run a search to compare our ranking with sites NASA already studied.</p>
+      </div>
+      <p class="validation__intro">
+        <strong>How we validate.</strong> We do not change the model and we add no data to the calculation.
+        After each analysis, we look up where sites that space-agency teams already studied as <em>Mars analogs</em>
+        fall in our ranking — NASA and NASA-funded teams in the Atacama, the Austrian Space Forum's MARS2013 Mars
+        simulation in Merzouga. A site picked at random would sit at the 50th percentile;
+        a higher percentile means our system independently points to places NASA already chose.
+      </p>
+      <p class="validation__summary" id="validation-summary"></p>
+      <div class="table-wrap">
+        <table class="table validation__table">
+          <thead>
+            <tr><th>NASA reference site</th><th>Why it was studied</th><th>Our score</th>
+                <th>Percentile</th><th>Nearest top-10 region</th><th>Verdict</th></tr>
+          </thead>
+          <tbody id="validation-body">
+            <tr><td colspan="6" class="table__empty">Results will appear here after a search.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="card__hint validation__note" id="validation-note">
+        <strong>How to read it.</strong> Each NASA site stands for a different kind of Martian terrain, so agreement
+        depends on the target: Licancabur (cold, high, rugged volcanic crater) should match rugged targets such as
+        Gale Crater; Salar de Pajonales (high salt-flat basin) should match lake-basin targets such as Jezero Crater.
+        Yungay was chosen for its extreme dryness, which our Earth–Mars–Moon features do not compare: a low rank there
+        marks a limit of the method, not an error. Sites just outside the study area use the closest ~11 km cell.
+      </p>
+      <p class="card__hint" id="validation-sources"></p>
+    </div>
+  </section>
+
+  <footer class="footer container">
+    Data: NASADEM, MODIS, NASA POWER (Earth) · MGS MOLA / TES, Mars Odyssey GRS (Mars) ·
+    LRO LOLA / Diviner / LROC (Moon). Harmonized at ~11 km.
+  </footer>
+
+  <!-- =====================================================================
+       6. AI MISSION ASSISTANT (floating chat panel)
+       Questions go to POST /api/assistant; the LLM (Groq) answers by calling
+       the project's own analysis tools. The API key stays on the server.
+       =================================================================== -->
+  <button type="button" class="assistant-fab" id="assistant-open" aria-expanded="false" aria-controls="assistant">
+    🛰️ Ask the mission assistant
+  </button>
+  <aside class="assistant" id="assistant" hidden aria-label="Mission assistant">
+    <header class="assistant__head">
+      <div>
+        <strong>Mission assistant</strong>
+        <span class="assistant__model" id="assistant-model">AI · grounded in this project's results</span>
+      </div>
+      <button type="button" class="assistant__close" id="assistant-close" aria-label="Close the assistant">×</button>
+    </header>
+    <div class="assistant__log" id="assistant-log" aria-live="polite">
+      <div class="msg msg--bot">Hi! Ask me anything about the results — in English or French.
+        I answer only with numbers computed by this tool.</div>
+    </div>
+    <div class="assistant__chips" id="assistant-chips">
+      <button type="button" class="chip" data-q="Why is site #1 better than site #3?">Why is #1 better than #3?</button>
+      <button type="button" class="chip" data-q="__ROVER__">Can my rover drive at the exact point?</button>
+      <button type="button" class="chip" data-q="Explain this score like I'm 10 years old.">Explain it like I'm 10</button>
+      <button type="button" class="chip" data-q="What are the main limits of this result?">What are the limits?</button>
+    </div>
+    <form class="assistant__form" id="assistant-form">
+      <textarea id="assistant-input" rows="2" maxlength="1500" placeholder="Ask about the results…" aria-label="Your question"></textarea>
+      <button type="submit" class="button" id="assistant-send">Send</button>
+    </form>
+    <p class="assistant__note">AI-generated (Groq LLM) from this project's analysis tools. Check key numbers in the dashboard.</p>
+  </aside>
+
+  <!-- Leaflet + Chart.js (pinned versions, cdnjs), then the app logic -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" defer></script>
+  <script src="{{ url_for('static', filename='js/app.js') }}" defer></script>
+</body>
+</html>
