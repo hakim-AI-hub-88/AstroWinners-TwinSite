@@ -170,8 +170,8 @@ CUSTOM_TARGET = {
 # SERVER
 # Port 5050 avoids a clash with the other Flask app of the project (flak/, port 5000).
 # ---------------------------------------------------------------------------
-HOST = os.environ.get("APP_HOST", "127.0.0.1")
-PORT = int(os.environ.get("APP_PORT", "5050"))
+HOST = "0.0.0.0"
+PORT = int(os.environ.get("PORT", 5050))
 DEBUG = os.environ.get("APP_DEBUG", "0") == "1"
 
 
