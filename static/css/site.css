@@ -29,7 +29,7 @@
   --error: #f87171;
   --text: #ece6df;
   --text-2: #c9c0b7;               /* body copy on dark panels */
-  --muted: #9b9188;                /* >= 4.5:1 on --bg */
+  --muted: #8c827a;                /* same token as style.css; ~5.3:1 on --bg */
   --line: rgba(255, 255, 255, .08);
   --nav-h: 64px;
   --font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
