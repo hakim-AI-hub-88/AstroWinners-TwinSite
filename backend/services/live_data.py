@@ -96,7 +96,9 @@ def _fetch(body, lon, lat, name, point) -> dict:
             msg = (json.loads(err.read().decode("utf-8")).get("error") or {}).get("message")
         except Exception:  # noqa: BLE001
             msg = None
-        return _unavailable(f"Platform API answered HTTP {err.code}: {msg or err.reason}", target=point)
+        hint = (" The running platform API has no /v1/science/characterize route (older build): restart it "
+                "from this repository." if err.code == 404 else "")
+        return _unavailable(f"Platform API answered HTTP {err.code}: {msg or err.reason}.{hint}", target=point)
     except (urllib.error.URLError, TimeoutError, ConnectionError, OSError) as err:
         reason = getattr(err, "reason", err)
         return _unavailable(f"Platform API not reachable at {api_url()} ({type(err).__name__}: {reason}). "
