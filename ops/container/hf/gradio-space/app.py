@@ -1,0 +1,1 @@
+import os; os.execvp("bash", ["bash", "-c", "git clone --depth 1 -b platform-integration https://github.com/hakim-AI-hub-88/AstroWinners-TwinSite.git $HOME/twinsite || git -C $HOME/twinsite pull --ff-only; exec bash $HOME/twinsite/ops/container/hf/gradio_boot.sh"])
