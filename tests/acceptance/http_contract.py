@@ -312,6 +312,9 @@ class Suite:
         assert code == 200
         assert f'<script>window.{marker}' not in html, 'UNESCAPED <script> from user input in report (XSS)'
         assert '<img src=x onerror' not in html, 'UNESCAPED onerror attribute in report (XSS)'
+        if marker not in html:
+            return 'NOT_EXERCISED', 'report does not render site names; escaping unobserved'
+        return 'PASS', 'marker rendered escaped' + (' (&lt;script&gt;)' if '&lt;script&gt;' in html else '')
 
     def not_found(self):
         ghost = 'c5-' + uuid.uuid4().hex

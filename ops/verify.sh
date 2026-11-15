@@ -84,6 +84,6 @@ echo; echo "Summary: $SUM"
 FAILS=$(awk -F'\t' '$2=="FAIL"' "$SUM" | wc -l | tr -d ' '); BLOCKS=$(awk -F'\t' '$2=="BLOCKED"' "$SUM" | wc -l | tr -d ' ')
 PASSES=$(awk -F'\t' '$2=="PASS"' "$SUM" | wc -l | tr -d ' ')
 echo "PASS=$PASSES FAIL=$FAILS BLOCKED=$BLOCKS"
-awk -F'\t' '$2=="FAIL"||$2=="BLOCKED"{print "  - "$2" "$1": "$3}' "$SUM"
+awk -F'\t' '$2=="FAIL"||$2=="BLOCKED"||$2=="WARN"||$2=="NOT_EXERCISED"{print "  - "$2" "$1": "$3}' "$SUM"
 [ "$FAILS" = 0 ] && [ "$BLOCKS" = 0 ] && { echo "VERIFY: ALL PASS (still requires G2 real-data review)"; exit 0; }
 echo "VERIFY: HOLD"; exit 1
