@@ -20,7 +20,7 @@ def main():
         for key in ('user.name', 'user.email'):
             if subprocess.run(['git', 'config', '--get', key], cwd=ROOT, capture_output=True).returncode:
                 raise SystemExit(f'Set {key} locally before creating the initial commit; identity is not invented.')
-        paths = ['.gitignore', '.env.example', 'Makefile', 'README.md', 'INTEGRATION_STATUS.md',
+        paths = ['.gitignore', '.env.example', 'Makefile', 'README.md', 'docs/status/INTEGRATION_STATUS.md',
                  'requirements-integration.txt', 'contracts', 'scripts/integration',
                  'references/SNAPSHOT.json', 'references/execution-kit',
                  'references/TwinSite_Engineering_Handoff.zip',

@@ -61,4 +61,4 @@ python3.13 scripts/integration/checkpoint.py --watch
 
 The watcher reruns every 75 minutes; stopping that process stops monitoring. `make check` records exact PASS/FAIL/BLOCKED values in `.runtime/checkpoint.json` and exits nonzero if anything is missing. It does not pretend an absent frontend build or API is a pass. The synthetic reference smoke verifies submission, idempotency, worker execution, deterministic output, event ordering/cursor, report labeling and failure responses. It is not G2 evidence.
 
-See [INTEGRATION_STATUS.md](INTEGRATION_STATUS.md) for current gate results. The original roadmap and prompts are in `references/execution-kit`. The three archives are pinned by SHA-256 in `references/SNAPSHOT.json`; `make bootstrap` verifies them before extraction and refuses to overwrite modified reference code.
+See [INTEGRATION_STATUS.md](status/INTEGRATION_STATUS.md) for current gate results. The original roadmap and prompts are in `references/execution-kit`. The three archives are pinned by SHA-256 in `references/SNAPSHOT.json`; `make bootstrap` verifies them before extraction and refuses to overwrite modified reference code.
