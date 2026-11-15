@@ -37,6 +37,7 @@ from .base import (
     Issue,
     OutOfFootprintError,
     RawAsset,
+    ResolutionError,
     SourceAdapter,
     TimeMismatchError,
     TimeWindow,
@@ -392,4 +393,17 @@ class MOLAMEGDRAdapter(SourceAdapter):
         R = clean.body_radius_m
         return dem_features(clean, scale, _sphere_dx(R), _sphere_dy(R),
                             "MOLA vertical precision ~1 m per shot (Smith et al. 2001); gridding/interpolation "
-                            "error not propagated.")
+                            "error not propagated.", support=clean.support)
+
+    def supported_scale(self, decoded: Decoded, minimum: float, max_block: int = 6) -> float:
+        """Smallest analysis scale (integer multiple of the native cell) at which
+        at least ``minimum`` of blocks contain a direct MOLA shot."""
+        from twinsite.processing.dem_features import block_support_fraction
+
+        for b in range(1, max_block + 1):
+            if decoded.grid.nrows // b < 3 or decoded.grid.ncols // b < 3:
+                break
+            if block_support_fraction(decoded.support, b, b) >= minimum:
+                return math.ceil(b * decoded.native_resolution_m * 10) / 10
+        raise ResolutionError("no analysis scale within the AOI reaches the observation-support minimum",
+                              minimum=minimum)

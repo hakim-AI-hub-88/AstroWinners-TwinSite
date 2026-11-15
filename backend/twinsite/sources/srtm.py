@@ -124,7 +124,16 @@ class SRTMGL1Adapter(SourceAdapter):
         observation = SRTM_WINDOW
         official = (f"https://data.lpdaac.earthdatacloud.nasa.gov/lp-prod-protected/SRTMGL1.003/"
                     f"{gid}/{gid}.zip")
-        if not self.offline:
+        if self.offline:
+            # Reuse the catalog evidence captured when the cached bytes were acquired.
+            for meta in fetch.find_cached(self.source_id, gid, "data", self.root):
+                ce = meta.get("catalog_evidence") or {}
+                if ce.get("concept_id"):
+                    evidence = {**ce, "restored_from_cached_asset": meta["asset_id"]}
+                    observation = TimeWindow(parse_utc(meta["observation_start"].replace("+00:00", "")),
+                                             parse_utc(meta["observation_end"].replace("+00:00", "")))
+                    break
+        else:
             q = urllib.parse.urlencode({"short_name": "SRTMGL1", "version": "003", "readable_granule_name": gid,
                                         "page_size": 5})
             url = f"{CMR_GRANULES}?{q}"

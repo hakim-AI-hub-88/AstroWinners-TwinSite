@@ -16,7 +16,7 @@ import json
 import math
 import os
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from twinsite.sources import fetch
 from twinsite.sources.base import AOI, FeatureSet, Grid
@@ -71,6 +71,31 @@ def _sample_calc(fs: FeatureSet, dx_fn, dy_fn, by_bx: Tuple[int, int]) -> Dict[s
     }
 
 
+def _mars_reference_point(dec, lon: float, lat: float, name: str) -> Dict[str, Any]:
+    """Report the product value at a named point and the nearest shot-supported cell.
+    No external elevation is asserted; reviewers compare against their own citation."""
+    g, s = dec.grid, dec.support
+    r = round((g.lat0 - lat) / g.dlat)
+    c = round((lon - g.lon0) / g.dlon)
+    best: Optional[Tuple[float, int, int]] = None
+    for rr in range(g.nrows):
+        for cc in range(g.ncols):
+            if (s.at(rr, cc) or 0) > 0:
+                d2 = (rr - r) ** 2 + (cc - c) ** 2
+                if best is None or d2 < best[0]:
+                    best = (d2, rr, cc)
+    out = {"name": name, "query_lon_e": lon, "query_lat": lat,
+           "cell": {"row": r, "col": c, "lat": g.lat(r), "lon": g.lon(c), "height_m": g.at(r, c),
+                    "mola_shots": s.at(r, c),
+                    "note": "zero shots => producer-interpolated value" if not s.at(r, c) else "observed cell median"}}
+    if best is not None:
+        _, rr, cc = best
+        out["nearest_shot_supported_cell"] = {
+            "row": rr, "col": cc, "lat": g.lat(rr), "lon": g.lon(cc), "height_m": g.at(rr, cc),
+            "mola_shots": s.at(rr, cc), "distance_cells": round(math.sqrt(best[0]), 3)}
+    return out
+
+
 def run(offline: bool = False) -> Dict[str, Any]:
     srtm, mola = SRTMGL1Adapter(offline=offline), MOLAMEGDRAdapter(offline=offline)
 
@@ -81,7 +106,9 @@ def run(offline: bool = False) -> Dict[str, Any]:
     m_dec = mola.decode(m_assets, m_aoi, m_gr[0])
     m_val = mola.validate(m_dec)
     m_cln = mola.clean(m_dec, ["mola_flag_interpolated"])
-    scale = math.ceil(m_dec.native_resolution_m * 10) / 10
+    # common scale = smallest multiple of the MOLA cell where >= MIN_COVERAGE of blocks hold a real shot
+    from .dem_features import MIN_COVERAGE
+    scale = mola.supported_scale(m_dec, MIN_COVERAGE)
     m_fs = mola.features(m_cln, scale)
 
     e_id, e_aoi, e_desc = EARTH_SITE
@@ -130,6 +157,9 @@ def run(offline: bool = False) -> Dict[str, Any]:
             "feature_details": {f.feature_id: f.detail for f in fs.features},
             "sample_calculation": _sample_calc(fs, dxf, dyf, by_bx),
         }
+        if dec.aoi.body == "Mars":
+            prov["reference_point_check"] = _mars_reference_point(
+                dec, 137.4417, -4.5895, "MSL Bradbury Landing (approximate coordinates)")
         prov_key, prov_sha = _write_immutable("derived", prov)
         provenance_id = f"prov-{sid}-{prov_sha[:16]}"
         rules = ["srtm_void_mask"] if adapter is srtm else ["mola_flag_interpolated"]

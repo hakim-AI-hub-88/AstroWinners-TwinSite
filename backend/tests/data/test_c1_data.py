@@ -298,6 +298,19 @@ class TestMOLA(unittest.TestCase):
         self.assertIsNotNone(next(f for f in fs.features if f.feature_id == "slope_deg").value)
 
 
+class TestObservationSupport(unittest.TestCase):
+    def test_reported_coverage_is_observation_supported(self):
+        from twinsite.processing.dem_features import block_support_fraction
+        from twinsite.sources.base import Grid
+        # 6x6 support grid with shots only in the top-left 2x2 block
+        vals = [1.0 if (r < 2 and c < 2) else 0.0 for r in range(6) for c in range(6)]
+        g = Grid(6, 6, 0, 0, 1, 1, vals, "area")
+        self.assertAlmostEqual(block_support_fraction(g, 1, 1), 4 / 36)
+        self.assertAlmostEqual(block_support_fraction(g, 2, 2), 1 / 9)
+        self.assertAlmostEqual(block_support_fraction(g, 3, 3), 1 / 4)
+        self.assertEqual(block_support_fraction(Grid(6, 6, 0, 0, 1, 1, [0.0] * 36, "area"), 2, 2), 0.0)
+
+
 class TestFetchSafety(unittest.TestCase):
     def test_credential_urls_refused(self):
         for url in ("https://user:pw@example.org/x", "https://example.org/x?token=abc",
