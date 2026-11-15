@@ -12,6 +12,7 @@ __pycache__/
 .pytest_cache/
 # Node / builds
 node_modules/
+node_modules
 dist/
 !frontend/dist/.gitkeep
 # runtime state (SQLite, blobs, caches, secrets files)

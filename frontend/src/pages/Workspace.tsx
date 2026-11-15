@@ -1,5 +1,5 @@
 import { lazy, Suspense, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useMutation } from '@tanstack/react-query'
 import { Btn, DemoBanner, Notice, PageHeader, Panel, Spinner, Tabs } from '@/components/ui'
 import PlanetMap, { type Footprint, type Pin } from '@/components/PlanetMap'
@@ -247,7 +247,7 @@ export default function Workspace() {
             </Panel>
             {!live && (
               <Panel eyebrow="Demo fixtures" title="Pre-computed synthetic runs">
-                <ul className="space-y-2 text-sm">{FIXTURES.map((f) => <li key={f.key}><a className="underline decoration-ember/60 underline-offset-4 hover:text-ember" href={`/analysis/${demoRunIdFor(f.key)}`} onClick={() => demoStart(demoRunIdFor(f.key))}>{f.title}</a></li>)}</ul>
+                <ul className="space-y-2 text-sm">{FIXTURES.map((f) => <li key={f.key}><Link className="underline decoration-ember/60 underline-offset-4 hover:text-ember" to={`/analysis/${demoRunIdFor(f.key)}`} onClick={() => demoStart(demoRunIdFor(f.key))}>{f.title}</Link></li>)}</ul>
               </Panel>
             )}
           </aside>

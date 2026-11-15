@@ -9,6 +9,12 @@ const NAV = [
   { to: '/', label: 'Overview', end: true }, { to: '/workspace', label: 'Workspace' }, { to: '/explorer', label: 'Explorer' },
   { to: '/data', label: 'Data Explorer' }, { to: '/docs', label: 'Docs' },
 ]
+// Pages of the main TwinSite site (Flask, outside the /console router): plain <a> links, never NavLink,
+// so the router basename is not prepended.
+const SITE = [
+  { href: '/', label: 'Home' }, { href: '/app', label: 'Mission Control' }, { href: '/auto', label: 'Auto Mode' },
+  { href: '/data', label: 'Data Hub' }, { href: '/resources', label: 'Resources' },
+]
 const MISSION_TABS = [
   { seg: 'analysis', label: 'Analysis' }, { seg: 'portfolios', label: 'Portfolios' },
   { seg: 'activity', label: 'Activity' }, { seg: 'reports', label: 'Report' },
@@ -50,6 +56,15 @@ export default function Layout() {
   return (
     <div className="flex min-h-screen flex-col">
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:bg-ember focus:p-2 focus:text-ink">Skip to content</a>
+      <div className="border-b border-line bg-panel/40" data-testid="site-bar">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-4 gap-y-1 px-4 py-1.5 text-xs">
+          <a href="/" className="text-ivory-dim hover:text-ivory">← TwinSite site</a>
+          <nav aria-label="TwinSite site" className="flex flex-wrap gap-x-3 gap-y-1">
+            {SITE.map((l) => <a key={l.href} href={l.href} className="text-mute hover:text-ivory">{l.label}</a>)}
+          </nav>
+          <span className="ml-auto text-mute">Mission Console</span>
+        </div>
+      </div>
       <header className="border-b border-line bg-ink/95">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3">
           <NavLink to="/" aria-label="TwinSite home"><Logo /></NavLink>

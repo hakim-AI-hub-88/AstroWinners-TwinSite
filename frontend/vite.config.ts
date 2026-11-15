@@ -7,7 +7,9 @@ import path from 'node:path'
 const contracts = path.resolve(__dirname, '../contracts')
 const apiTarget = process.env.TWINSITE_API_URL ?? 'http://127.0.0.1:8080'
 
+// Served by Flask (and nginx) under /console/; API calls stay absolute at /v1.
 export default defineConfig({
+  base: '/console/',
   plugins: [react(), tailwindcss()],
   resolve: { alias: { '@contracts': contracts, '@': path.resolve(__dirname, 'src') } },
   server: {
