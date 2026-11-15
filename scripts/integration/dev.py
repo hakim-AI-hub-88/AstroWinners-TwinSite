@@ -12,12 +12,18 @@ REFERENCE = ROOT/'references/extracted/ARES_NASA_Feasibility_Architecture/ARES/i
 
 
 def main():
-    parser=argparse.ArgumentParser();parser.add_argument('--reference',action='store_true');parser.add_argument('--port',type=int,default=8080);args=parser.parse_args()
+    parser=argparse.ArgumentParser();parser.add_argument('--reference',action='store_true');parser.add_argument('--port',type=int,default=8080);parser.add_argument('--no-ai',action='store_true',help='Simple Analysis only');args=parser.parse_args()
     if not 1024 <= args.port <= 65535:
         raise SystemExit('Use an unprivileged TCP port (1024–65535).')
     env=os.environ.copy()
-    # Providers/uploads stay disabled by default, regardless of shell credentials.
-    env.update(TWINSITE_AI_ENABLED='false',TWINSITE_UPLOADS_ENABLED='false',TWINSITE_API_HOST='127.0.0.1',TWINSITE_API_PORT=str(args.port))
+    # AI-Powered Analysis is the default when the protected free-provider secret file exists
+    # (created by ops/migrate_vesper_credentials.py). Uploads stay disabled.
+    secrets_file=ROOT/'.runtime/secrets/ai-providers.env'
+    ai=not args.no_ai and secrets_file.exists()
+    env.update(TWINSITE_AI_ENABLED='true' if ai else 'false',TWINSITE_UPLOADS_ENABLED='false',TWINSITE_API_HOST='127.0.0.1',TWINSITE_API_PORT=str(args.port))
+    if ai:
+        env['TWINSITE_AI_SECRET_ENV_FILE']=str(secrets_file)
+    print('AI-Powered Analysis: '+('ON (free providers only)' if ai else 'OFF (Simple Analysis only)'),flush=True)
     runtime=ROOT/'.runtime';runtime.mkdir(exist_ok=True)
     env['TWINSITE_DATA_DIR']=str(runtime)
     if args.reference:

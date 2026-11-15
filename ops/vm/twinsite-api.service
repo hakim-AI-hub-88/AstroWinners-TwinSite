@@ -13,7 +13,10 @@ Environment=TWINSITE_API_HOST=127.0.0.1
 Environment=TWINSITE_API_PORT=8080
 Environment=TWINSITE_DATA_DIR=/var/lib/twinsite
 Environment=TWINSITE_SOURCE_DATA_DIR=/var/lib/twinsite/source-cache
-Environment=TWINSITE_AI_ENABLED=false
+Environment=TWINSITE_AI_ENABLED=true
+# Free-only AI provider credentials: root-provisioned, owned by twinsite, mode 0600, outside the source tree.
+# Missing file => AI-Powered Analysis reports unavailable and Simple Analysis runs (never paid inference).
+Environment=TWINSITE_AI_SECRET_ENV_FILE=/etc/twinsite/ai-providers.env
 Environment=TWINSITE_UPLOADS_ENABLED=false
 # Services never hold Earthdata credentials: measured runs read only the verified cache.
 # Point the optional secret file at a path that does not exist so a stray /opt/twinsite/.env is never read.

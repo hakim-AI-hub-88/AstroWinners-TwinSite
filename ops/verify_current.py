@@ -20,6 +20,12 @@ ENV = dict(os.environ, PYTHONPATH=str(ROOT / 'backend') + os.pathsep + str(ROOT)
 # caller explicitly points at one, and drop any token inherited from the shell.
 ENV.setdefault('TWINSITE_SECRET_ENV_FILE', str(ROOT / '.runtime/no-secrets.env'))
 ENV.pop('EARTHDATA_TOKEN', None)
+# Verification is offline and AI-free: no provider credentials, no inference spend.
+ENV['TWINSITE_AI_SECRET_ENV_FILE'] = str(ROOT / '.runtime/no-ai-secrets.env')
+for _name in [n for n in ENV if n.startswith(('CLOUDFLARE_API_TOKEN', 'CLOUDFLARE_ACCOUNT_ID', 'GOOGLE_API_KEY', 'GROQ_API_KEY',
+                                            'MISTRAL_API_KEY', 'NVIDIA_NIM_API_KEY', 'OLLAMA_API_KEY', 'OPENROUTER_API_KEY',
+                                            'ELEVENLABS_API_KEY'))]:
+    ENV.pop(_name)
 results = []
 
 def run(name, command, cwd=ROOT):
@@ -32,7 +38,7 @@ def run(name, command, cwd=ROOT):
 py=sys.executable
 run('schemas',[py,'scripts/integration/validate_contracts.py'])
 run('types',[py,'scripts/integration/generate_types.py','--check'])
-for name, directory in [('integration','scripts/integration/tests'),('science','backend/tests/science'),('data','backend/tests/data'),('c0','backend/tests/integration'),('qa_negative_controls','tests/acceptance')]:
+for name, directory in [('integration','scripts/integration/tests'),('science','backend/tests/science'),('data','backend/tests/data'),('c0','backend/tests/integration'),('qa_negative_controls','tests/acceptance'),('ai_router_agents_gateway','backend/tests/ai')]:
     run(name,[py,'-m','unittest','discover','-s',directory,'-p','test_*.py','-v'])
 run('store_worker',[py,'-m','unittest','backend.tests.api.test_backend.StoreTests','backend.tests.api.test_backend.WorkerTests','-v'])
 for name, command in [('frontend_typecheck',['npm','run','typecheck']),('frontend_build',['npm','run','build']),('frontend_tests',['npm','test'])]:

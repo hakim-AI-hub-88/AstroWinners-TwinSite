@@ -32,6 +32,8 @@ ROUTES = [
     ('GET', re.compile(rf'^/v1/missions/{RUN}/evidence$'), 'evidence'),
     ('GET', re.compile(rf'^/v1/missions/{RUN}/report$'), 'report'),
     ('POST', re.compile(rf'^/v1/missions/{RUN}/cancel$'), 'cancel'),
+    ('GET', re.compile(rf'^/v1/missions/{RUN}/agents$'), 'agents'),
+    ('GET', re.compile(r'^/v1/ai/status$'), 'ai_status'),
     # Reserved G3 routes: explicit 501 (contract: response schemas need C0 review first).
     ('POST', re.compile(rf'^/v1/missions/{RUN}/portfolios/alternatives$'), 'not_implemented'),
     ('GET', re.compile(r'^/v1/data/catalog$'), 'data_catalog'),
@@ -52,6 +54,14 @@ class ApiError(Exception):
 
 def error_body(code, message, field=None):
     return {'schema_version': SCHEMA_VERSION, 'error': {'code': code, 'message': message, 'field': field}}
+
+
+def _ai_enabled(settings):
+    try:
+        from twinsite.ai import ai_enabled
+        return ai_enabled(settings)
+    except Exception:  # noqa: BLE001 - health must not fail because of AI configuration
+        return False
 
 
 def _reject_constant(name):
@@ -187,7 +197,7 @@ class Handler(BaseHTTPRequestHandler):
         except Exception:  # noqa: BLE001
             ready = False
         body = {'schema_version': SCHEMA_VERSION, 'status': 'ready' if ready else 'unavailable',
-                'ai_enabled': self.app.settings.ai_enabled, 'uploads_enabled': self.app.settings.uploads_enabled}
+                'ai_enabled': _ai_enabled(self.app.settings), 'uploads_enabled': self.app.settings.uploads_enabled}
         self.send_json(200 if ready else 503, body)
 
     def route_openapi(self, query):
@@ -252,7 +262,10 @@ class Handler(BaseHTTPRequestHandler):
         except (ValueError, KeyError, TypeError) as error:
             raise ApiError(422, 'SEMANTIC_VALIDATION_FAILED', str(error)[:500] or error.__class__.__name__) from None
         try:
-            run_id, _replay = self.app.store.submit(payload, key)
+            mode = (query.get('analysis_mode') or ['ai'])[0]
+            if mode not in ('ai', 'simple'):
+                raise ApiError(422, 'INVALID_ANALYSIS_MODE', 'analysis_mode must be ai or simple', 'analysis_mode')
+            run_id, _replay = self.app.store.submit(payload, key, mode)
         except Conflict as error:
             raise ApiError(409, 'IDEMPOTENCY_CONFLICT', str(error), 'Idempotency-Key') from None
         except CapacityError as error:
@@ -278,6 +291,17 @@ class Handler(BaseHTTPRequestHandler):
 
     def route_report(self, query, run_id):
         self._send(200, self.app.require_committed(run_id)['report'].encode('utf-8'), 'text/html; charset=utf-8')
+
+    def route_agents(self, query, run_id):
+        self.app.require_run(run_id)
+        trace = self.app.store.agent_trace(run_id)
+        mode = self.app.store.analysis_mode(run_id)
+        self.send_json(200, trace or {'schema': 'twinsite.agent_trace/1', 'run_id': run_id, 'analysis_mode': mode,
+                                      'records': [], 'pending': mode == 'ai'})
+
+    def route_ai_status(self, query):
+        from twinsite.ai import registry
+        self.send_json(200, registry(self.app.settings))
 
     def route_cancel(self, query, run_id):
         # Provisional (pending C0 contract addition): request cancellation; worker stops at next phase boundary.

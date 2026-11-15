@@ -54,7 +54,7 @@ def main():
         check(f'SPA deep link {deep}', status == 200 and b'id="root"' in body, status)
     status, _, body = fetch(base, '/v1/health')
     health = json.loads(body) if status == 200 else {}
-    check('API health through proxy', health.get('status') == 'ready' and health.get('ai_enabled') is False, health)
+    check('API health through proxy', health.get('status') == 'ready' and isinstance(health.get('ai_enabled'), bool), health)
     status, _, body = fetch(base, '/v1/data/catalog?limit=100')
     items = json.loads(body).get('items', []) if status == 200 else []
     check('live catalog lists measured sites', {i.get('data_status') for i in items} == {'measured'} and len(items) >= 2, len(items))

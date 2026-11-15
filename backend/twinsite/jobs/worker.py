@@ -145,6 +145,48 @@ class Worker:
         except LeaseLost:
             return None
 
+    def _ai_stage(self, run, payload, result, sidecar, pair):
+        """AI-Powered Analysis. Advisory only: it never changes result/sidecar. Any failure here
+        degrades to Simple Analysis with the real reason recorded; it never fails the run."""
+        from twinsite.ai.agents import Orchestrator, rescore_function
+        from twinsite.ai.registry import router as ai_router
+        from twinsite.science import analyze_mission
+        observations = pair['observations'] if pair else None
+
+        def emit(phase, agent_id, summary):
+            # Agents execute inside the P80 review window (after the deterministic engine, before publish), so
+            # events stay in phase order; the role's logical phase is carried in the summary and the trace.
+            self.store.note(run, 'P80', 'succeeded', f'[{phase}] {summary}', 'agent-' + agent_id.lower(),
+                            self.settings.lease_seconds)
+
+        try:
+            router = ai_router(self.settings)
+            if not router.enabled():
+                emit('P80', 'A11', 'AI-Powered Analysis unavailable: ' + router.disabled_reason() +
+                     '. Continuing with Simple Analysis (deterministic, no AI).')
+            context, image = [], None
+            try:
+                from twinsite.sources.gateway import mission_context
+                context, image = mission_context(payload, observations, self.settings.data_dir)
+            except Exception:  # noqa: BLE001 - context is optional evidence
+                log.warning('run %s: scientific context gateway unavailable', run['run_id'], exc_info=True)
+            rescore = rescore_function(payload, observations,
+                                       lambda p, obs: analyze_mission(p, evidence=obs, mode='strict')['result'],
+                                       lambda p: analyze_mission(p, mode='exploratory')['result'])
+            trace = Orchestrator(router, emit, rescore).run(run['run_id'], payload, result, sidecar, observations,
+                                                            context, image)
+        except LeaseLost:
+            raise
+        except Exception as error:  # noqa: BLE001
+            log.error('run %s: AI stage failed', run['run_id'], exc_info=True)
+            trace = {'schema': 'twinsite.agent_trace/1', 'run_id': run['run_id'], 'analysis_mode': 'ai',
+                     'ai_available': False, 'fallback_reason': 'AI stage error: ' + error.__class__.__name__,
+                     'ai_roles_executed': [], 'records': []}
+            self._safe(lambda: self.store.note(run, 'P80', 'succeeded', 'AI stage failed (' + error.__class__.__name__ +
+                                               '); Simple Analysis result delivered unchanged.', 'agent-orchestrator'))
+        self.store.save_agent_trace(run, trace)
+        return trace
+
     def _pipeline(self, run):
         payload = run['payload']
         pair = None
@@ -185,10 +227,17 @@ class Worker:
         self._advance(run, 'reviewing', 'P80', 'succeeded', 'Release-evidence sidecar built and validated against the contract.',
                       'engine-p80', 1, None)
         final_status = 'completed' if sidecar['release_action'] == 'RELEASE' else 'completed_with_limits'
+        trace = None
+        if self.store.analysis_mode(run['run_id']) == 'ai':
+            trace = self._ai_stage(run, payload, result, sidecar, pair)
         self._advance(run, 'publishing', 'P90', 'running',
                       f'Release gate: {sidecar["release_action"]} ({", ".join(sidecar["blocking_issues"]) or "no issues"}). '
                       'Rendering deterministic report.', 'publish', 0, 1)
         html = report_mod.render(run['run_id'], result, sidecar)
+        if trace:
+            from twinsite.ai.agents import report_section
+            section = report_section(trace)
+            html = html.replace('</body>', section + '</body>') if '</body>' in html else html + section
         artifacts = [self.blobs.put(json.dumps(result, allow_nan=False, sort_keys=True).encode('utf-8')),
                      self.blobs.put(json.dumps(sidecar, allow_nan=False, sort_keys=True).encode('utf-8')),
                      self.blobs.put(html.encode('utf-8'))]

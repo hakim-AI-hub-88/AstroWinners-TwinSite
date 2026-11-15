@@ -81,6 +81,15 @@ class Store:
                     body TEXT NOT NULL,
                     PRIMARY KEY (run_id, sequence)
                 );
+                CREATE TABLE IF NOT EXISTS run_options (
+                    run_id TEXT PRIMARY KEY REFERENCES runs(run_id),
+                    analysis_mode TEXT NOT NULL DEFAULT 'ai'
+                );
+                CREATE TABLE IF NOT EXISTS agent_traces (
+                    run_id TEXT PRIMARY KEY REFERENCES runs(run_id),
+                    body TEXT NOT NULL,
+                    created_at TEXT NOT NULL
+                );
                 CREATE TABLE IF NOT EXISTS results (
                     run_id TEXT PRIMARY KEY REFERENCES runs(run_id),
                     result TEXT NOT NULL,
@@ -141,7 +150,7 @@ class Store:
         return [json.loads(r['body']) for r in rows]
 
     # ---------------------------------------------------------------- submit
-    def submit(self, payload, idempotency_key):
+    def submit(self, payload, idempotency_key, analysis_mode='ai'):
         """Return (run_id, replay). Raises Conflict or CapacityError."""
         digest = canonical_sha256(payload)
         with self.write() as db:
@@ -160,6 +169,7 @@ class Store:
                           created_at,updated_at,created_order) VALUES(?,?,?,?,?,?,?,?,?,?)""",
                        (run['run_id'], idempotency_key, digest, dumps(payload), str(payload.get('data_status')),
                         'queued', run['trace_id'], now, now, order))
+            db.execute('INSERT INTO run_options(run_id, analysis_mode) VALUES(?,?)', (run['run_id'], analysis_mode))
             label = 'SYNTHETIC input; not NASA measurements.' if payload.get('data_status') == 'synthetic' \
                 else 'Input declares measured data; evidence must be resolved from approved assets.'
             self._event(db, run, 'P00', 'queued', 'Mission accepted and queued. ' + label, 'register')
@@ -170,6 +180,29 @@ class Store:
         with self.connection() as db:
             row = db.execute('SELECT * FROM runs WHERE run_id=?', (run_id,)).fetchone()
         return dict(row) if row else None
+
+    def analysis_mode(self, run_id):
+        with self.connection() as db:
+            row = db.execute('SELECT analysis_mode FROM run_options WHERE run_id=?', (run_id,)).fetchone()
+        return row[0] if row else 'simple'
+
+    def agent_trace(self, run_id):
+        with self.connection() as db:
+            row = db.execute('SELECT body FROM agent_traces WHERE run_id=?', (run_id,)).fetchone()
+        return json.loads(row[0]) if row else None
+
+    def save_agent_trace(self, run, trace):
+        with self.write() as db:
+            self._owned(db, run)
+            db.execute('INSERT OR REPLACE INTO agent_traces(run_id, body, created_at) VALUES(?,?,?)',
+                       (run['run_id'], dumps(trace), utc_now()))
+
+    def note(self, run, phase, state, summary, task_id, lease_seconds=30):
+        """Fenced event without a status change (agent activity)."""
+        with self.write() as db:
+            self._owned(db, run)
+            db.execute('UPDATE runs SET lease_expires=? WHERE run_id=?', (time.time() + lease_seconds, run['run_id']))
+            return self._event(db, run, phase, state, summary, task_id)
 
     def committed(self, run_id):
         with self.connection() as db:
