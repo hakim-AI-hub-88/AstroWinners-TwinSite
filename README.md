@@ -1,363 +1,272 @@
-# Planetary Analog Discovery System
+<a id="top"></a>
 
-Web application for the NASA Space Apps Challenge. It finds places in the **Atacama Desert
-(Earth)** whose environment resembles a selected **Mars** or **Moon** target, using NASA data
-processed by the pipeline in `../pipeline/`.
+<p align="center">
+  <a href="#launch"><img src="docs/readme/assets/twinsite-cover.jpg" width="100%" alt="TwinSite cover artwork: an astronaut on a rocky ridge looks toward Earth, the Moon and Mars beneath the TwinSite wordmark and the words Discover, Compare, Prepare."></a>
+  <br><sub><em>Cover artwork is illustrative, not an app screenshot. <a href="#what-ships-today">What ships today</a> is the implemented scope.</em></sub>
+</p>
 
-Current stage: **working similarity engine**. You pick a target, and the app ranks the Atacama regions
-(~11 km), explains each match, refines each region to an exact ~1 km point, and draws a similarity map.
+<h3 align="center">Every mission to Mars or the Moon rehearses on Earth first.<br>TwinSite finds where.</h3>
 
-## TWINSITE interface (current design)
+<p align="center">Pick a crater on Mars or a landing site on the Moon. TwinSite scores Earth terrain in the <strong>Atacama Desert</strong> and Morocco's <strong>Merzouga dunes</strong> against it,
+ranks the closest twins, explains every difference feature by feature, and turns the evidence into a printable mission dossier.</p>
 
-- **Home page** at `/` (`templates/home.html` and `static/css/home.css`): a full-screen hero ("The next world starts here.") with the Earth, the Moon and Mars linked to an analogue site, and a "Find my analogue terrain" button. The photos are in `static/img/home/`, with their sources in `credits.json`.
-- **Interactive globes** at the top of Mission Control (`static/js/twinmap.js`, CesiumJS 1.140, `backend/services/layers.py`, `routes/twin_routes.py`):
-  - **Target globe.** Switch between the Moon and Mars, then click anywhere to select a square region (50, 100 or 200 km wide), or click a NASA landing site.
-  - **Data check.** `GET /api/region-info` checks the harmonized data inside the region: number of cells, comparable parameters, and physical values.
-  - **Analysis.** "Find Earth analogues for this region" runs the full analysis with that region as the target. It is named `Selected region @ lat, lon / R km`, so the score, pattern analysis, assistant and report all work with it unchanged.
-  - **Earth globe.** It shows the similarity overlay of both zones, the numbered matches and a "Best matches" list. Clicking a match selects it in the whole dashboard and zooms the map onto it.
-  - **3D and 2D.** Both globes are 3D when zoomed out and switch to a flat 2D map when zoomed in; the 2D/3D button forces the mode.
-  - **Layers.**
-    - Moon base map: NASA Trek LRO WAC.
-    - Mars base maps: NASA Trek Viking and MOLA.
-    - Earth base maps: Esri satellite imagery (with place names) and NASA GIBS Blue Marble.
-    - NASA overlay: MODIS land surface temperature.
-    - The project's own **harmonized data layers** (`GET /api/layers`, `GET /api/layer/<body>/<feature>.png`): day and night temperature, albedo, elevation, slope, relief, thermal inertia, iron, and data coverage.
-  - **Report.** The mission report includes both globe views as displayed.
-- **Dashboard** at `/app`. The pages are `/app#mission`, `/app#explorer`, `/app#science` and `/app#applications`. The TWINSITE logo links back to the home page.
+<p align="center">
+  <img src="https://img.shields.io/badge/NASA_Space_Apps-2026-ff8f4a?style=for-the-badge&labelColor=0e0a08" alt="NASA Space Apps 2026">
+  <img src="https://img.shields.io/badge/Team-AstroWinners-f0c27a?style=for-the-badge&labelColor=0e0a08" alt="Team AstroWinners">
+  <img src="https://img.shields.io/badge/Status-Research_prototype-e7a58c?style=for-the-badge&labelColor=0e0a08" alt="Status: research prototype"><br>
+  <img src="https://img.shields.io/badge/Python-3.10+-d9c39a?style=flat-square&logo=python&logoColor=white&labelColor=1a120d" alt="Python 3.10+">
+  <img src="https://img.shields.io/badge/Flask-API-d9c39a?style=flat-square&logo=flask&logoColor=white&labelColor=1a120d" alt="Flask">
+  <img src="https://img.shields.io/badge/scikit--learn-PCA_·_K--means-d9c39a?style=flat-square&logo=scikitlearn&logoColor=white&labelColor=1a120d" alt="scikit-learn">
+  <img src="https://img.shields.io/badge/CesiumJS-1.140-d9c39a?style=flat-square&logo=cesium&logoColor=white&labelColor=1a120d" alt="CesiumJS 1.140">
+  <img src="https://img.shields.io/badge/Leaflet-1.9.4-d9c39a?style=flat-square&logo=leaflet&logoColor=white&labelColor=1a120d" alt="Leaflet 1.9.4">
+  <img src="https://img.shields.io/badge/Groq-optional_AI-d9c39a?style=flat-square&labelColor=1a120d" alt="Groq, optional AI">
+</p>
 
-The project is presented as **TWINSITE**. Its look (starfield, Earth horizon, Mars limb, glass panels,
-orange accents, Orbitron and Inter fonts, mission bar) comes from the design template in `../index.html`.
-All features of the previous single-page version are kept; that version is backed up in `legacy/v1/`.
+<p align="center">
+  <a href="#launch"><strong>🚀 Launch locally</strong></a> &nbsp;·&nbsp;
+  <a href="#science"><strong>🔬 How the score works</strong></a> &nbsp;·&nbsp;
+  <a href="docs/catalog.md"><strong>🛰️ Resource atlas</strong></a> &nbsp;·&nbsp;
+  <a href="#horizon"><strong>🌌 Roadmap</strong></a>
+</p>
 
-The left panel (mission target, rover filter, scenarios), the mission bar and the assistant are on every
-page. The results are split across **4 pages** inside one document, so changing page never reloads the analysis:
+<a id="what-ships-today"></a>
+<img src="docs/readme/assets/telemetry.svg" width="100%" alt="What ships today: 2 Earth study zones, 4 preset targets plus custom globe regions, about 2.3 million Mars and Moon grid cells, 11 API routes, 9 assistant tools, 5 published reference sites.">
 
-| Page | Content |
-|---|---|
-| `#mission` Mission Control | target and Earth-analog visual cards, mission brief, **Analog Similarity Index** (score ring), selection rationale with **"How the score is built"**, candidate sites, parameter comparison |
-| `#explorer` Site Explorer | Atacama and Merzouga similarity maps, target map (NASA Trek), environmental-signature radar, Analog Zone Benchmark |
-| `#science` Science & Validation | Cross-Planet Pattern Analysis (Planetary Environment Atlas = PCA, Terrain Signature Classes = K-means), field validation, methodology |
-| `#applications` Applications & Report | 7 mission-application **photo cards** (each with a headline metric and a status), **Mission Report** |
+<p align="center">
+  <picture>
+    <source media="(prefers-reduced-motion: reduce)" srcset="docs/readme/assets/signal-static.png">
+    <img src="docs/readme/assets/signal.gif" width="100%" alt="Target → weighted analysis → Earth analog → explanation and report. Animated signal diagram, not live telemetry.">
+  </picture>
+</p>
 
-- **Explainable score.** Score = 100 × (1 − d), where d² is the sum of the weighted squared differences
-  of all compared parameters. The points lost, 100 − score, are therefore split exactly by each
-  parameter's share of d². For example, Jezero vs the Atacama: 100 − 13.2 = 86.8, of which night temperature costs 11.4 points.
-- **Photos:** NASA public-domain images in `static/img/missions/`. Their sources are listed in `credits.json`.
-- **Mission report** (`POST /api/report`, `backend/services/report.py`):
-  - the backend analyses both zones and draws one PNG similarity map per zone with Pillow (no external tiles);
-  - the Groq LLM writes the executive summary, findings, recommendations and risks from these facts only, in JSON mode. Without a key or a network connection, a deterministic summary is used instead;
-  - the browser adds the tables, radar, atlas, photo cards, validation and methodology, then opens a printable page. Use "Print / Save as PDF" to export it.
-  - Open it from the Applications page, the mission bar, or the assistant's "Generate mission report" chip.
+<p align="center">
+  <a href="#flight-plan"><img src="docs/readme/assets/nav-mission.svg" width="49%" alt="01 Explore: from a distant target to an Earth test site. Select, rank, refine."></a>
+  <a href="#science"><img src="docs/readme/assets/nav-data.svg" width="49%" alt="02 Analyze: every layer has a role and a source. Data, APIs, provenance."></a><br>
+  <a href="#architecture"><img src="docs/readme/assets/nav-intelligence.svg" width="49%" alt="03 Discover: computed by science, explained with context. Models, tools, limits."></a>
+  <a href="#reports"><img src="docs/readme/assets/nav-reports.svg" width="49%" alt="04 Prepare: carry the analysis beyond the dashboard. Reports, diagrams, files."></a>
+</p>
 
-## Data roles (never mixed)
+<p align="center"><sub>
+<a href="docs/catalog.md#api">HTTP APIs</a> · <a href="docs/catalog.md#data">Data sources</a> · <a href="docs/catalog.md#intelligence">AI &amp; models</a> · <a href="docs/catalog.md#reports">Reports</a> · <a href="docs/catalog.md#links">Research &amp; links</a> · <a href="docs/implementation.md">Implementation audit</a> · <a href="docs/inventory.md">Every repository file</a>
+</sub></p>
 
-| Data | Files | Used for |
-|---|---|---|
-| Harmonized + normalized (0–1) | `*_features_harmonized_normalized.csv.gz` | **Scoring and ranking only** |
-| Harmonized, physical units | `*_features_harmonized.csv.gz` | **Explanations only** (K, °, m shown to the user) |
-| Earth processed (~1 km) | `pipeline/data_ready/earth/processed/earth_features.csv` | **Refinement only**: exact point inside a top region |
+> [!NOTE]
+> **Scope, plainly.** Implemented today: two Earth study zones, four preset targets plus custom globe regions, deterministic similarity scoring and refinement, PCA and K-means views, five published reference sites, one Groq assistant with nine tools, and printable reports. The proposed **13-agent platform**, live scientific-data ingestion and worldwide search are [future ambitions](#horizon), not shipped features. TwinSite is a research prototype, not a NASA-endorsed mission-planning system.
 
-## How the score works (`backend/services/similarity_engine.py`)
+<a id="flight-plan"></a>
+<img src="docs/readme/assets/section-01.svg" width="100%" alt="01 — Flight plan. The experience.">
 
-1. **Target profile:** mean normalized features of the cells within 50 km of the target.
-2. **Features compared:** those valid on both sides.
-   - `elevation` is excluded: each body has a different reference surface.
-   - `thermal_inertia` and `mineral_index` join automatically once Earth has data.
-3. **Weighted distance:** `d = sqrt(Σ w (x − t)² / Σ w)` and `score = 100 × (1 − d)`.
-   - Values flagged uncertain (estimated temperatures, proxy albedo) get 30 % less weight.
-   - Only cells with **every** compared feature are scored; otherwise missing data would inflate the score.
-4. **Confidence:** the share of the planned evidence that was available and reliable.
-5. **Ranking:** the top 10 regions, at least 25 km apart.
-6. **Refinement** (`refinement.py`): inside each region, the 1 km cell with no water, slope ≤ 15°, and day/night temperatures closest to the target.
+## Explore → compare → understand
 
-Weights, penalty, separation and thresholds are set in `backend/utils/config.py`.
+Start with **Jezero Crater**, where Perseverance landed. Choose your rover's slope limit. TwinSite analyzes **both Earth zones**, ranks candidate regions, explains the differences and proposes a finer test point where data permits. Switch zones, inspect a different candidate, then carry the evidence into a report.
 
-**Typical results:** Jezero 87, Gale 87, Mare Tranquillitatis 63, Apollo 15 70. The Atacama is clearly
-more Mars-like than Moon-like. Night temperature dominates the remaining difference: Atacama nights are 85–180 K warmer.
+| Mission station | What is implemented | Source |
+| :--- | :--- | :--- |
+| **Arrival** · `/` | Planetary hero, Earth/Moon/Mars imagery and entry into the workspace. | [Home](templates/home.html) |
+| **Mission Control** · `/app#mission` | Two Cesium globes; target selection; layer controls; 2D/3D switching; similarity ring; confidence; ranked regions; physical comparisons; score breakdown; mission brief and copy action. | [Dashboard](templates/index.html) · [globe controller](static/js/twinmap.js) |
+| **Site Explorer** · `/app#explorer` | Atacama and Merzouga Leaflet maps, target map, clickable cells, environmental radar, zone benchmark and synchronized region selection. | [Frontend](static/js/app.js) |
+| **Science & Validation** · `/app#science` | PCA environment atlas, K-means terrain classes, body/type coloring, click-to-map exploration, post-hoc checks against published analog sites, methodology. | [Models](backend/services/ml_models.py) · [validation](backend/services/validation.py) |
+| **Applications & Report** · `/app#applications` | Seven application cards with computed metrics and availability labels; printable mission dossier. | [Application logic](static/js/app.js) · [report service](backend/services/report.py) |
+| **Mission assistant** · available across the dashboard | English/French conversational explanations, dashboard context, tool-use labels and report shortcut. Requires a Groq key and network. | [Assistant](backend/services/assistant.py) |
 
-## Targets
+The four workspace pages share one document and keep the current analysis in memory. The sidebar, mission bar and assistant remain available across them.
 
-| Planet | Location | Lat, Lon | Why |
-|---|---|---|---|
-| Mars | Jezero Crater | 18.38, 77.58 | Perseverance site, ancient delta |
-| Mars | Gale Crater | −5.40, 137.80 | Curiosity site, layered sediments |
-| Moon | Mare Tranquillitatis | 8.50, 31.40 | Apollo 11 region, basaltic plains |
-| Moon | Apollo 15 | 26.13, 3.63 | Hadley Rille, mare/highland boundary |
+<details>
+<summary><strong>Choose a target · four presets, two zones, custom regions</strong></summary>
 
-Targets are defined in `backend/utils/config.py`.
+| Target | Coordinates · east-positive longitude | One-click scenario | Slope limit |
+| :--- | :--- | :--- | :--- |
+| Mars · Jezero Crater | 18.38°, 77.58° | Perseverance-class rover test | 15° |
+| Mars · Gale Crater | −5.40°, 137.80° | Curiosity-class drive & drill | 15° |
+| Moon · Apollo 15 | 26.13°, 3.63° | Astronaut EVA + lunar rover training | 10° |
+| Moon · Mare Tranquillitatis | 8.50°, 31.40° | Lander site rehearsal | 8° |
 
-## Architecture
+**Custom regions:** click the target globe. The analysis uses a circle with radius **25, 50 or 100 km**, displayed as an enclosing **50, 100 or 200 km** square. The region check reports cell count, usable features and physical values before analysis. Its three-feature precheck is less strict than the engine's four-feature requirement; “analysable” is not a guarantee of a ranking.
 
+**Earth search areas:** Atacama, Chile (25–22° S, 70–66° W; default), and Merzouga–Erg Chebbi, Morocco (30–32° N, 5–3° W). These are bounded study areas, not a worldwide search. [Configuration](backend/utils/config.py) · [custom-region implementation](backend/services/layers.py).
+
+</details>
+
+<details>
+<summary><strong>Open the seven application cards · implemented answers and their limits</strong></summary>
+
+| Card | What the code actually provides |
+| :--- | :--- |
+| Analog field testing | Top regions, similarity and a refined Earth point when one qualifies. |
+| Rover traverse | Slope-based accessible share and terrain statistics; not a traversability simulation or route planner. |
+| Thermal environment | Target/test-site day/night values and thermal swing; some target values are modeled. |
+| Surface material | Mars-only heuristic classification from thermal inertia. No comparable Earth thermal-inertia map; lunar classification unavailable. |
+| Lunar cold traps | Preliminary lunar temperature check against 110 K; not ice detection or a full cold-trap survey. |
+| Habitat site assessment | Slope, thermal swing and Mars iron when available; not a habitat design or construction suitability model. |
+| Science communication | Similarity, closest features, largest differences and comparative charts. |
+
+These cards exist in [useCaseAnswers](static/js/app.js). Their presence does not mean all seven scientific problems are solved.
+
+</details>
+
+<a id="science"></a>
+<img src="docs/readme/assets/section-02.svg" width="100%" alt="02 — Evidence, before inference. The science.">
+
+## A similarity score you can inspect
+
+**100 means an identical profile on the shared normalized feature scale. It is not a probability of mission success.** The score uses surface properties; it does not reproduce gravity, atmosphere, pressure or radiation.
+
+```text
+effective weight = nominal weight × (1 − 0.30 × target uncertainty)
+                                  × (1 − 0.30 × Earth-cell uncertainty)
+
+distance = √( Σ effective_weight × (Earth_feature − target_mean)²
+              / Σ effective_weight )
+score    = 100 × (1 − distance)
 ```
-app/
-├── backend/
-│   ├── app.py                     Flask entry point (create_app, page route, data preload)
-│   ├── routes/
-│   │   └── similarity_routes.py   /api/targets, /api/status, /api/similarity
-│   ├── services/
-│   │   ├── data_loader.py         load_earth_data / load_mars_data / load_moon_data (pandas)
-│   │   └── similarity_engine.py   PLACEHOLDER: compute() contract for the next step
-│   ├── utils/
-│   │   └── config.py              paths, targets, features, server settings
-│   └── README.md                  backend details
-├── templates/
-│   └── index.html                 the whole interface (one Jinja2 template)
-├── static/
-│   ├── css/style.css              dashboard design (responsive)
-│   └── js/app.js                  vanilla JS: calls the API, fills the dashboard
-├── requirements.txt
-└── README.md
+
+1. Average the normalized cells within the target's circular window (50 km for presets).
+2. Compare available shared features; require at least four. Exclude elevation because the bodies use different reference surfaces. Reject Earth cells missing any selected feature.
+3. Rank up to ten regions, at least 25 km apart. The optional rover filter admits regions where at least 50% of land cells meet the chosen 5–30° slope limit; it **does not alter scores**.
+4. Refine each region using the processed Earth grid: exclude water and steep cells, then minimize day/night temperature mismatch. If target temperatures are unavailable, use the lowest qualifying slope. A qualifying point may be absent.
+5. Explain each feature's share of weighted squared distance, physical values, missing features and confidence. The interface allocates the lost score points using those shares; this is an attribution convention, not an independent additive physical model.
+
+| Data role | Resolution / scale | Used for |
+| :--- | :--- | :--- |
+| [Harmonized, normalized](data_ready/harmonized/) | ~11 km regions · common 0–1 scale | Similarity and model features |
+| [Harmonized, physical](data_ready/harmonized/validation_report.md) | Same regions · K, degrees, meters, albedo, TIU, Fe wt% | Explanations, tables and display layers |
+| [Processed Earth](data_ready/earth/processed/) / [Merzouga](data_ready/merzouga/processed/) | ~1 km cells | Rover eligibility and refined points |
+
+**Confidence** measures available effective feature weight relative to all planned feature weight. It is an evidence-coverage indicator, not a calibrated statistical certainty. [Engine](backend/services/similarity_engine.py) · [refinement](backend/services/refinement.py) · [full scientific notes](docs/implementation.md#science).
+
+<details>
+<summary><strong>Inspect coverage, models and validation</strong></summary>
+
+The bundled [harmonization report](data_ready/harmonized/validation_report.md) records **1,200 Atacama**, **400 Merzouga**, **1,843,200 Mars** and **460,800 Moon** rows. Rows are grid cells, not all complete observations. Mars has nine populated feature columns; Earth zones and Moon have seven. Thermal inertia and iron are absent for the Earth zones and Moon, and elevation is excluded from scoring, leaving six usual shared scoring features.
+
+**Two independent model views:** PCA projects six environmental features into two dimensions. K-means uses slope, roughness and relief, selecting `k` from 3–6 by silhouette score. Training samples up to 3,000 cells per body; K-means weights balance the bodies, while PCA fits the sampled rows without these weights. Merzouga is projected through the same fitted models. These models do not determine the similarity score.
+
+**Five published reference sites:** Licancabur, Yungay and Salar de Pajonales in the Atacama; the MARS2013 Weyprecht and Payer camps near Merzouga. Validation finds the closest scored cell within 30 km, its percentile and the nearest ranked region. Reference sites never train the models or change the ranking. A low Yungay rank can reflect missing aridity features, not a failed field study. [Sources and coordinates](backend/data/validation_sites.json).
+
+**Limits carried into the documentation:** modeled Mars temperatures; measured and estimated lunar temperatures; lunar albedo proxy; coarse NASA POWER albedo; unresolved dunes/boulders; incomplete coverage; limited study areas; no terrain-displaced Cesium surface. Scores depend on target, features, data and filter settings. Old README example scores are not treated as a new benchmark.
+
+</details>
+
+<a id="architecture"></a>
+<img src="docs/readme/assets/section-03.svg" width="100%" alt="03 — A system you can trace. The architecture.">
+
+## Follow a result to its source
+
+<img src="docs/readme/assets/architecture.svg" width="100%" alt="Three data roles feed one shared analysis service. Dashboard, Groq tools and reports read its results; PCA and validation provide additional views.">
+
+The application is **Flask + pandas/NumPy + scikit-learn + vanilla JavaScript**, with CesiumJS 1.140.0, Leaflet 1.9.4 and Chart.js 4.4.1 in the browser. Pillow generates report maps. Groq is the only implemented LLM provider; `openai/gpt-oss-120b` is its configured default model identifier, not a direct OpenAI API integration.
+
+| Open a subsystem | Explore |
+| :--- | :--- |
+| **11 HTTP API routes** | [Methods, request fields, responses and examples](docs/catalog.md#api) |
+| **Scientific data & map services** | [Product provenance, bundled files, tiles and missing datasets](docs/catalog.md#data) |
+| **AI & ML** | [Provider configuration, all nine assistant tools, PCA and K-means](docs/catalog.md#intelligence) |
+| **Source code** | [Component-by-component implementation audit](docs/implementation.md) |
+| **Complete file map** | [Every file in the audited base snapshot](docs/inventory.md) |
+
+<details>
+<summary><strong>Expand the live Markdown architecture diagram</strong></summary>
+
+```mermaid
+flowchart TD
+    Browser[Browser: home and four-page dashboard] --> API[Flask: five API blueprints]
+    API --> Analysis[Shared cached analysis]
+    Normalized[Normalized harmonized CSVs] --> Analysis
+    Physical[Physical harmonized CSVs] --> Analysis
+    Processed[Processed Earth CSVs] --> Refine[Rover filter and refinement]
+    Refine --> Analysis
+    Analysis --> Validation[Post-hoc reference-site checks]
+    Normalized --> ML[PCA and K-means]
+    ML --> API
+    Analysis --> API
+    API --> Assistant[Groq assistant: nine tools]
+    Assistant --> Analysis
+    API --> Report[Report facts and Pillow maps]
+    Report --> Analysis
+    Report --> Narrative[Groq narrative or deterministic fallback]
+    Narrative --> Print[Browser report: Print / Save as PDF]
+    Tiles[NASA Trek / GIBS / Esri tiles] --> Browser
 ```
 
-```
-browser (index.html + app.js) ──fetch──► Flask routes ──► data_loader ──► pipeline/data_ready/harmonized/*.csv.gz
-                                                      └──► similarity_engine.compute()  (next step)
-```
+[Diagram guide & rendering constraints](docs/readme/README.md) · [API catalog](docs/catalog.md#api)
 
-The data is **read in place** from `../pipeline/data_ready/harmonized/` and never copied.
-It is loaded once at start-up and kept in memory.
+</details>
 
-## Run
+<a id="reports"></a>
+<img src="docs/readme/assets/section-04.svg" width="100%" alt="04 — From analysis to field dossier. The report.">
+
+## Keep the evidence with the recommendation
+
+The report service analyzes both zones, assembles computed facts and draws local PNG similarity maps. Groq can write the narrative from these facts; without a usable key or provider connection, a deterministic summary is used. The browser adds rankings, comparisons, radar, available PCA plots, globe captures, application cards, validation and methodology, then opens **Print / Save as PDF**.
+
+This is a browser print workflow, not a server PDF endpoint. Reports are generated on demand; no committed mission-report PDF is claimed. [Report implementation](backend/services/report.py) · [all bundled validation and processing reports](docs/catalog.md#reports).
+
+<a id="horizon"></a>
+<img src="docs/readme/assets/section-05.svg" width="100%" alt="05 — The next horizon. Future ambitions.">
+
+## Ambitious by design. Precise about what ships.
+
+| Future ambition — not implemented | What exists now | What would justify changing the label |
+| :--- | :--- | :--- |
+| **13 specialized AI agents** | One Groq assistant with nine callable tools; separate report narrative call | Agent roles, orchestration, execution and evaluation committed and demonstrated |
+| **Live scientific API ingestion** for weather, geology and environmental context | Bundled processed datasets; live map tile requests | Reproducible download/refresh code, provenance and checks committed |
+| **More Earth analog zones / worldwide discovery** | Atacama and Merzouga only | New zone data, configuration, coverage and validation |
+| **Earth thermal inertia and mineral data; lunar H-parameter and iron** | Schema fields and explicit missing-data handling | Comparable datasets populated and scientific assumptions documented |
+| **Finer albedo and 30 m terrain refinement** | Coarse POWER albedo, ~11 km scoring, ~1 km refined points | Higher-resolution sources and a tested method |
+| **User-adjustable feature weights** | Weights live in Python configuration | UI and API controls with constraints and validation |
+| **Stronger scientific validation** | Post-hoc ranking checks at five reference sites; bundled model reports | Independent field evidence, sensitivity analysis and reproducibility benchmarks |
+| **Additional AI providers / visual similarity** | Groq only; feature-distance matching | Provider or image-model integrations and evaluation |
+
+No delivery dates or completed agent roles are implied. See the [scope audit](docs/implementation.md#future) before promoting an ambition to an implemented capability.
+
+<a id="launch"></a>
+
+## Launch locally
+
+Use **Python 3.10+** with a version supported by the dependencies. Run these commands from a normal full clone; the repository already contains `data_ready/`.
 
 ```bash
-cd app
-python3 -m venv .venv                     # local Python environment (not committed)
-source .venv/bin/activate                 # Windows: .venv\Scripts\activate
+git clone https://github.com/hakim-AI-hub-88/AstroWinners-TwinSite.git
+cd AstroWinners-TwinSite
+python3 -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env                      # then put your own GROQ_API_KEY in .env
-python backend/app.py                     # http://127.0.0.1:5050 (home) · /app (dashboard)
+python backend/app.py
 ```
 
-- **Self-contained data:** the app reads `app/data_ready/`, a copy of the pipeline output `pipeline/data_ready/`
-  (harmonized Earth/Mars/Moon/Merzouga features, 1 km Earth data, validation reports). Without that folder it
-  falls back to `../pipeline/data_ready/`; `DATA_READY_DIR=/path` overrides both.
-- **Secrets:** keys live only in `app/.env` (git-ignored). `.env.example` shows the expected variables.
+Open **[the home page](http://127.0.0.1:5050/)** or **[Mission Control](http://127.0.0.1:5050/app)**. On Windows, activate with `.venv\Scripts\activate`.
 
-- **Backend and frontend run together.** Flask serves the page (`/`), the static files and the API.
-- **Start-up time:** about 15 s, mostly reading the Mars file (1.8 million cells).
-- **Settings** (environment variables):
-  - `APP_PORT`: server port, default 5050.
-  - `APP_DEBUG=1`: Flask debug mode.
-  - `HARMONIZED_DATA_DIR`: use another data folder.
-- **Data must exist first.** If it doesn't, run the pipeline in `../pipeline`:
-  `run_pipeline.py`, then `run_planetary.py`, then `run_harmonize.py`.
+**Optional AI:** copy `.env.example` to `.env`, replace its placeholder with your own `GROQ_API_KEY`, and optionally set `GROQ_MODEL`. Leave the key unset for core analysis and deterministic reports. `.env` is ignored by Git. The key stays on the server; assistant conversations/tool results and report facts are sent to Groq when those AI features are used.
 
-## API
+<details>
+<summary><strong>Configuration, dependencies and first checks</strong></summary>
 
-| Method | Route | Returns |
-|---|---|---|
-| GET | `/api/targets` | `{"mars": ["Jezero Crater", "Gale Crater"], "moon": ["Mare Tranquillitatis", "Apollo 15"]}` |
-| GET | `/api/status` | Per body: loaded, rows, available and missing features, coverage |
-| POST | `/api/report` | Body `{"planet", "location", "rover_mode", "max_slope", "use_ai"}`. Returns facts for both zones, the AI narrative and map PNGs (base64). |
-| POST | `/api/similarity` | Body `{"planet": "mars", "location": "Jezero Crater"}`. Returns the placeholder answer plus the target information (cells within 50 km, mean feature profile). |
+| Variable | Default / purpose |
+| :--- | :--- |
+| `APP_HOST`, `APP_PORT`, `APP_DEBUG` | `127.0.0.1`, `5050`, `0`; debug only when exactly `1` |
+| `DATA_READY_DIR` | Repository `data_ready/`, or sibling `../pipeline/data_ready/` if absent |
+| `HARMONIZED_DATA_DIR` | `DATA_READY_DIR/harmonized/` |
+| `EARTH_PROCESSED_FILE` | Atacama processed CSV under `DATA_READY_DIR` |
+| `MERZOUGA_PROCESSED_FILE` | Merzouga processed CSV under `DATA_READY_DIR` |
+| `GROQ_API_KEY`, `GROQ_MODEL` | Optional assistant/report credentials; default model `openai/gpt-oss-120b` |
 
-## Two Earth analog zones: Atacama (Chile) + Merzouga (Morocco)
+**Path and server overrides must be exported before startup.** The minimal `.env` loader runs after those settings are read, so `.env` is reliable for Groq settings, not earlier configuration values. The upstream data-processing scripts mentioned by older notes are not included in this repository.
 
-Both zones go through the same pipeline: Earth pipeline, then common schema, then ~11 km harmonization (`pipeline/run_zones.py`).
-They share the **same 0–1 scale**, so their scores can be compared directly. The Atacama stays the **default zone**: without a `zone` parameter, every endpoint behaves as before.
+```bash
+curl http://127.0.0.1:5050/api/status
+curl http://127.0.0.1:5050/api/zones
+curl -X POST http://127.0.0.1:5050/api/similarity \
+  -H 'Content-Type: application/json' \
+  -d '{"planet":"mars","location":"Jezero Crater","zone":"atacama","rover_mode":true,"max_slope":15}'
+```
 
-- **Zone selector** in the search form. Every search analyses **both** zones; the selector, the comparison buttons or a click on a zone map decide which zone drives the ranking, brief, radar, use cases, validation, ML and assistant.
-- **Two Leaflet maps:** the original Atacama map, plus a **Merzouga-only map**. Both show similarity colours, numbered top regions and validation sites (▲). An "analysed zone" badge marks the active one.
-- **"Earth analog zones compared" card:**
-  - both best scores, side by side;
-  - the closer analog and the point difference;
-  - a feature table (target vs each zone's best region, physical values, ✓ = closer on the scoring scale).
-- **Validation in Merzouga:** the Austrian Space Forum **MARS2013** Mars simulation camps (base "Weyprecht" 31.365° N 4.071° W; forward camp "Payer" 30.900° N 3.875° W).
-  - Sources: Groemer et al. 2014, *Astrobiology* 14:360; IAC 2013 paper; ESA exploration portal.
-  - For Jezero, Weyprecht ranks at the **83rd percentile**.
-- **ML:** the models are still trained on Atacama, Mars and Moon (results unchanged); Merzouga is projected with the same fitted models.
-- **AI assistant:** every tool accepts `zone`, and a new `compare_zones` tool compares the two zones.
+Startup loads the bundled datasets and fits models; time and memory depend on the machine. Browser libraries, fonts and external map imagery use CDNs/services, so an uncached full interface needs a network connection. Numerical analysis reads local data; live AI also needs a network connection. The Flask development server is the documented local entry point; production hosting is not supplied here.
 
-**API**
-- `GET /api/zones`
-- `POST /api/similarity` with `"zone": "atacama" | "merzouga"`
-- `GET /api/ml?...&zone=merzouga`
+</details>
 
-**Results** (rover filter at 15°):
+---
 
-| Target | Atacama | Merzouga |
-|---|---|---|
-| Jezero | 86.8 | 81.2 |
-| Gale | 87.1 | 81.7 |
-| Apollo 15 | 69.7 | 62.8 |
-| Mare Tranquillitatis | 63.3 | 57.5 |
-
-The Atacama is the closer analog, because its nights are colder and its terrain rougher.
-
-**Known limits**
-- **Albedo** (NASA POWER, 1°) has only 4 values over Merzouga, which creates a visible step at 4° W in the Merzouga ranking. A finer albedo source (e.g. MODIS MCD43A3, 500 m) would remove it.
-- At ~3.7 km, the features cannot see dune shapes (Erg Chebbi).
-
-## Mission planner (use case)
-
-> *An agency is preparing a rover for Jezero. Where should it test it on Earth?*
-> The tool answers in one click, with evidence.
-
-- **4 one-click scenarios:**
-
-  | Scenario | Target | Slope limit |
-  |---|---|---|
-  | Perseverance-class rover test | Jezero | ≤ 15° |
-  | Curiosity-class drive & drill | Gale | ≤ 15° |
-  | Astronaut EVA + lunar rover training | Apollo 15 | ≤ 10° |
-  | Lander site rehearsal | Mare Tranquillitatis | ≤ 8° |
-
-- **Rover-accessible filter** (toggle + slider, 5–30°). A region (~11 km) is proposed only if at least 50 % of its land 1 km cells have a mean slope at or below the limit.
-  - It uses the **Earth processed data** (1 km means of 30 m NASADEM slopes).
-  - It **never changes scores**; it only restricts which regions are proposed.
-  - The exact point also respects the limit.
-  - Non-drivable regions are shown in grey on the map.
-- **Mission brief:**
-  - the question;
-  - the answer (exact coordinates, score, confidence, drivable share, slope and elevation of the point);
-  - evidence (closest matches, rank, NASA datasets used);
-  - limits to plan for;
-  - links to open the point in **NASA Worldview** or Google Maps, and a **Copy brief** button (plain text for an email or report).
-- **API:** `POST /api/similarity` also accepts `"rover_mode": true` and `"max_slope": 5–30`.
-
-## Machine-learning models (section after the maps)
-
-Two **unsupervised** scikit-learn models, independent of the similarity score, so the jury can see whether different methods agree.
-
-**Training rules**
-- Harmonized **normalized** data only.
-- A **balanced sample** of 3,000 cells per body, so Mars (1.8 M cells) does not dominate.
-- Fixed random seed.
-- Trained once at server start (~5 s).
-- **No labels:** the NASA validation sites are never used.
-
-| Model | Method | Features | Result |
-|---|---|---|---|
-| **A · Planetary environment space** | PCA, 2 components | slope, roughness, relief, day/night temperature, albedo | 2-D map keeps **80 %** of the variance. The Atacama is **1.8× closer to Mars than to the Moon** (centroid distance 0.50 vs 0.89). |
-| **B · Terrain types** | K-means; k chosen by **silhouette** (k = 3, 0.61) | slope, roughness, relief | 3 types shared by all bodies: flat plains, gentle/rolling, rugged |
-
-**Why some features are left out of the terrain types**
-- **Temperatures:** with them, the clusters simply separate the bodies, because Atacama nights are much warmer (Model A already shows this).
-- **Albedo:** each body uses a different instrument, which lowered the silhouette to 0.39.
-
-**Agreement with the similarity ranking:** share of top-10 regions that have the target's terrain type.
-
-| Target | Top-10 regions of the target's type |
-|---|---|
-| Jezero | 9 / 10 |
-| Apollo 15 | 10 / 10 |
-| Mare Tranquillitatis | 10 / 10 |
-| Gale | 0 / 10 |
-
-Gale's area is only 39 % rugged terrain, and the Atacama has 2.5 % of that type. The page shows this as a limit.
-
-**Interactive features**
-- Scatter coloured by body or by terrain type.
-- Click an Atacama point to update the radar and the map.
-- "Show on the Atacama map" overlays one terrain type on the Leaflet map.
-- The AI assistant has a `get_ml_insights` tool.
-
-**Code and API:** `services/ml_models.py`, `routes/ml_routes.py`, and `GET /api/ml?planet=&location=&rover_mode=&max_slope=`.
-
-## Validation against NASA analog sites (bottom of the page)
-
-After each analysis, we check where Atacama sites that NASA or NASA-funded teams **already studied as Mars analogs** fall in our ranking.
-- **The model is not changed** and the sites are **never an input** to the score.
-- `services/validation.py` only reads results that were already computed.
-- The sites and their sources are in `backend/data/validation_sites.json`.
-
-| Site | Program | Coordinates (source) |
-|---|---|---|
-| Licancabur summit lake | NASA Ames / SETI High Lakes Project | 22.834° S, 67.884° W (Wikipedia; NASA NTRS 20030110696) |
-| Yungay hyperarid site | NASA Ames ARADS rover drilling tests | 24.10° S, 70.01° W (PANGAEA 10.1594/PANGAEA.929564) |
-| Salar de Pajonales | SETI / NASA Astrobiology Institute | 25.144° S, 68.82° W (Wikipedia; Frontiers 2022) |
-
-**Metrics for each site**
-- **Score and percentile** of the closest ~11 km cell ("better than X % of Atacama cells"; a random site averages 50 %).
-- **Nearest top-10 region** and its distance.
-- **Verdict:** ≥ 80 % strong agreement, ≥ 60 % agreement, 40–60 % neutral, below that low rank.
-
-**Results (rover filter at 15°)**
-
-| Target | Licancabur | Yungay | Salar de Pajonales |
-|---|---|---|---|
-| Gale Crater | **99th percentile** | 26 | 19 |
-| Jezero Crater | 5 | 28 | **75th percentile** |
-
-**Interpretation, shown honestly on the page**
-- Each site matches a different kind of target: Licancabur, a rugged volcanic crater, matches Gale; Pajonales, a salt-flat basin, matches Jezero.
-- Yungay was chosen for **dryness**, which the cross-planet features do not compare. That is a limit of the method.
-- María Elena South was not included: no published coordinates were found.
-
-The NASA sites appear as ▲ on the Atacama map. The AI assistant has a `get_validation` tool.
-
-## AI Mission Assistant
-
-The **"Ask the mission assistant"** button (bottom right) opens a chat. You can ask, for example:
-- "Why is site #1 better than #3?"
-- "Can my rover drive at 24.1 S, 66.6 W?"
-- "Explain this score like I'm 10"
-
-It answers in English or French.
-
-**How it works**
-- **LLM:** Groq (`openai/gpt-oss-120b`, change it with the `GROQ_MODEL` variable) with **tool calling**.
-- **The LLM computes nothing itself.** It calls tools that run the project's own analysis (`services/analysis.py`, the same code as the dashboard):
-
-  | Tool | What it returns |
-  |---|---|
-  | `run_similarity` | Score, top 10 regions, exact points, features used |
-  | `get_region_details` | Physical values per feature and each feature's share of the distance |
-  | `compare_regions` | Why one rank beats another |
-  | `get_cell_at` | Score and drivability of any point in the area |
-  | `get_method_and_limits` | Algorithm, weights, data roles, known limits |
-  | `get_dataset_info` | NASA datasets, resolution and coverage per body |
-
-- **Dashboard state:** the browser sends the current target, rover filter and selected region, so "site #1" is the region the user sees.
-- **System prompt rules:** every number must come from a tool, and the relevant limits are always stated.
-- Each answer shows which tools were used.
-
-**Setup**
-- `pip install -r requirements.txt` (includes `groq`).
-- Put the key in **`app/.env`**: `GROQ_API_KEY=...`. That file is git-ignored and readable only by its owner; the key is never sent to the browser.
-- Without a key, or without internet, the assistant shows "unavailable" and the rest of the app keeps working.
-
-**API**
-- `GET /api/assistant/status`
-- `POST /api/assistant` with `{"question", "history"?, "context"?}`
-- Code: `backend/services/assistant.py` and `backend/routes/assistant_routes.py`.
-
-## Problems this study can solve (bottom of the page)
-
-Seven questions are listed before any search. After each **Find Earth Analogs**, each one gets an answer
-computed for the selected target, using physical values only (the explanation role of the data).
-
-| # | Question | Mars target | Moon target |
-|---|---|---|---|
-| 1 | Where to test a rover in the Atacama? | ✅ top 3 regions + exact point | ✅ |
-| 2 | Can a rover drive here? | ✅ drivable share, slope of the point, target terrain | ✅ |
-| 3 | What temperatures must the hardware survive? | ✅ target vs test-site range in °C | ✅ |
-| 4 | Is the ground dust, sand or rock? | 🟡 class from TES thermal inertia (< 100 dust, < 350 sand, else rock) | ⛔ no lunar thermal-inertia map yet |
-| 5 | Where could water ice survive on the Moon? | ⛔ not applicable | 🟡 daytime maximum vs the ~110 K stability limit |
-| 6 | Where to build a base? | ✅ slope, thermal swing, GRS iron | 🟡 no lunar iron map yet |
-| 7 | Why does the Atacama resemble Mars? | ✅ score + closest and most different features | ✅ |
-
-The logic lives in `static/js/app.js` (`USE_CASES`, `useCaseAnswers`). Badges: ✅ answered, 🟡 partial, ⛔ not applicable or no data.
-
-## Interactive maps
-
-| Map | Library | Basemap (official NASA tiles, no API key) |
-|---|---|---|
-| Atacama similarity map | Leaflet 1.9.4 | NASA GIBS *Blue Marble shaded relief* |
-| Mars target | Leaflet, `L.CRS.EPSG4326` | NASA Trek *Viking MDIM 2.1 colour mosaic* / *MOLA colour relief* (switchable) |
-| Moon target | Leaflet, `L.CRS.EPSG4326` | NASA Trek *LRO WAC global mosaic* |
-| Radar chart | Chart.js 4.4.1 | — |
-
-- **Atacama map:** one square per ~11 km cell. The colour is the **rank** of its score among Atacama cells (red = most similar, blue = least), because scores are often packed in a narrow band. The legend shows the real score range.
-- **Click a square** to see target vs that cell on the radar. Clicking a ranked region (or its number) updates every card.
-- **Target map:** the circle shows the 50 km area averaged into the target profile, drawn with the body's own radius.
-- **Radar:** axes use the normalized scale (the same one as the score); tooltips show physical values.
-
-Leaflet, Chart.js and the tiles load from the internet, so the demo needs a connection. Without one, the rest of the dashboard still works.
-
-## Possible next steps
-
-- **Validation:** check that Atacama sites already used for Mars rover tests rank well.
-- **Weight sliders** in the interface (the engine already reads weights from config).
-- **Finer refinement** with NASADEM 30 m (local slope and roughness).
-# twinsite
+<p align="center"><strong>Earth is the rehearsal. The next world is the mission.</strong><br>
+<sub>Cover artwork supplied by the TwinSite team (illustrative) · Diagrams generated in code · Inspired by <a href="https://github.com/desagencydes-rgb">desagencydes-rgb</a> · <a href="docs/catalog.md#credits">Image credits &amp; source rights</a><br>
+GitHub-native links, disclosures, SVG diagrams and GIF motion. The interactive 3D globes run in TwinSite, not inside this README.<br>
+<a href="docs/readme/README.md">Design &amp; preview notes</a> · <a href="#top">Back to orbit ↑</a></sub></p>
