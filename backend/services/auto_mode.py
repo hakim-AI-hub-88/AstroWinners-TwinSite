@@ -546,7 +546,7 @@ def _agents(m: dict, s: dict) -> str:
     res["links"] = {"console": f"/console/analysis/{run_id}", "platform_report": f"/v1/missions/{run_id}/report",
                     "platform_status": f"/v1/missions/{run_id}"}
     deadline = time.monotonic() + AGENTS_TIMEOUT_S
-    after, status, events, trace = 0, "queued", [], {}
+    after, status, events, trace, st, grace = 0, "queued", [], {}, {}, 3
     while time.monotonic() < deadline:
         try:
             _, st = _get_json(f"/v1/missions/{run_id}")
@@ -567,8 +567,14 @@ def _agents(m: dict, s: dict) -> str:
         last = events[-1]["summary"] if events else "queued"
         s["detail"] = f"Run {run_id} {status}: {last}"
         _save(m)
-        if status in TERMINAL and (trace.get("records") or not trace.get("pending")):
-            break
+        if status in ("failed", "cancelled"):
+            break                                  # report the platform's own error below
+        if status in TERMINAL:
+            if trace.get("records") or not trace.get("pending"):
+                break
+            grace -= 1                             # trace may land just after the run commits
+            if grace <= 0:
+                break
         time.sleep(POLL_S)
     else:
         raise RuntimeError(f"Platform run {run_id} still '{status}' after {int(AGENTS_TIMEOUT_S)} s; "

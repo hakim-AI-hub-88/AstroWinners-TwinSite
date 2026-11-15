@@ -143,6 +143,51 @@ class AutoModeApiTest(unittest.TestCase):
         body = self.client.get(f"/api/auto/missions/{mid}").get_json()
         self.assertNotIn("pid", body)
 
+    def _platform_mission(self, status, records, pending):
+        """Run a mission against a mocked platform API returning `status` and an agent trace."""
+        def get_json(path, timeout=20.0):
+            if path.endswith("/agents"):
+                return 200, {"records": records, "pending": pending, "analysis_mode": "ai"}
+            if "/events" in path:
+                return 200, [{"sequence": 1, "phase": "P10", "state": "running", "summary": "acquire"}]
+            if path.endswith("/result"):
+                return 200, {"sites": [{"id": "earth-1", "name": "Site One", "eligible": True,
+                                        "observed_similarity": 0.91, "coverage": 1.0}], "limitations": ["l1"]}
+            return 200, {"status": status, "error": "WORKER_CRASH: boom" if status == "failed" else None}
+
+        def boom(*a, **k):
+            raise FileNotFoundError("dataset missing")
+        with mock.patch.object(auto_mode, "_post_json", return_value=(202, {"run_id": "run-x", "prerank": []})), \
+                mock.patch.object(auto_mode, "_get_json", side_effect=get_json), \
+                mock.patch.object(auto_mode, "POLL_S", 0.01), \
+                mock.patch("services.data_loader.LOADERS", {"mars": boom, "moon": boom}), \
+                mock.patch("services.data_loader.load_zone", boom):
+            r = self.client.post("/api/auto/missions", json={"target": {"planet": "mars", "lat": 18.4, "lon": 77.6}})
+            return wait_done(r.get_json()["mission_id"], timeout=10)
+
+    def test_agents_step_reports_platform_failure_fast(self):
+        t0 = time.time()
+        m = self._platform_mission("failed", [], True)
+        agents = next(s for s in m["steps"] if s["id"] == "agents")
+        self.assertLess(time.time() - t0, 8)
+        self.assertEqual(agents["state"], "failed")
+        self.assertIn("WORKER_CRASH", agents["detail"])
+
+    def test_agents_trace_stored_without_account_names(self):
+        rec = {"agent_id": "A06", "role": "Domain Analyst", "phase": "P60", "execution": "ai", "summary": "9 findings",
+               "agent_result": {"status": "completed"},
+               "inference": {"ok": True, "provider": "groq", "model": "m1", "account": "GROQ_API_KEY_X", "latency_ms": 5}}
+        m = self._platform_mission("completed_with_limits", [rec], False)
+        agents = next(s for s in m["steps"] if s["id"] == "agents")
+        self.assertEqual(agents["state"], "completed", agents)
+        self.assertEqual(m["state"], "completed")
+        a = m["result"]["agents"][0]
+        self.assertEqual((a["agent_id"], a["execution"], a["outcome"], a["provider"]), ("A06", "ai", "completed", "groq"))
+        self.assertEqual(m["result"]["platform"]["top_sites"][0]["name"], "Site One")
+        self.assertEqual(m["result"]["links"]["console"], "/console/analysis/run-x")
+        raw = (Path(_TMP) / "auto" / f"{m['mission_id']}.json").read_text()
+        self.assertNotIn("GROQ_API_KEY", raw)
+
     def test_mission_fails_honestly_without_any_data(self):
         def boom(*a, **k):
             raise FileNotFoundError("dataset missing")

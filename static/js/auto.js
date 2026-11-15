@@ -215,6 +215,7 @@
       out.push(`<div class="panel"><h3 class="auto-h3">Platform analog ranking <span class="tag">live NASA evidence</span></h3>`
         + table(["Earth site", "Similarity", "Evidence coverage"], p.top_sites.map((s) =>
           `<tr><td>${esc(s.name || s.site_id)}</td><td><b>${num(100 * (s.similarity || 0))}</b> / 100</td><td>${num(100 * (s.coverage || 0), 0)} %</td></tr>`))
+        + `<p class="auto-hint">Platform similarity uses the live terrain features measured at the target point (slope, roughness, relief) against characterized Earth sites. It is a different feature set from the zone scores above, so the two scales are not directly comparable.</p>`
         + (p.limitations && p.limitations.length ? `<details><summary>Limitations</summary><ul>${p.limitations.map((x) => `<li>${esc(x)}</li>`).join("")}</ul></details>` : "")
         + `</div>`);
     }
