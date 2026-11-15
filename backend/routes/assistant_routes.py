@@ -2,23 +2,23 @@
 # API ROUTES - AI MISSION ASSISTANT
 #
 # Endpoints:
-#   GET  /api/assistant/status -> is the assistant configured? which model?
+#   GET  /api/assistant/status -> is the assistant configured? which path/model?
 #   POST /api/assistant        -> answer one question
 #        body: {"question": "...",
 #               "history": [{"role": "user"|"assistant", "content": "..."}],   (optional)
 #               "context": {"planet", "location", "rover_mode", "max_slope", "selected_rank"}}  (optional)
-#        200: {"answer", "tools_used", "model", "tokens"}
-#        400: missing / too long question ; 503: assistant unavailable (no key, network, provider)
+#        200: {"answer", "tools_used", "model", "provider", "tokens", "mode"}
+#        400: missing / too long question ; 503: assistant unavailable (no provider reachable)
 #
-# The API key stays on the server (utils/config.py reads it from app/.env).
+# Paths: Groq tool-calling when a Groq key exists (env or the platform secret
+# file); otherwise the free multi-provider router answers without tools.
+# Keys stay on the server.
 #############################################################################
 from __future__ import annotations
 
-import os
-
 from flask import Blueprint, jsonify, request
 
-from services import assistant
+from services import ai_bridge, assistant
 from utils import config
 
 bp = Blueprint("assistant", __name__, url_prefix="/api/assistant")
@@ -27,8 +27,13 @@ bp = Blueprint("assistant", __name__, url_prefix="/api/assistant")
 @bp.get("/status")
 def status():
     cfg = config.ASSISTANT
-    return jsonify({"configured": bool(os.environ.get(cfg["api_key_env"], "").strip()),
-                    "provider": "Groq", "model": cfg["model"]})
+    if assistant.groq_configured():
+        return jsonify({"configured": True, "provider": "Groq", "model": cfg["model"], "mode": "groq_tools"})
+    st = ai_bridge.status()
+    names = [p["name"] for p in st["providers"] if p["configured"]]
+    return jsonify({"configured": bool(st["enabled"]), "provider": "free AI router",
+                    "model": ", ".join(names) + " (no tools)" if names else "", "mode": "router_no_tools",
+                    "reason": None if st["enabled"] else st["reason"]})
 
 
 @bp.post("")

@@ -145,30 +145,95 @@ def _parse_json(text: str) -> dict:
 
 
 def narrative(facts: dict, use_ai: bool = True) -> dict:
+    """AI narrative through the free multi-provider router (services.ai_bridge, JSON mode), anchored to the
+    facts: every number it quotes must exist in the facts, otherwise the sentence (list item) is dropped, or
+    the whole AI text is replaced by the deterministic summary when the summary/conclusion is affected."""
     if not use_ai:
         return _fallback(facts)
+    from services import ai_bridge
+
+    keys = ("executive_summary", "key_findings", "recommendations", "risks", "conclusion")
+
+    def shape_ok(obj):
+        if not isinstance(obj, dict) or not isinstance(obj.get("executive_summary"), str) or not obj["executive_summary"].strip():
+            return ["executive_summary (non-empty string) required"]
+        return [f"{k} must be a list" for k in keys[1:4] if not isinstance(obj.get(k, []), list)]
+
     try:
-        from services.assistant import _client  # same Groq client (key read from app/.env)
-        client = _client()
-        resp = client.chat.completions.create(
-            model=config.ASSISTANT["model"], temperature=0.2,
-            response_format={"type": "json_object"},
-            messages=[{"role": "system", "content": SYSTEM},
-                      {"role": "user", "content": json.dumps(facts, ensure_ascii=False)}],
-        )
-        data = _parse_json(resp.choices[0].message.content)
-        out = {k: data.get(k) for k in ("executive_summary", "key_findings", "recommendations", "risks", "conclusion")}
-        if not out["executive_summary"]:
-            raise ValueError("empty narrative")
+        res = ai_bridge.complete_text(SYSTEM, json.dumps(facts, ensure_ascii=False), json_mode=True,
+                                      purpose="report", max_tokens=1400, validate=shape_ok)
+        if res["status"] != "ok":
+            fb = _fallback(facts)
+            fb["note"] = f"AI narrative unavailable ({res['reason']}); deterministic summary used."
+            return fb
+        data = res.get("data") if isinstance(res.get("data"), dict) else _parse_json(res["text"])
+        out = {k: data.get(k) for k in keys}
         for k in ("key_findings", "recommendations", "risks"):
             out[k] = [str(x) for x in (out[k] or [])][:8]
-        out["generated_by"] = f"Groq · {config.ASSISTANT['model']}"
+        out["executive_summary"] = str(out["executive_summary"] or "").strip()
+        out["conclusion"] = str(out["conclusion"] or "").strip()
+        allowed = _fact_numbers(facts)
+        bad_head = _unanchored(out["executive_summary"], allowed) + _unanchored(out["conclusion"], allowed)
+        if not out["executive_summary"] or bad_head:
+            fb = _fallback(facts)
+            fb["note"] = ("AI narrative rejected: it quoted numbers absent from the computed facts ("
+                          + ", ".join(sorted(set(bad_head))[:6]) + "); deterministic summary used.") if bad_head else \
+                "AI narrative was empty; deterministic summary used."
+            return fb
+        removed = []
+        for k in ("key_findings", "recommendations", "risks"):
+            kept = []
+            for item in out[k]:
+                bad = _unanchored(item, allowed)
+                (removed.append({"section": k, "numbers": bad}) if bad else kept.append(item))
+            out[k] = kept
+        out["generated_by"] = ai_bridge.provider_label(res) + (" (cached)" if res.get("cached") else "")
+        out["numeric_check"] = {"policy": "every quoted number must appear in the facts (2 % tolerance)",
+                                "removed_items": removed}
         return out
     except Exception as exc:  # noqa: BLE001 - the report must still be produced
         log.warning("report narrative fallback: %s", exc)
         fb = _fallback(facts)
         fb["note"] = f"AI narrative unavailable ({type(exc).__name__}); deterministic summary used."
         return fb
+
+
+_NUM_RE = re.compile(r"(?<![\w.])-?\d{1,3}(?:,\d{3})+(?:\.\d+)?|(?<![\w.])-?\d+(?:\.\d+)?")
+
+
+def _fact_numbers(facts) -> list[float]:
+    """Every number present in the facts (values and numbers written inside strings), plus 100 (score scale)."""
+    out = [100.0]
+
+    def walk(v):
+        if isinstance(v, bool) or v is None:
+            return
+        if isinstance(v, (int, float)):
+            if math.isfinite(v):
+                out.append(abs(float(v)))
+        elif isinstance(v, str):
+            out.extend(abs(float(t.replace(",", ""))) for t in _NUM_RE.findall(v))
+        elif isinstance(v, dict):
+            for x in v.values():
+                walk(x)
+        elif isinstance(v, (list, tuple)):
+            for x in v:
+                walk(x)
+    walk(facts)
+    return out
+
+
+def _unanchored(text: str, allowed: list[float]) -> list[str]:
+    """Numbers quoted in `text` that are not in the facts (small integers 0-10 are exempt)."""
+    bad = []
+    for token in _NUM_RE.findall(text or ""):
+        x = abs(float(token.replace(",", "")))
+        if x <= 10 and x.is_integer():
+            continue
+        tol = 0.051 if "." in token else 0.51
+        if not any(abs(x - a) <= max(0.02 * a, tol) for a in allowed):
+            bad.append(token)
+    return bad
 
 
 #############################################
