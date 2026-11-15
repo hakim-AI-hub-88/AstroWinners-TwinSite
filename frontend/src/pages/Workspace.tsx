@@ -38,6 +38,7 @@ export default function Workspace() {
   const [allowUnknown, setAllowUnknown] = useState(false)
   const [pm, setPm] = useState<'standalone' | 'combined' | 'both'>('both')
   const [err, setErr] = useState<string | null>(null)
+  const [unreachable, setUnreachable] = useState(false)
 
   const selected = (['Moon', 'Mars'] as const).filter((b) => targets[b])
   const boxFor = (b: 'Moon' | 'Mars'): Box => custom[b] ?? (PRESETS[b].find((p) => p.id === region[b])?.bbox as Box)
@@ -63,6 +64,12 @@ export default function Workspace() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [title, targets, region, custom, mode, earthArea, feats, minCov, maxSites, budget, maxDays, allowUnknown, pm])
 
+  const fail = (e: unknown) => {
+    const net = e instanceof ApiError && e.status === 0
+    setUnreachable(net)
+    setErr(e instanceof ApiError ? `${e.code}${e.field ? ` (${e.field})` : ''}: ${e.message}` : (e as Error).message)
+    if (net) void health.refetch()
+  }
   const run = useMutation({
     mutationFn: async () => {
       if (!live) {
@@ -79,7 +86,7 @@ export default function Workspace() {
       rememberRun({ runId: r.runId, title: r.title, body: selected.join(' + ') || '—', demo: r.demo, at: Date.now() })
       nav(`/analysis/${r.runId}`)
     },
-    onError: (e) => setErr(e instanceof ApiError ? `${e.code}${e.field ? ` (${e.field})` : ''}: ${e.message}` : (e as Error).message),
+    onError: (e) => fail(e),
   })
 
   // Live API accepts measured input only when C1 evidence exists; until then the real pipeline can be exercised with a labelled synthetic fixture.
@@ -90,12 +97,12 @@ export default function Workspace() {
       return { runId: acc.run_id, demo: true, title: `${f.title} (synthetic, live API)` }
     },
     onSuccess: (r) => { rememberRun({ runId: r.runId, title: r.title, body: selected.join(' + ') || '—', demo: true, at: Date.now() }); nav(`/analysis/${r.runId}`) },
-    onError: (e) => setErr(e instanceof ApiError ? `${e.code}: ${e.message}` : (e as Error).message),
+    onError: (e) => fail(e),
   })
   const published = useMutation({
     mutationFn: postPublishedMission,
     onSuccess: (r) => { rememberRun({ runId: r.run_id, title: 'Measured Zagora–Gale', body: 'Earth + Mars', demo: false, at: Date.now() }); nav(`/analysis/${r.run_id}`) },
-    onError: (e) => setErr((e as Error).message),
+    onError: (e) => fail(e),
   })
   const problems: string[] = []
   if (!selected.length) problems.push('Select at least one target body (Moon or Mars).')
@@ -187,14 +194,13 @@ export default function Workspace() {
                 <div className="flex justify-between"><dt className="text-mute">Data source</dt><dd>{live ? 'Live API' : 'Demo fixture'}</dd></div>
               </dl>
               {problems.length > 0 && <ul className="mt-3 list-disc pl-5 text-sm text-bad">{problems.map((p) => <li key={p}>{p}</li>)}</ul>}
-              {err && <div className="mt-3"><Notice tone="bad" title="The API rejected this mission">{err}</Notice></div>}
+              {err && <div className="mt-3"><Notice tone="bad" title={unreachable ? 'API unreachable' : 'The API rejected this mission'}>{unreachable ? 'The TwinSite backend is not running or not reachable. Start the API and worker (python scripts/integration/dev.py), then retry. Nothing was submitted.' : err}</Notice></div>}
               {live ? (<>
-                <Btn variant="primary" className="mt-4 w-full py-3" disabled={problems.length > 0 || runFixture.isPending} onClick={() => { setErr(null); runFixture.mutate() }}>{runFixture.isPending ? 'Submitting…' : 'Run synthetic fixture (DEMO data) →'}</Btn>
-                <Btn className="mt-2 w-full" disabled={problems.length > 0 || run.isPending} onClick={() => { setErr(null); run.mutate() }}>{run.isPending ? 'Submitting…' : 'Submit my parameters as a measured run'}</Btn>
+                <Btn variant="primary" className="mt-4 w-full py-3" disabled={problems.length > 0 || runFixture.isPending} onClick={() => { setErr(null); setUnreachable(false); runFixture.mutate() }}>{runFixture.isPending ? 'Submitting…' : 'Run synthetic fixture (DEMO data) →'}</Btn>
               </>) : (
                 <Btn variant="primary" className="mt-4 w-full py-3" disabled={problems.length > 0 || run.isPending || health.isLoading} onClick={() => { setErr(null); run.mutate() }}>{health.isLoading ? 'Checking API…' : 'Open demo result →'}</Btn>
               )}
-              <p className="mt-2 text-xs text-mute">Run is the only action that starts a job. Page loads never do.{live && ' The fixture button exercises the real pipeline with labelled synthetic values. A measured run fails closed (MEASURED_EVIDENCE_UNAVAILABLE) until approved NASA evidence is wired.'}</p>
+              <p className="mt-2 text-xs text-mute">Run is the only action that starts a job. Page loads never do.{live && ' The fixture button exercises the real pipeline with labelled synthetic values. Measured analysis is resolved server-side from published NASA evidence only: use “Analyze measured Zagora–Gale pair” above. Custom regions have no measured evidence yet, so they cannot be submitted as measured runs.'}</p>
             </Panel>
             {!live && (
               <Panel eyebrow="Demo fixtures" title="Pre-computed synthetic runs">
