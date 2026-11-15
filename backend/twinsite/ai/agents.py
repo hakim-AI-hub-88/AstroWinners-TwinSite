@@ -88,6 +88,33 @@ def evidence_packet(payload, result, sidecar, observations=None, context=()):
     return items
 
 
+PROMPT_KEYS = ('evidence_id', 'site', 'body', 'feature', 'value', 'unit', 'status', 'interval_p10_p90', 'qa',
+               'eligible', 'similarity', 'release_action', 'blocking_issues', 'domain')
+
+
+def prompt_packet(packet, result, limit=42):
+    """Compact, prioritised subset for prompts (free-tier token limits). Citations are still validated against the
+    FULL packet, so nothing outside the packet can be cited; this only bounds what the model reads."""
+    target_ids = {loc['id'] for loc in (result.get('scope') or {}).get('locations', [])}
+    order = {s['id']: i for i, s in enumerate(sorted(result.get('sites', []), key=lambda s: -(s.get('observed_similarity') or 0)))}
+
+    def rank(e):
+        site = e.get('site')
+        if site in target_ids or e.get('feature') == 'release_gate':
+            return (0, 0)
+        if site in order:
+            return (1 if e.get('status') != 'deterministic_result' else 2, order[site])
+        return (3, 0)
+    out = []
+    for e in sorted(packet, key=rank):
+        if rank(e)[0] in (1, 2) and rank(e)[1] >= 6:
+            continue                       # beyond the top 6 candidates: omitted from the prompt (still citable)
+        out.append({k: (round(v, 4) if isinstance(v, float) else v) for k, v in e.items() if k in PROMPT_KEYS and v is not None})
+        if len(out) >= limit:
+            break
+    return out
+
+
 def _result_digest(result):
     sites = [{'site': s['id'], 'eligible': s['eligible'], 'coverage': s['coverage'],
               'similarity': round(s['observed_similarity'], 4) if s.get('observed_similarity') is not None else None,
@@ -289,10 +316,11 @@ class Orchestrator:
         by_id = {e['evidence_id']: e for e in packet}
         known = set(by_id)
         digest = _result_digest(result)
+        digest['sites'] = sorted(digest['sites'], key=lambda x: -(x['similarity'] or 0))[:8]
         features = sorted(payload['mission']['features'])
         ctx = json.dumps({'mission_features': payload['mission']['features'], 'deterministic_result': digest,
                           'release_action': sidecar.get('release_action'), 'blocking_issues': sidecar.get('blocking_issues'),
-                          'evidence': packet[:60]}, separators=(',', ':'), default=str)
+                          'evidence': prompt_packet(packet, result)}, separators=(',', ':'), default=str)
         ai_available = self.router.enabled()
 
         # A01 Source Curator (deterministic)
@@ -405,8 +433,8 @@ class Orchestrator:
         # A06 Domain Analyst
         o = self._ai(Task('A06', run_id, 'json', GUARD, 'Analyse the evidence by scientific domain. Allowed domains: '
                           f'{list(DOMAINS)}. For each finding give the domain, a precise claim, the evidence_ids it rests on, '
-                          'kind (interpretation|hypothesis) and confidence. Also list data_gaps (domain, missing, '
-                          'why_it_matters) for domains with no evidence. Return {"findings":[...],"data_gaps":[...]}.\n'
+                          'kind (interpretation|hypothesis) and confidence. At most 8 findings, each claim under 40 words. Also list at '
+                          'most 6 data_gaps (domain, missing, why_it_matters) for domains with no evidence. Return {"findings":[...],"data_gaps":[...]}.\n'
                           'CONTEXT:' + ctx, priority=priority, validate=_v_domain(known), prefer=('groq', 'cloudflare')))
         domain = None
         if o and o.ok:
@@ -422,7 +450,8 @@ class Orchestrator:
         o = self._ai(Task('A07', run_id, 'json', GUARD, 'Synthesise what the evidence and the deterministic result say '
                           'about this analog site. The deterministic result is authoritative for scores and eligibility. '
                           'Return {"summary":str,"key_claims":[{"claim":str,"evidence_ids":[...],"basis":"measured|derived|'
-                          'assumption|ai_hypothesis|synthetic"}],"recommendation":str,"uncertainties":[str]}. Quote numbers '
+                          'assumption|ai_hypothesis|synthetic"}],"recommendation":str,"uncertainties":[str]}. At most 6 claims, each under '
+                          '40 words. Quote numbers '
                           'exactly as in the evidence.\nCONTEXT:' + ctx + extra, priority=priority,
                           validate=_v_synthesis(known), prefer=('cloudflare', 'groq')))
         synthesis, synth_provider = None, None

@@ -198,3 +198,13 @@ def prerank(target, candidates, weights=None):
                 den += w
         ranked.append((round(num / den, 4) if den else 0.0, c))
     return sorted(ranked, key=lambda x: -x[0])
+
+
+def block_count(doc):
+    return ((doc.get("provenance", {}).get("feature_details", {}).get("local_relief_m") or {}).get("stats") or {}).get("n")
+
+
+def extent_compatible(target, candidate, tolerance=1.2):
+    """Same rule as the release gate (AOI_EXTENT_MISMATCH), applied before matching so incompatible areas never enter."""
+    a, b = block_count(target), block_count(candidate)
+    return bool(a and b) and max(a, b) / min(a, b) <= tolerance

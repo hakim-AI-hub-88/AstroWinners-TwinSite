@@ -397,8 +397,10 @@ class Handler(BaseHTTPRequestHandler):
             raise ApiError(422, 'TARGET_INSUFFICIENT', 'The target has no valid measured slope; pick another point')
         earth = [d for d in sites.load_sites(self.app.settings.data_dir, 'Earth')
                  if any(o['feature_id'] == 'slope_deg' and o['value'] is not None for o in d['observations'])]
+        excluded = [d['site_id'] for d in earth if not sites.extent_compatible(target, d)]
+        earth = [d for d in earth if sites.extent_compatible(target, d)]
         if not earth:
-            raise ApiError(409, 'NO_EARTH_SITES', 'No characterized Earth sites yet; run ops/seed_sites.py or add Earth sites')
+            raise ApiError(409, 'NO_EARTH_SITES', 'No characterized Earth sites with a comparable analysis extent; add Earth sites')
         ranked = sites.prerank(target, earth)[:n]
         try:
             dataset, payload = build_match(target, [c for _, c in ranked])
@@ -410,7 +412,7 @@ class Handler(BaseHTTPRequestHandler):
             raise ApiError(409, 'IDEMPOTENCY_CONFLICT', str(error), 'Idempotency-Key') from None
         except CapacityError as error:
             raise ApiError(429, 'QUEUE_FULL', str(error), headers={'Retry-After': '30'}) from None
-        self.send_json(202, dict(self.app.accepted_body(run_id), dataset_id=dataset,
+        self.send_json(202, dict(self.app.accepted_body(run_id), dataset_id=dataset, excluded_extent_incompatible=excluded,
                                  prerank=[{'site_id': c['site_id'], 'name': c['name'], 'score': sc} for sc, c in ranked]),
                        {'Location': f'/v1/missions/{run_id}'})
 
