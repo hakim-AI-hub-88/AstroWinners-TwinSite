@@ -1,0 +1,920 @@
+{
+  "analysis_scale_m": 1852.3,
+  "assets": [
+    {
+      "adapter_version": "twinsite-data/1.0.0",
+      "asset_id": "srtmgl1-n30w006-a9c6dd5d6e41",
+      "body": "Earth",
+      "byte_size": 9369604,
+      "coordinate_conventions": "WGS84 geodetic lon/lat, east-positive; point-registered 1 arc-second posts; EGM96 heights",
+      "crs": "EPSG:4326",
+      "format": "zip(HGT int16 big-endian)",
+      "license_url": "https://lpdaac.usgs.gov/data/data-citation-and-policies/",
+      "object_key": "raw/SRTMGL1/a9c6dd5d6e41a8d8e8f4f51d905acdfa99a72384c66d5617799abfd5a333947f/N30W006.SRTMGL1.hgt.zip",
+      "observation_end": "2000-02-21T23:59:59Z",
+      "observation_start": "2000-02-11T00:00:00Z",
+      "parent_asset_ids": [],
+      "product_id": "SRTMGL1",
+      "product_version": "003",
+      "retrieved_at": "2026-11-15T04:00:30Z",
+      "schema_version": "1.0",
+      "sha256": "a9c6dd5d6e41a8d8e8f4f51d905acdfa99a72384c66d5617799abfd5a333947f",
+      "source_id": "SRTMGL1",
+      "source_url": "https://step.esa.int/auxdata/dem/SRTMGL1/N30W006.SRTMGL1.hgt.zip"
+    },
+    {
+      "adapter_version": "twinsite-data/1.0.0",
+      "asset_id": "mola-megt00n090hb.img-sub-2bc27bff39c9",
+      "body": "Mars",
+      "byte_size": 2888,
+      "coordinate_conventions": "IAU2000 planetocentric lat, east-positive lon 0..360; simple cylindrical 128 ppd; area-registered cell medians; heights above areoid; byte ranges (inclusive) of source file: 38 ranges 13144896..13997451",
+      "crs": "IAU_2000:49900",
+      "format": "concatenated HTTP byte ranges of PDS3 IMG",
+      "license_url": "https://pds.nasa.gov/datastandards/about/",
+      "object_key": "raw/MOLA_MEGDR/2bc27bff39c9513a8696969abe72d4c2643c337b71b222c63e343d825e9c2c62/megt00n090hb.img.r13144896-13997451.n38.bin",
+      "observation_end": "2001-06-30T11:10:40Z",
+      "observation_start": "1997-09-15T19:10:00Z",
+      "parent_asset_ids": [
+        "mola-megt00n090hb.lbl-c85891df3c11"
+      ],
+      "product_id": "MGS-M-MOLA-5-MEGDR-L3-V1.0",
+      "product_version": "2.0",
+      "retrieved_at": "2026-11-15T03:54:38Z",
+      "schema_version": "1.0",
+      "sha256": "2bc27bff39c9513a8696969abe72d4c2643c337b71b222c63e343d825e9c2c62",
+      "source_id": "MOLA_MEGDR",
+      "source_url": "https://pds-geosciences.wustl.edu/mgs/mgs-m-mola-5-megdr-l3-v1/mgsl_300x/meg128/megt00n090hb.img"
+    },
+    {
+      "adapter_version": "twinsite-data/1.0.0",
+      "asset_id": "mola-megc00n090hb.img-sub-0e47c5bf42c1",
+      "body": "Mars",
+      "byte_size": 1444,
+      "coordinate_conventions": "IAU2000 planetocentric lat, east-positive lon 0..360; simple cylindrical 128 ppd; area-registered cell medians; heights above areoid; byte ranges (inclusive) of source file: 38 ranges 6572448..6998725",
+      "crs": "IAU_2000:49900",
+      "format": "concatenated HTTP byte ranges of PDS3 IMG",
+      "license_url": "https://pds.nasa.gov/datastandards/about/",
+      "object_key": "raw/MOLA_MEGDR/0e47c5bf42c15080899875b8b52daf559ec78f91d856bf56b41dd0fd71b8258c/megc00n090hb.img.r6572448-6998725.n38.bin",
+      "observation_end": "2001-06-30T11:10:40Z",
+      "observation_start": "1997-09-15T19:10:00Z",
+      "parent_asset_ids": [
+        "mola-megc00n090hb.lbl-7c373fcff18e"
+      ],
+      "product_id": "MGS-M-MOLA-5-MEGDR-L3-V1.0",
+      "product_version": "2.0",
+      "retrieved_at": "2026-11-15T03:56:23Z",
+      "schema_version": "1.0",
+      "sha256": "0e47c5bf42c15080899875b8b52daf559ec78f91d856bf56b41dd0fd71b8258c",
+      "source_id": "MOLA_MEGDR",
+      "source_url": "https://pds-geosciences.wustl.edu/mgs/mgs-m-mola-5-megdr-l3-v1/mgsl_300x/meg128/megc00n090hb.img"
+    },
+    {
+      "adapter_version": "twinsite-data/1.0.0",
+      "asset_id": "mola-megt00n090hb.lbl-c85891df3c11",
+      "body": "Mars",
+      "byte_size": 4820,
+      "coordinate_conventions": "IAU2000 planetocentric lat, east-positive lon 0..360; simple cylindrical 128 ppd; area-registered cell medians; heights above areoid",
+      "crs": "IAU_2000:49900",
+      "format": "PDS3 ODL label (ASCII)",
+      "license_url": "https://pds.nasa.gov/datastandards/about/",
+      "object_key": "raw/MOLA_MEGDR/c85891df3c11e724c5c5d980630e56ee4f13c40d234b68e22401b9a404df3d36/megt00n090hb.lbl",
+      "observation_end": "2001-06-30T11:10:40Z",
+      "observation_start": "1997-09-15T19:10:00Z",
+      "parent_asset_ids": [],
+      "product_id": "MGS-M-MOLA-5-MEGDR-L3-V1.0",
+      "product_version": "2.0",
+      "retrieved_at": "2026-11-15T03:54:00Z",
+      "schema_version": "1.0",
+      "sha256": "c85891df3c11e724c5c5d980630e56ee4f13c40d234b68e22401b9a404df3d36",
+      "source_id": "MOLA_MEGDR",
+      "source_url": "https://pds-geosciences.wustl.edu/mgs/mgs-m-mola-5-megdr-l3-v1/mgsl_300x/meg128/megt00n090hb.lbl"
+    },
+    {
+      "adapter_version": "twinsite-data/1.0.0",
+      "asset_id": "mola-megc00n090hb.lbl-7c373fcff18e",
+      "body": "Mars",
+      "byte_size": 3088,
+      "coordinate_conventions": "IAU2000 planetocentric lat, east-positive lon 0..360; simple cylindrical 128 ppd; area-registered cell medians; heights above areoid",
+      "crs": "IAU_2000:49900",
+      "format": "PDS3 ODL label (ASCII)",
+      "license_url": "https://pds.nasa.gov/datastandards/about/",
+      "object_key": "raw/MOLA_MEGDR/7c373fcff18ee6facc2cde7ef07aa6c52daddee1235fbe373dbb2f474223adc4/megc00n090hb.lbl",
+      "observation_end": "2001-06-30T11:10:40Z",
+      "observation_start": "1997-09-15T19:10:00Z",
+      "parent_asset_ids": [],
+      "product_id": "MGS-M-MOLA-5-MEGDR-L3-V1.0",
+      "product_version": "2.0",
+      "retrieved_at": "2026-11-15T03:54:07Z",
+      "schema_version": "1.0",
+      "sha256": "7c373fcff18ee6facc2cde7ef07aa6c52daddee1235fbe373dbb2f474223adc4",
+      "source_id": "MOLA_MEGDR",
+      "source_url": "https://pds-geosciences.wustl.edu/mgs/mgs-m-mola-5-megdr-l3-v1/mgsl_300x/meg128/megc00n090hb.lbl"
+    }
+  ],
+  "comparison_pairs": [
+    {
+      "earth_evidence_id": "ev-earth-zagora-draa-slope_deg-3f2bb6430161e48f",
+      "feature_id": "slope_deg",
+      "mars_evidence_id": "ev-mars-gale-aeolis-slope_deg-164109cd32a9b22a"
+    },
+    {
+      "earth_evidence_id": "ev-earth-zagora-draa-roughness_m-b5fcf29c053122a0",
+      "feature_id": "roughness_m",
+      "mars_evidence_id": "ev-mars-gale-aeolis-roughness_m-14c3e59c911b8558"
+    },
+    {
+      "earth_evidence_id": "ev-earth-zagora-draa-local_relief_m-437aea82fe8acc62",
+      "feature_id": "local_relief_m",
+      "mars_evidence_id": "ev-mars-gale-aeolis-local_relief_m-f76821d077242461"
+    }
+  ],
+  "data_status": "measured",
+  "observations": [
+    {
+      "analysis_scale_m": 1852.3,
+      "body": "Earth",
+      "data_status": "measured",
+      "evidence_id": "ev-earth-zagora-draa-slope_deg-3f2bb6430161e48f",
+      "evidence_kind": "derived_measurement",
+      "feature_id": "slope_deg",
+      "geometry": {
+        "coordinates": [
+          -5.95,
+          30.2,
+          -5.65,
+          30.5
+        ],
+        "crs": "EPSG:4326",
+        "type": "bbox"
+      },
+      "missing_reason": null,
+      "observation_period": {
+        "end": "2000-02-21T23:59:59Z",
+        "start": "2000-02-11T00:00:00Z"
+      },
+      "processing_version": "twinsite-data/1.0.0; terrain/1.0.0 (block-mean, Horn-1981 slope, 3x3 SD roughness)",
+      "provenance_id": "prov-earth-zagora-draa-d8f1ddc6378ac64b",
+      "qa_status": "ACCEPT",
+      "quality_flags": [
+        "MIRROR_NOT_VERIFIED_AGAINST_LPDAAC",
+        "SRTM_C_BAND_SURFACE_INCLUDES_CANOPY_AND_STRUCTURES"
+      ],
+      "schema_version": "1.0",
+      "site_id": "earth-zagora-draa",
+      "source_asset_ids": [
+        "srtmgl1-n30w006-a9c6dd5d6e41"
+      ],
+      "source_checksum": "a9c6dd5d6e41a8d8e8f4f51d905acdfa99a72384c66d5617799abfd5a333947f",
+      "source_granule_id": "N30W006.SRTMGL1.hgt",
+      "source_product": "SRTMGL1",
+      "source_url": "https://step.esa.int/auxdata/dem/SRTMGL1/N30W006.SRTMGL1.hgt.zip",
+      "spatial_resolution_m": 30.794,
+      "uncertainty": {
+        "basis": "10th-90th percentile of per-cell values within the AOI at analysis scale (spatial variability, not instrument error). SRTM product spec: absolute vertical error < 16 m (90%); not propagated.",
+        "high": 1.4995,
+        "kind": "interval",
+        "low": 0.1461,
+        "standard_deviation": null
+      },
+      "unit": "degree",
+      "valid_coverage_fraction": 1.0,
+      "value": 0.5838
+    },
+    {
+      "analysis_scale_m": 1852.3,
+      "body": "Earth",
+      "data_status": "measured",
+      "evidence_id": "ev-earth-zagora-draa-roughness_m-b5fcf29c053122a0",
+      "evidence_kind": "derived_measurement",
+      "feature_id": "roughness_m",
+      "geometry": {
+        "coordinates": [
+          -5.95,
+          30.2,
+          -5.65,
+          30.5
+        ],
+        "crs": "EPSG:4326",
+        "type": "bbox"
+      },
+      "missing_reason": null,
+      "observation_period": {
+        "end": "2000-02-21T23:59:59Z",
+        "start": "2000-02-11T00:00:00Z"
+      },
+      "processing_version": "twinsite-data/1.0.0; terrain/1.0.0 (block-mean, Horn-1981 slope, 3x3 SD roughness)",
+      "provenance_id": "prov-earth-zagora-draa-d8f1ddc6378ac64b",
+      "qa_status": "ACCEPT",
+      "quality_flags": [
+        "MIRROR_NOT_VERIFIED_AGAINST_LPDAAC",
+        "SRTM_C_BAND_SURFACE_INCLUDES_CANOPY_AND_STRUCTURES"
+      ],
+      "schema_version": "1.0",
+      "site_id": "earth-zagora-draa",
+      "source_asset_ids": [
+        "srtmgl1-n30w006-a9c6dd5d6e41"
+      ],
+      "source_checksum": "a9c6dd5d6e41a8d8e8f4f51d905acdfa99a72384c66d5617799abfd5a333947f",
+      "source_granule_id": "N30W006.SRTMGL1.hgt",
+      "source_product": "SRTMGL1",
+      "source_url": "https://step.esa.int/auxdata/dem/SRTMGL1/N30W006.SRTMGL1.hgt.zip",
+      "spatial_resolution_m": 30.794,
+      "uncertainty": {
+        "basis": "10th-90th percentile of per-cell values within the AOI at analysis scale (spatial variability, not instrument error). SRTM product spec: absolute vertical error < 16 m (90%); not propagated.",
+        "high": 43.5138,
+        "kind": "interval",
+        "low": 4.2433,
+        "standard_deviation": null
+      },
+      "unit": "m",
+      "valid_coverage_fraction": 1.0,
+      "value": 17.9224
+    },
+    {
+      "analysis_scale_m": 1852.3,
+      "body": "Earth",
+      "data_status": "measured",
+      "evidence_id": "ev-earth-zagora-draa-local_relief_m-437aea82fe8acc62",
+      "evidence_kind": "derived_measurement",
+      "feature_id": "local_relief_m",
+      "geometry": {
+        "coordinates": [
+          -5.95,
+          30.2,
+          -5.65,
+          30.5
+        ],
+        "crs": "EPSG:4326",
+        "type": "bbox"
+      },
+      "missing_reason": null,
+      "observation_period": {
+        "end": "2000-02-21T23:59:59Z",
+        "start": "2000-02-11T00:00:00Z"
+      },
+      "processing_version": "twinsite-data/1.0.0; terrain/1.0.0 (block-mean, Horn-1981 slope, 3x3 SD roughness)",
+      "provenance_id": "prov-earth-zagora-draa-d8f1ddc6378ac64b",
+      "qa_status": "ACCEPT",
+      "quality_flags": [
+        "MIRROR_NOT_VERIFIED_AGAINST_LPDAAC",
+        "SRTM_C_BAND_SURFACE_INCLUDES_CANOPY_AND_STRUCTURES"
+      ],
+      "schema_version": "1.0",
+      "site_id": "earth-zagora-draa",
+      "source_asset_ids": [
+        "srtmgl1-n30w006-a9c6dd5d6e41"
+      ],
+      "source_checksum": "a9c6dd5d6e41a8d8e8f4f51d905acdfa99a72384c66d5617799abfd5a333947f",
+      "source_granule_id": "N30W006.SRTMGL1.hgt",
+      "source_product": "SRTMGL1",
+      "source_url": "https://step.esa.int/auxdata/dem/SRTMGL1/N30W006.SRTMGL1.hgt.zip",
+      "spatial_resolution_m": 30.794,
+      "uncertainty": {
+        "basis": "range statistic; SRTM product spec: absolute vertical error < 16 m (90%); not propagated.",
+        "high": null,
+        "kind": "unknown",
+        "low": null,
+        "standard_deviation": null
+      },
+      "unit": "m",
+      "valid_coverage_fraction": 1.0,
+      "value": 313.811
+    },
+    {
+      "analysis_scale_m": 1852.3,
+      "body": "Mars",
+      "data_status": "measured",
+      "evidence_id": "ev-mars-gale-aeolis-slope_deg-164109cd32a9b22a",
+      "evidence_kind": "derived_measurement",
+      "feature_id": "slope_deg",
+      "geometry": {
+        "coordinates": [
+          137.25,
+          -4.75,
+          137.55,
+          -4.45
+        ],
+        "crs": "IAU_2000:49900",
+        "type": "bbox"
+      },
+      "missing_reason": null,
+      "observation_period": {
+        "end": "2001-06-30T11:10:40Z",
+        "start": "1997-09-15T19:10:00Z"
+      },
+      "processing_version": "twinsite-data/1.0.0; terrain/1.0.0 (block-mean, Horn-1981 slope, 3x3 SD roughness)",
+      "provenance_id": "prov-mars-gale-aeolis-ed154434f5666ddf",
+      "qa_status": "ACCEPT",
+      "quality_flags": [
+        "MOLA_INTERPOLATED_CELLS_RETAINED",
+        "MOLA_SHOT_SUPPORTED_FRACTION=0.257",
+        "OBSERVATION_SUPPORTED_BLOCK_FRACTION=0.741"
+      ],
+      "schema_version": "1.0",
+      "site_id": "mars-gale-aeolis",
+      "source_asset_ids": [
+        "mola-megc00n090hb.img-sub-0e47c5bf42c1",
+        "mola-megc00n090hb.lbl-7c373fcff18e",
+        "mola-megt00n090hb.img-sub-2bc27bff39c9",
+        "mola-megt00n090hb.lbl-c85891df3c11"
+      ],
+      "source_checksum": "2bc27bff39c9513a8696969abe72d4c2643c337b71b222c63e343d825e9c2c62",
+      "source_granule_id": "MEGT00N090HB.IMG",
+      "source_product": "MGS-M-MOLA-5-MEGDR-L3-V1.0",
+      "source_url": "https://pds-geosciences.wustl.edu/mgs/mgs-m-mola-5-megdr-l3-v1/mgsl_300x/meg128/megt00n090hb.img",
+      "spatial_resolution_m": 463.058,
+      "uncertainty": {
+        "basis": "10th-90th percentile of per-cell values within the AOI at analysis scale (spatial variability, not instrument error). MOLA vertical precision ~1 m per shot (Smith et al. 2001); gridding/interpolation error not propagated.",
+        "high": 4.278,
+        "kind": "interval",
+        "low": 0.2656,
+        "standard_deviation": null
+      },
+      "unit": "degree",
+      "valid_coverage_fraction": 0.740741,
+      "value": 1.5093
+    },
+    {
+      "analysis_scale_m": 1852.3,
+      "body": "Mars",
+      "data_status": "measured",
+      "evidence_id": "ev-mars-gale-aeolis-roughness_m-14c3e59c911b8558",
+      "evidence_kind": "derived_measurement",
+      "feature_id": "roughness_m",
+      "geometry": {
+        "coordinates": [
+          137.25,
+          -4.75,
+          137.55,
+          -4.45
+        ],
+        "crs": "IAU_2000:49900",
+        "type": "bbox"
+      },
+      "missing_reason": null,
+      "observation_period": {
+        "end": "2001-06-30T11:10:40Z",
+        "start": "1997-09-15T19:10:00Z"
+      },
+      "processing_version": "twinsite-data/1.0.0; terrain/1.0.0 (block-mean, Horn-1981 slope, 3x3 SD roughness)",
+      "provenance_id": "prov-mars-gale-aeolis-ed154434f5666ddf",
+      "qa_status": "ACCEPT",
+      "quality_flags": [
+        "MOLA_INTERPOLATED_CELLS_RETAINED",
+        "MOLA_SHOT_SUPPORTED_FRACTION=0.257",
+        "OBSERVATION_SUPPORTED_BLOCK_FRACTION=0.741"
+      ],
+      "schema_version": "1.0",
+      "site_id": "mars-gale-aeolis",
+      "source_asset_ids": [
+        "mola-megc00n090hb.img-sub-0e47c5bf42c1",
+        "mola-megc00n090hb.lbl-7c373fcff18e",
+        "mola-megt00n090hb.img-sub-2bc27bff39c9",
+        "mola-megt00n090hb.lbl-c85891df3c11"
+      ],
+      "source_checksum": "2bc27bff39c9513a8696969abe72d4c2643c337b71b222c63e343d825e9c2c62",
+      "source_granule_id": "MEGT00N090HB.IMG",
+      "source_product": "MGS-M-MOLA-5-MEGDR-L3-V1.0",
+      "source_url": "https://pds-geosciences.wustl.edu/mgs/mgs-m-mola-5-megdr-l3-v1/mgsl_300x/meg128/megt00n090hb.img",
+      "spatial_resolution_m": 463.058,
+      "uncertainty": {
+        "basis": "10th-90th percentile of per-cell values within the AOI at analysis scale (spatial variability, not instrument error). MOLA vertical precision ~1 m per shot (Smith et al. 2001); gridding/interpolation error not propagated.",
+        "high": 114.6707,
+        "kind": "interval",
+        "low": 8.5413,
+        "standard_deviation": null
+      },
+      "unit": "m",
+      "valid_coverage_fraction": 0.740741,
+      "value": 42.837
+    },
+    {
+      "analysis_scale_m": 1852.3,
+      "body": "Mars",
+      "data_status": "measured",
+      "evidence_id": "ev-mars-gale-aeolis-local_relief_m-f76821d077242461",
+      "evidence_kind": "derived_measurement",
+      "feature_id": "local_relief_m",
+      "geometry": {
+        "coordinates": [
+          137.25,
+          -4.75,
+          137.55,
+          -4.45
+        ],
+        "crs": "IAU_2000:49900",
+        "type": "bbox"
+      },
+      "missing_reason": null,
+      "observation_period": {
+        "end": "2001-06-30T11:10:40Z",
+        "start": "1997-09-15T19:10:00Z"
+      },
+      "processing_version": "twinsite-data/1.0.0; terrain/1.0.0 (block-mean, Horn-1981 slope, 3x3 SD roughness)",
+      "provenance_id": "prov-mars-gale-aeolis-ed154434f5666ddf",
+      "qa_status": "ACCEPT",
+      "quality_flags": [
+        "MOLA_INTERPOLATED_CELLS_RETAINED",
+        "MOLA_SHOT_SUPPORTED_FRACTION=0.257",
+        "OBSERVATION_SUPPORTED_BLOCK_FRACTION=0.741"
+      ],
+      "schema_version": "1.0",
+      "site_id": "mars-gale-aeolis",
+      "source_asset_ids": [
+        "mola-megc00n090hb.img-sub-0e47c5bf42c1",
+        "mola-megc00n090hb.lbl-7c373fcff18e",
+        "mola-megt00n090hb.img-sub-2bc27bff39c9",
+        "mola-megt00n090hb.lbl-c85891df3c11"
+      ],
+      "source_checksum": "2bc27bff39c9513a8696969abe72d4c2643c337b71b222c63e343d825e9c2c62",
+      "source_granule_id": "MEGT00N090HB.IMG",
+      "source_product": "MGS-M-MOLA-5-MEGDR-L3-V1.0",
+      "source_url": "https://pds-geosciences.wustl.edu/mgs/mgs-m-mola-5-megdr-l3-v1/mgsl_300x/meg128/megt00n090hb.img",
+      "spatial_resolution_m": 463.058,
+      "uncertainty": {
+        "basis": "range statistic; MOLA vertical precision ~1 m per shot (Smith et al. 2001); gridding/interpolation error not propagated.",
+        "high": null,
+        "kind": "unknown",
+        "low": null,
+        "standard_deviation": null
+      },
+      "unit": "m",
+      "valid_coverage_fraction": 0.740741,
+      "value": 925.562
+    }
+  ],
+  "processing_version": "twinsite-data/1.0.0; terrain/1.0.0 (block-mean, Horn-1981 slope, 3x3 SD roughness)",
+  "schema_note": "observations[] follow contracts/v1/evidence_observation.schema.json; assets[] follow asset_manifest.schema.json; sites[].quality_verdict follows quality_verdict.schema.json. Values are REAL NASA product summaries, not synthetic.",
+  "sites": [
+    {
+      "body": "Earth",
+      "provenance": {
+        "acquisition_errors_preserved": [
+          {
+            "code": "CREDENTIAL_MISSING",
+            "evidence": {
+              "url": "https://data.lpdaac.earthdatacloud.nasa.gov/lp-prod-protected/SRTMGL1.003/N30W006.SRTMGL1.hgt/N30W006.SRTMGL1.hgt.zip"
+            },
+            "message": "EARTHDATA_TOKEN not set; authoritative source skipped"
+          },
+          {
+            "code": "ACQUISITION_FAILED",
+            "evidence": {
+              "location": "https://urs.earthdata.nasa.gov/oauth/authorize",
+              "status": "302",
+              "url": "https://data.lpdaac.earthdatacloud.nasa.gov/lp-prod-protected/SRTMGL1.003/N30W006.SRTMGL1.hgt/N30W006.SRTMGL1.hgt.zip"
+            },
+            "message": "HTTP 302 from data.lpdaac.earthdatacloud.nasa.gov"
+          }
+        ],
+        "adapter": {
+          "adapter_version": "twinsite-data/1.0.0",
+          "approved_rules": [
+            "srtm_void_mask"
+          ],
+          "body": "Earth",
+          "crs": "EPSG:4326",
+          "doc_url": "https://www.earthdata.nasa.gov/s3fs-public/2025-05/SRTM_Quick_Guide.pdf",
+          "license_url": "https://lpdaac.usgs.gov/data/data-citation-and-policies/",
+          "product_id": "SRTMGL1",
+          "product_version": "003",
+          "source_id": "SRTMGL1",
+          "unit": "m",
+          "vertical_datum": "EGM96 geoid"
+        },
+        "analysis_scale_m": 1852.3,
+        "cell_size_m_used": [
+          1842.796,
+          1847.639
+        ],
+        "cleaned_object_key": "cleaned/7cb0d2b91e8657fd9324683ae802210b66c0a2db4d91600793ef7a5b419ea058.json",
+        "cleaned_sha256": "7cb0d2b91e8657fd9324683ae802210b66c0a2db4d91600793ef7a5b419ea058",
+        "description": "Draa valley / Jbel Bani foothills near Zagora, Morocco (arid terrain)",
+        "feature_definitions": {
+          "local_relief_m": "max - min of block-mean elevation within the AOI at analysis scale",
+          "roughness_m": "AOI mean of 3x3-neighbourhood elevation standard deviation at analysis scale",
+          "slope_deg": "AOI mean of Horn (1981) 3x3 slope on the block-mean DEM at analysis scale"
+        },
+        "feature_details": {
+          "local_relief_m": {
+            "stats": {
+              "max": 992.638,
+              "mean": 755.564,
+              "median": 743.695,
+              "min": 678.827,
+              "n": 270,
+              "p10": 701.3,
+              "p90": 819.581,
+              "sd": 52.988
+            },
+            "vertical_datum": "EGM96 geoid"
+          },
+          "roughness_m": {
+            "interior_cells": 208,
+            "stats": {
+              "max": 81.9539,
+              "mean": 17.9224,
+              "median": 9.3774,
+              "min": 2.795,
+              "n": 208,
+              "p10": 4.2433,
+              "p90": 43.5138,
+              "sd": 16.9641
+            },
+            "valid_cells": 208
+          },
+          "slope_deg": {
+            "interior_cells": 208,
+            "stats": {
+              "max": 3.1887,
+              "mean": 0.5838,
+              "median": 0.3052,
+              "min": 0.0728,
+              "n": 208,
+              "p10": 0.1461,
+              "p90": 1.4995,
+              "sd": 0.5958
+            },
+            "valid_cells": 208
+          }
+        },
+        "granule": {
+          "catalog_evidence": {
+            "bounding": [
+              {
+                "EastBoundingCoordinate": -4.99972222,
+                "NorthBoundingCoordinate": 31.00027778,
+                "SouthBoundingCoordinate": 29.99972222,
+                "WestBoundingCoordinate": -6.00027778
+              }
+            ],
+            "catalog": "NASA CMR",
+            "collection_concept_id": "C2763266360-LPCLOUD",
+            "concept_id": "G2821052091-LPCLOUD",
+            "doi": [
+              "10.5067/MEaSUREs/SRTM/SRTMGL1.003"
+            ],
+            "hits": 1,
+            "query": "https://cmr.earthdata.nasa.gov/search/granules.umm_json?short_name=SRTMGL1&version=003&readable_granule_name=N30W006.SRTMGL1.hgt&page_size=5",
+            "restored_from_cached_asset": "srtmgl1-n30w006-a9c6dd5d6e41",
+            "revision_date": "2023-12-20T20:14:42.490Z",
+            "sha256": "9d73c2d8cddf4b7ffc2aa061b633db88938c8378b069b9270002a2f06eafa6c7",
+            "size": [
+              {
+                "Name": "Not provided",
+                "Size": 10.1048,
+                "SizeUnit": "MB"
+              }
+            ],
+            "transcript": "transcripts/SRTMGL1/20261115T034947605724Z.jsonl"
+          },
+          "footprint": [
+            -6.0001388888888885,
+            29.999861111111112,
+            -4.9998611111111115,
+            31.000138888888888
+          ],
+          "granule_id": "N30W006.SRTMGL1.hgt"
+        },
+        "horizontal_datum": "WGS84",
+        "native_resolution_m": 30.794,
+        "radius_model": "WGS84 ellipsoid (a=6378137 m, f=1/298.257223563) local radii",
+        "sample_calculation": {
+          "block": [
+            60,
+            69
+          ],
+          "cell": {
+            "col": 7,
+            "lat": 30.341806,
+            "lon": -5.806389,
+            "row": 9
+          },
+          "dx_m": 1842.95,
+          "dy_m": 1847.637,
+          "dz_dx": 0.00429,
+          "dz_dy": -0.011007,
+          "formula": "slope = atan(hypot(((c+2f+i)-(a+2d+g))/(8dx), ((a+2b+c)-(g+2h+i))/(8dy))); rows north->south",
+          "horn_slope_deg": 0.6768,
+          "roughness_sd_m": 19.2747,
+          "window_m": [
+            [
+              727.552,
+              727.951,
+              726.2
+            ],
+            [
+              724.209,
+              723.294,
+              746.827
+            ],
+            [
+              749.855,
+              776.642,
+              769.216
+            ]
+          ]
+        },
+        "site_id": "earth-zagora-draa",
+        "transcripts": [
+          "transcripts/SRTMGL1/20261115T034948318991Z.jsonl"
+        ],
+        "transformations": [
+          "subset posts rows 1800..2880, cols 180..1260 of 3601x3601",
+          "int16 metres -> float metres (no scale/offset)",
+          "srtm_void_mask: void posts kept as null (no fill/interpolation)",
+          "aggregate: block mean 60x69 native samples -> 1842.8 m (E-W) x 1847.6 m (N-S) at lat 30.3500; block valid only if all members valid",
+          "metric spacing from WGS84 ellipsoid (a=6378137 m, f=1/298.257223563) local radii",
+          "terrain/1.0.0 (block-mean, Horn-1981 slope, 3x3 SD roughness)"
+        ],
+        "validation": {
+          "issues": [
+            {
+              "code": "MIRROR_NOT_VERIFIED_AGAINST_LPDAAC",
+              "evidence": [
+                "bytes from public mirror; LP DAAC checksum comparison needs Earthdata Login"
+              ],
+              "rule_id": null,
+              "severity": "warning"
+            },
+            {
+              "code": "SURFACE_IS_RADAR_PHASE_CENTRE",
+              "evidence": [
+                "C-band SRTM heights include canopy/buildings; not bare-rock surface"
+              ],
+              "rule_id": null,
+              "severity": "info"
+            }
+          ],
+          "metrics": {
+            "max_m": 1088.0,
+            "min_m": 667.0,
+            "posts": 1168561,
+            "voids": 0
+          },
+          "verdict": "ACCEPT"
+        },
+        "vertical_datum": "EGM96 geoid"
+      },
+      "provenance_id": "prov-earth-zagora-draa-d8f1ddc6378ac64b",
+      "provenance_object_key": "derived/d8f1ddc6378ac64b1e694734c6ef522d2e3aa1e4f364ca13c18447efb23e01b2.json",
+      "quality_verdict": {
+        "asset_id": "srtmgl1-n30w006-a9c6dd5d6e41",
+        "attempt_count": 0,
+        "cleaned_checksum": "7cb0d2b91e8657fd9324683ae802210b66c0a2db4d91600793ef7a5b419ea058",
+        "issues": [
+          {
+            "code": "MIRROR_NOT_VERIFIED_AGAINST_LPDAAC",
+            "evidence": [
+              "bytes from public mirror; LP DAAC checksum comparison needs Earthdata Login"
+            ],
+            "rule_id": null,
+            "severity": "warning"
+          },
+          {
+            "code": "SURFACE_IS_RADAR_PHASE_CENTRE",
+            "evidence": [
+              "C-band SRTM heights include canopy/buildings; not bare-rock surface"
+            ],
+            "rule_id": null,
+            "severity": "info"
+          }
+        ],
+        "method_version": "c1-qa/1.0.0",
+        "raw_checksum": "a9c6dd5d6e41a8d8e8f4f51d905acdfa99a72384c66d5617799abfd5a333947f",
+        "source_product_id": "SRTMGL1.003",
+        "verdict": "ACCEPT"
+      },
+      "site_id": "earth-zagora-draa"
+    },
+    {
+      "body": "Mars",
+      "provenance": {
+        "acquisition_errors_preserved": [],
+        "adapter": {
+          "adapter_version": "twinsite-data/1.0.0",
+          "approved_rules": [
+            "mola_flag_interpolated"
+          ],
+          "body": "Mars",
+          "crs": "IAU_2000:49900",
+          "doc_url": "https://pds-geosciences.wustl.edu/missions/mgs/megdr.html",
+          "license_url": "https://pds.nasa.gov/datastandards/about/",
+          "product_id": "MGS-M-MOLA-5-MEGDR-L3-V1.0",
+          "product_version": "2.0",
+          "source_id": "MOLA_MEGDR",
+          "unit": "m",
+          "vertical_datum": "Mars areoid GMM3 (mgm1025, degree/order 50)"
+        },
+        "analysis_scale_m": 1852.3,
+        "cell_size_m_used": [
+          1846.26,
+          1852.231
+        ],
+        "cleaned_object_key": "cleaned/8c52fa98ee222da1b1dcb46630b1eba2cb33d3394cb644a55675f11968fa7947.json",
+        "cleaned_sha256": "8c52fa98ee222da1b1dcb46630b1eba2cb33d3394cb644a55675f11968fa7947",
+        "description": "Gale crater floor (Aeolis Palus) around the MSL Bradbury landing site",
+        "feature_definitions": {
+          "local_relief_m": "max - min of block-mean elevation within the AOI at analysis scale",
+          "roughness_m": "AOI mean of 3x3-neighbourhood elevation standard deviation at analysis scale",
+          "slope_deg": "AOI mean of Horn (1981) 3x3 slope on the block-mean DEM at analysis scale"
+        },
+        "feature_details": {
+          "local_relief_m": {
+            "stats": {
+              "max": -3584.938,
+              "mean": -4396.866,
+              "median": -4453.25,
+              "min": -4510.5,
+              "n": 81,
+              "p10": -4495.375,
+              "p90": -4212.562,
+              "sd": 157.087
+            },
+            "vertical_datum": "Mars areoid GMM3 (mgm1025, degree/order 50)"
+          },
+          "roughness_m": {
+            "interior_cells": 49,
+            "stats": {
+              "max": 240.6579,
+              "mean": 42.837,
+              "median": 17.816,
+              "min": 5.0147,
+              "n": 49,
+              "p10": 8.5413,
+              "p90": 114.6707,
+              "sd": 52.2963
+            },
+            "valid_cells": 49
+          },
+          "slope_deg": {
+            "interior_cells": 49,
+            "stats": {
+              "max": 8.8471,
+              "mean": 1.5093,
+              "median": 0.6665,
+              "min": 0.034,
+              "n": 49,
+              "p10": 0.2656,
+              "p90": 4.278,
+              "sd": 1.9318
+            },
+            "valid_cells": 49
+          }
+        },
+        "granule": {
+          "catalog_evidence": {
+            "catalog": "PDS Geosciences Node directory meg128",
+            "count_tile": "megc00n090hb",
+            "tile": "megt00n090hb"
+          },
+          "footprint": [
+            90.0,
+            -44.0,
+            180.0,
+            0.0
+          ],
+          "granule_id": "MEGT00N090HB.IMG"
+        },
+        "horizontal_datum": "IAU2000 Mars planetocentric",
+        "native_resolution_m": 463.058,
+        "radius_model": "Mars sphere R=3396000 m (label A_AXIS_RADIUS)",
+        "reference_point_check": {
+          "cell": {
+            "col": 24,
+            "height_m": -4503.0,
+            "lat": -4.58984375,
+            "lon": 137.44140625,
+            "mola_shots": 0.0,
+            "note": "zero shots => producer-interpolated value",
+            "row": 17
+          },
+          "name": "MSL Bradbury Landing (approximate coordinates)",
+          "nearest_shot_supported_cell": {
+            "col": 26,
+            "distance_cells": 2.0,
+            "height_m": -4517.0,
+            "lat": -4.58984375,
+            "lon": 137.45703125,
+            "mola_shots": 1.0,
+            "row": 17
+          },
+          "query_lat": -4.5895,
+          "query_lon_e": 137.4417
+        },
+        "sample_calculation": {
+          "block": [
+            4,
+            4
+          ],
+          "cell": {
+            "col": 4,
+            "lat": -4.59375,
+            "lon": 137.390625,
+            "row": 4
+          },
+          "dx_m": 1846.281,
+          "dy_m": 1852.231,
+          "dz_dx": -0.005171,
+          "dz_dy": 0.001139,
+          "formula": "slope = atan(hypot(((c+2f+i)-(a+2d+g))/(8dx), ((a+2b+c)-(g+2h+i))/(8dy))); rows north->south",
+          "horn_slope_deg": 0.3034,
+          "roughness_sd_m": 9.0231,
+          "window_m": [
+            [
+              -4461.125,
+              -4471.562,
+              -4482.75
+            ],
+            [
+              -4471.562,
+              -4484.812,
+              -4492.5
+            ],
+            [
+              -4469.125,
+              -4476.375,
+              -4482.0
+            ]
+          ]
+        },
+        "site_id": "mars-gale-aeolis",
+        "transcripts": [
+          "transcripts/MOLA_MEGDR/20261115T035346029152Z.jsonl"
+        ],
+        "transformations": [
+          "subset lines 570..607, samples 6048..6085 of 5632x11520",
+          "MSB int16 metres -> float metres (no scale/offset)",
+          "AOI longitudes normalised to 0..360 east: 137.25..137.55",
+          "mola_flag_interpolated: zero-shot cells retained (product values) and flagged; no values altered",
+          "aggregate: block mean 4x4 native samples -> 1846.3 m (E-W) x 1852.2 m (N-S) at lat -4.6016; block valid only if all members valid",
+          "metric spacing from Mars sphere R=3396000 m (label A_AXIS_RADIUS)",
+          "terrain/1.0.0 (block-mean, Horn-1981 slope, 3x3 SD roughness)",
+          "reported valid_coverage_fraction = fraction of 4x4 analysis blocks with >=1 direct observation (0.741); non-fill coverage 1.000"
+        ],
+        "validation": {
+          "issues": [
+            {
+              "code": "MOLA_INTERPOLATED_CELLS",
+              "evidence": [
+                "1073 of 1444 cells have zero MOLA shots (producer-interpolated); shot-supported fraction 0.257"
+              ],
+              "rule_id": "mola_flag_interpolated",
+              "severity": "warning"
+            },
+            {
+              "code": "GRID_SPACING_IS_NOT_SHOT_FOOTPRINT",
+              "evidence": [
+                "463 m bins; along-track gaps up to ~12 km near equator (label)"
+              ],
+              "rule_id": null,
+              "severity": "info"
+            }
+          ],
+          "metrics": {
+            "cells": 1444,
+            "max_m": -2996.0,
+            "max_shots_per_cell": 5.0,
+            "min_m": -4532.0,
+            "shot_supported_cells": 371,
+            "shot_supported_fraction": 0.256925
+          },
+          "verdict": "ACCEPT"
+        },
+        "vertical_datum": "Mars areoid GMM3 (mgm1025, degree/order 50)"
+      },
+      "provenance_id": "prov-mars-gale-aeolis-ed154434f5666ddf",
+      "provenance_object_key": "derived/ed154434f5666ddfa5448590427dc46e991b8f3afe10f739cd8deec9285424c9.json",
+      "quality_verdict": {
+        "asset_id": "mola-megt00n090hb.img-sub-2bc27bff39c9",
+        "attempt_count": 0,
+        "cleaned_checksum": "8c52fa98ee222da1b1dcb46630b1eba2cb33d3394cb644a55675f11968fa7947",
+        "issues": [
+          {
+            "code": "MOLA_INTERPOLATED_CELLS",
+            "evidence": [
+              "1073 of 1444 cells have zero MOLA shots (producer-interpolated); shot-supported fraction 0.257"
+            ],
+            "rule_id": "mola_flag_interpolated",
+            "severity": "warning"
+          },
+          {
+            "code": "GRID_SPACING_IS_NOT_SHOT_FOOTPRINT",
+            "evidence": [
+              "463 m bins; along-track gaps up to ~12 km near equator (label)"
+            ],
+            "rule_id": null,
+            "severity": "info"
+          }
+        ],
+        "method_version": "c1-qa/1.0.0",
+        "raw_checksum": "2bc27bff39c9513a8696969abe72d4c2643c337b71b222c63e343d825e9c2c62",
+        "source_product_id": "MGS-M-MOLA-5-MEGDR-L3-V1.0.2.0",
+        "verdict": "ACCEPT"
+      },
+      "site_id": "mars-gale-aeolis"
+    }
+  ],
+  "source_snapshot_id": "c1-g2-8e99d2afad638414",
+  "source_snapshot_sha256": "8e99d2afad638414febd3c9a8f4721ae2421ab48a2982695ad291702baf5b835"
+}
