@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Body } from '@/lib/types'
 import { bodyAccent } from '@/lib/regions'
 
@@ -6,6 +6,9 @@ export interface Pin { id: string; label: string; lon: number; lat: number; rank
 export interface Footprint { id: string; label: string; bbox: number[]; kind?: string }
 
 const W = 720, H = 360
+export const MIN_SPAN = 0.2
+/** Mean radii (km) for the on-map scale readout only. */
+export const RADIUS_KM: Partial<Record<Body, number>> = { Moon: 1737.4, Mars: 3389.5 }
 
 /** NASA Trek global mosaics in geographic (equirectangular) tiling: level z has 2^(z+1) x 2^z tiles of 180/2^z degrees,
  *  top-left at (-180, 90), east-positive longitude, matching this map's planetocentric frame. Display only. */
@@ -15,59 +18,165 @@ export const BASEMAPS: Partial<Record<Body, { name: string; url: string; maxZoom
   Moon: { name: 'LRO WAC global mosaic', maxZoom: 8, credit: 'NASA / GSFC / Arizona State Univ. LRO WAC via NASA Trek',
     url: 'https://trek.nasa.gov/tiles/Moon/EQ/LRO_WAC_Mosaic_Global_303ppd_v02/1.0.0/default/default028mm/{z}/{y}/{x}.jpg' },
 }
+export const tileUrl = (body: Body, z: number, row: number, col: number) =>
+  BASEMAPS[body]!.url.replace('{z}', String(z)).replace('{y}', String(row)).replace('{x}', String(col))
 
-function basemapTiles(body: Body, view: { x0: number; x1: number; y0: number; y1: number }) {
+/** View = centre (lon, lat) and longitude span across the map width; latitude span is span/2 (equal degrees per pixel). */
+export interface View { cx: number; cy: number; span: number }
+export function clampView(v: View): View {
+  const span = Math.min(360, Math.max(MIN_SPAN, v.span))
+  const hx = span / 2, hy = span / 4
+  return { span, cx: Math.min(180 - hx, Math.max(-180 + hx, v.cx)), cy: Math.min(90 - hy, Math.max(-90 + hy, v.cy)) }
+}
+const bounds = (v: View) => ({ x0: v.cx - v.span / 2, x1: v.cx + v.span / 2, y0: v.cy - v.span / 4, y1: v.cy + v.span / 4 })
+
+/** Zoom by `factor` keeping the map point under viewBox coordinate (px, py) fixed. */
+export function zoomAt(v: View, factor: number, px: number, py: number): View {
+  const b = bounds(v)
+  const lon = b.x0 + (px / W) * v.span, lat = b.y1 - (py / H) * (v.span / 2)
+  const span = Math.min(360, Math.max(MIN_SPAN, v.span / factor))
+  const x0 = lon - (px / W) * span, y1 = lat + (py / H) * (span / 2)
+  return clampView({ span, cx: x0 + span / 2, cy: y1 - span / 4 })
+}
+export const panBy = (v: View, dpx: number, dpy: number): View =>
+  clampView({ ...v, cx: v.cx - (dpx / W) * v.span, cy: v.cy + (dpy / H) * (v.span / 2) })
+
+export function fitView(pins: Pin[], footprints: Footprint[]): View {
+  const pts: number[][] = []
+  for (const p of pins) pts.push([p.lon, p.lat])
+  for (const f of footprints) pts.push([f.bbox[0], f.bbox[1]], [f.bbox[2], f.bbox[3]])
+  if (pts.length === 0) return { cx: 0, cy: 0, span: 360 }
+  const x0 = Math.min(...pts.map((p) => p[0])), x1 = Math.max(...pts.map((p) => p[0]))
+  const y0 = Math.min(...pts.map((p) => p[1])), y1 = Math.max(...pts.map((p) => p[1]))
+  const span = Math.max((x1 - x0) * 1.6, (y1 - y0) * 3.2, 4)
+  return clampView({ cx: (x0 + x1) / 2, cy: (y0 + y1) / 2, span })
+}
+
+function basemapTiles(body: Body, v: View) {
   const bm = BASEMAPS[body]
   if (!bm) return []
-  const span = Math.max(view.x1 - view.x0, 1e-6)
-  const z = Math.max(0, Math.min(bm.maxZoom, Math.ceil(Math.log2((W * 180) / (span * 256)))))
+  const b = bounds(v)
+  const z = Math.max(0, Math.min(bm.maxZoom, Math.ceil(Math.log2((W * 180) / (v.span * 256)))))
   const deg = 180 / 2 ** z, cols = 2 ** (z + 1), rows = 2 ** z
-  const c0 = Math.max(0, Math.floor((view.x0 + 180) / deg)), c1 = Math.min(cols - 1, Math.floor((view.x1 + 180 - 1e-9) / deg))
-  const r0 = Math.max(0, Math.floor((90 - view.y1) / deg)), r1 = Math.min(rows - 1, Math.floor((90 - view.y0 - 1e-9) / deg))
+  const c0 = Math.max(0, Math.floor((b.x0 + 180) / deg)), c1 = Math.min(cols - 1, Math.floor((b.x1 + 180 - 1e-9) / deg))
+  const r0 = Math.max(0, Math.floor((90 - b.y1) / deg)), r1 = Math.min(rows - 1, Math.floor((90 - b.y0 - 1e-9) / deg))
   const tiles: Array<{ key: string; href: string; lon: number; lat: number; deg: number }> = []
   for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++)
-    tiles.push({ key: `${z}/${r}/${c}`, href: bm.url.replace('{z}', String(z)).replace('{y}', String(r)).replace('{x}', String(c)), lon: -180 + c * deg, lat: 90 - r * deg, deg })
-  return tiles.slice(0, 96)
+    tiles.push({ key: `${z}/${r}/${c}`, href: tileUrl(body, z, r, c), lon: -180 + c * deg, lat: 90 - r * deg, deg })
+  return tiles.slice(0, 120)
+}
+
+const STEPS = [30, 10, 5, 2, 1, 0.5, 0.2, 0.1, 0.05, 0.02]
+export const gridStep = (span: number) => STEPS.find((s) => span / s >= 4) ?? STEPS[STEPS.length - 1]
+export const fmtDeg = (v: number, step: number) => `${Number(v.toFixed(step >= 1 ? 0 : step >= 0.1 ? 1 : 2))}°`
+
+export function MapButton({ label, onClick, children }: { label: string; onClick: () => void; children: React.ReactNode }) {
+  return <button type="button" aria-label={label} title={label} onClick={onClick}
+    className="grid h-8 w-8 place-items-center rounded-md border border-line bg-panel/90 text-sm text-ivory backdrop-blur hover:border-ember hover:text-ember">{children}</button>
 }
 
 /** Equirectangular map for Moon/Mars: planetocentric east longitude, −180…180, with an optional NASA mosaic of the same body.
- *  No Earth imagery is ever shown on another body. */
+ *  Wheel / pinch / double-click / +− keys zoom, drag / arrow keys pan. No Earth imagery is ever shown on another body. */
 export default function PlanetMap({ body, pins, footprints, layers }: { body: Body; pins: Pin[]; footprints: Footprint[]; layers: { pins: boolean; footprints: boolean; graticule: boolean; basemap?: boolean } }) {
-  const [fit, setFit] = useState(true)
-  const view = useMemo(() => {
-    const pts: number[][] = []
-    for (const p of pins) pts.push([p.lon, p.lat])
-    for (const f of footprints) { pts.push([f.bbox[0], f.bbox[1]], [f.bbox[2], f.bbox[3]]) }
-    if (!fit || pts.length === 0) return { x0: -180, x1: 180, y0: -90, y1: 90 }
-    let x0 = Math.min(...pts.map((p) => p[0])), x1 = Math.max(...pts.map((p) => p[0])), y0 = Math.min(...pts.map((p) => p[1])), y1 = Math.max(...pts.map((p) => p[1]))
-    const spanX = Math.max(x1 - x0, 20), spanY = Math.max(y1 - y0, 10), padX = spanX * 0.25, padY = spanY * 0.35
-    const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, sx = spanX + padX * 2, sy = spanY + padY * 2
-    const s = Math.max(sx, sy * 2)
-    x0 = cx - s / 2; x1 = cx + s / 2; y0 = cy - s / 4; y1 = cy + s / 4
-    return { x0: Math.max(-180, x0), x1: Math.min(180, x1), y0: Math.max(-90, y0), y1: Math.min(90, y1) }
-  }, [pins, footprints, fit])
-  const X = (lon: number) => ((lon - view.x0) / (view.x1 - view.x0)) * W
-  const Y = (lat: number) => ((view.y1 - lat) / (view.y1 - view.y0)) * H
-  const step = (view.x1 - view.x0) > 200 ? 30 : (view.x1 - view.x0) > 60 ? 10 : (view.x1 - view.x0) > 20 ? 5 : 1
+  const fitted = useMemo(() => fitView(pins, footprints), [pins, footprints])
+  const [view, setView] = useState<View>(fitted)
+  useEffect(() => setView(fitted), [fitted, body])
+  const svgRef = useRef<SVGSVGElement>(null)
+  const pointers = useRef(new Map<number, { x: number; y: number }>())
+  const pinch = useRef<number | null>(null)
+
+  const toViewBox = useCallback((clientX: number, clientY: number) => {
+    const r = svgRef.current!.getBoundingClientRect()
+    return { x: ((clientX - r.left) / r.width) * W, y: ((clientY - r.top) / r.height) * H, scale: W / r.width }
+  }, [])
+
+  // Non-passive wheel listener so the page does not scroll while zooming the map.
+  useEffect(() => {
+    const el = svgRef.current
+    if (!el) return
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault()
+      const p = toViewBox(e.clientX, e.clientY)
+      setView((v) => zoomAt(v, Math.exp(-e.deltaY * 0.0015), p.x, p.y))
+    }
+    el.addEventListener('wheel', onWheel, { passive: false })
+    return () => el.removeEventListener('wheel', onWheel)
+  }, [toViewBox])
+
+  const onPointerDown = (e: React.PointerEvent<SVGSVGElement>) => {
+    e.currentTarget.setPointerCapture(e.pointerId)
+    pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
+    pinch.current = null
+  }
+  const onPointerMove = (e: React.PointerEvent<SVGSVGElement>) => {
+    const prev = pointers.current.get(e.pointerId)
+    if (!prev) return
+    pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
+    const pts = [...pointers.current.values()]
+    if (pts.length >= 2) {
+      const [a, b] = pts
+      const dist = Math.hypot(a.x - b.x, a.y - b.y)
+      if (pinch.current) {
+        const mid = toViewBox((a.x + b.x) / 2, (a.y + b.y) / 2)
+        const f = dist / pinch.current
+        setView((v) => zoomAt(v, f, mid.x, mid.y))
+      }
+      pinch.current = dist
+      return
+    }
+    const { scale } = toViewBox(e.clientX, e.clientY)
+    const dx = (e.clientX - prev.x) * scale, dy = (e.clientY - prev.y) * scale
+    if (dx || dy) setView((v) => panBy(v, dx, dy))
+  }
+  const onPointerUp = (e: React.PointerEvent<SVGSVGElement>) => { pointers.current.delete(e.pointerId); pinch.current = null }
+  const onDoubleClick = (e: React.MouseEvent<SVGSVGElement>) => { const p = toViewBox(e.clientX, e.clientY); setView((v) => zoomAt(v, e.shiftKey ? 0.5 : 2, p.x, p.y)) }
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    const act: Record<string, (v: View) => View> = {
+      '+': (v) => zoomAt(v, 1.5, W / 2, H / 2), '=': (v) => zoomAt(v, 1.5, W / 2, H / 2), '-': (v) => zoomAt(v, 1 / 1.5, W / 2, H / 2),
+      ArrowLeft: (v) => panBy(v, 60, 0), ArrowRight: (v) => panBy(v, -60, 0), ArrowUp: (v) => panBy(v, 0, 60), ArrowDown: (v) => panBy(v, 0, -60),
+      '0': () => fitted,
+    }
+    if (act[e.key]) { e.preventDefault(); setView(act[e.key]) }
+  }
+
+  const b = bounds(view)
+  const X = (lon: number) => ((lon - b.x0) / view.span) * W
+  const Y = (lat: number) => ((b.y1 - lat) / (view.span / 2)) * H
+  const step = gridStep(view.span)
   const lons: number[] = [], lats: number[] = []
-  for (let v = Math.ceil(view.x0 / step) * step; v <= view.x1; v += step) lons.push(v)
-  for (let v = Math.ceil(view.y0 / step) * step; v <= view.y1; v += step) lats.push(v)
+  for (let i = Math.ceil(b.x0 / step); i * step <= b.x1; i++) lons.push(i * step)
+  for (let i = Math.ceil(b.y0 / step); i * step <= b.y1; i++) lats.push(i * step)
   const accent = bodyAccent[body]
   const showBasemap = layers.basemap !== false && !!BASEMAPS[body]
   const tiles = useMemo(() => (showBasemap ? basemapTiles(body, view) : []), [showBasemap, body, view])
+  const radius = RADIUS_KM[body]
+  const widthKm = radius ? (view.span * Math.PI / 180) * radius * Math.cos((view.cy * Math.PI) / 180) : null
+
   return (
     <div>
-      <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`${body} equirectangular map, planetocentric east longitude`} className="w-full rounded-md border border-line" style={{ background: `radial-gradient(ellipse at 40% 30%, ${accent}22, #0b0a09 70%)` }}>
-        {tiles.length > 0 && <g opacity="0.85">{tiles.map((t) => <image key={t.key} href={t.href} x={X(t.lon)} y={Y(t.lat)} width={X(t.lon + t.deg) - X(t.lon) + 0.5} height={Y(t.lat - t.deg) - Y(t.lat) + 0.5} preserveAspectRatio="none" />)}</g>}
-        {layers.graticule && <g stroke="#2c2824" strokeWidth="0.7">{lons.map((v) => <g key={'x' + v}><line x1={X(v)} x2={X(v)} y1="0" y2={H} /><text x={X(v) + 3} y={H - 4} fill="#8a8274" fontSize="9" stroke="none">{v}°</text></g>)}{lats.map((v) => <g key={'y' + v}><line y1={Y(v)} y2={Y(v)} x1="0" x2={W} /><text x="4" y={Y(v) - 3} fill="#8a8274" fontSize="9" stroke="none">{v}°</text></g>)}</g>}
-        {layers.footprints && footprints.map((f) => { const x = X(f.bbox[0]), y = Y(f.bbox[3]), w = Math.max(12, X(f.bbox[2]) - x), h = Math.max(12, Y(f.bbox[1]) - y)
-          return <g key={f.id}><rect x={x} y={y} width={w} height={h} fill={accent} fillOpacity="0.18" stroke={accent} strokeWidth="1.5" strokeDasharray="4 3" /><text x={x + w + 5} y={y + 10} fill="#efe7d6" fontSize="11">{f.label}</text></g> })}
-        {layers.pins && pins.map((p) => <g key={p.id} transform={`translate(${X(p.lon)} ${Y(p.lat)})`}><circle r="8" fill={p.eligible === false ? '#1b1815' : accent} stroke="#efe7d6" strokeWidth="1.3" /><text y="3.5" textAnchor="middle" fontSize="10" fontWeight="600" fill={p.eligible === false ? '#efe7d6' : '#0b0a09'}>{p.rank ?? '×'}</text><text x="12" y="4" fill="#efe7d6" fontSize="11">{p.label}</text></g>)}
-      </svg>
+      <div className="relative" tabIndex={0} onKeyDown={onKeyDown} aria-label={`${body} map. Drag or use arrow keys to pan; scroll, pinch, double-click or plus and minus keys to zoom; 0 fits to features.`}>
+        <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`${body} equirectangular map, planetocentric east longitude`}
+          className="w-full cursor-grab touch-none select-none rounded-md border border-line active:cursor-grabbing"
+          style={{ background: `radial-gradient(ellipse at 40% 30%, ${accent}22, #0b0a09 70%)` }}
+          onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={onPointerUp} onDoubleClick={onDoubleClick}>
+          {tiles.length > 0 && <g opacity="0.85">{tiles.map((t) => <image key={t.key} href={t.href} x={X(t.lon)} y={Y(t.lat)} width={X(t.lon + t.deg) - X(t.lon) + 0.5} height={Y(t.lat - t.deg) - Y(t.lat) + 0.5} preserveAspectRatio="none" />)}</g>}
+          {layers.graticule && <g stroke="#2c2824" strokeWidth="0.7">{lons.map((v) => <g key={'x' + v}><line x1={X(v)} x2={X(v)} y1="0" y2={H} /><text x={X(v) + 3} y={H - 4} fill="#8a8274" fontSize="9" stroke="none">{fmtDeg(v, step)}</text></g>)}{lats.map((v) => <g key={'y' + v}><line y1={Y(v)} y2={Y(v)} x1="0" x2={W} /><text x="4" y={Y(v) - 3} fill="#8a8274" fontSize="9" stroke="none">{fmtDeg(v, step)}</text></g>)}</g>}
+          {layers.footprints && footprints.map((f) => { const x = X(f.bbox[0]), y = Y(f.bbox[3]), w = Math.max(12, X(f.bbox[2]) - x), h = Math.max(12, Y(f.bbox[1]) - y)
+            return <g key={f.id}><rect x={x} y={y} width={w} height={h} fill={accent} fillOpacity="0.18" stroke={accent} strokeWidth="1.5" strokeDasharray="4 3" /><text x={x + w + 5} y={y + 10} fill="#efe7d6" fontSize="11">{f.label}</text></g> })}
+          {layers.pins && pins.map((p) => <g key={p.id} transform={`translate(${X(p.lon)} ${Y(p.lat)})`}><circle r="8" fill={p.eligible === false ? '#1b1815' : accent} stroke="#efe7d6" strokeWidth="1.3" /><text y="3.5" textAnchor="middle" fontSize="10" fontWeight="600" fill={p.eligible === false ? '#efe7d6' : '#0b0a09'}>{p.rank ?? '×'}</text><text x="12" y="4" fill="#efe7d6" fontSize="11">{p.label}</text></g>)}
+        </svg>
+        <div className="absolute right-2 top-2 flex flex-col gap-1">
+          <MapButton label="Zoom in" onClick={() => setView((v) => zoomAt(v, 2, W / 2, H / 2))}>+</MapButton>
+          <MapButton label="Zoom out" onClick={() => setView((v) => zoomAt(v, 0.5, W / 2, H / 2))}>−</MapButton>
+          <MapButton label="Fit to features" onClick={() => setView(fitted)}>⤢</MapButton>
+          <MapButton label="Whole body" onClick={() => setView({ cx: 0, cy: 0, span: 360 })}>◯</MapButton>
+        </div>
+      </div>
       <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-mute">
         <span>{body} · planetocentric east longitude (−180…180) · equirectangular · {showBasemap ? `basemap: ${BASEMAPS[body]!.credit} (display only, not used in analysis)` : 'no imagery basemap'}</span>
-        <button className="underline" onClick={() => setFit(!fit)}>{fit ? 'Show whole body' : 'Fit to features'}</button>
+        <span className="mono">centre {view.cx.toFixed(2)}°, {view.cy.toFixed(2)}° · {view.span < 1 ? view.span.toFixed(2) : view.span.toFixed(0)}° across{widthKm != null ? ` ≈ ${widthKm < 10 ? widthKm.toFixed(1) : Math.round(widthKm).toLocaleString()} km` : ''}</span>
       </div>
+      <p className="mt-1 text-xs text-mute">Drag to pan · scroll, pinch or double-click to zoom (shift+double-click zooms out) · keys: arrows, + / −, 0 to fit.</p>
     </div>
   )
 }

@@ -9,6 +9,7 @@ import { rankSites } from '@/lib/analysis'
 import { CRS } from '@/lib/regions'
 import type { Body } from '@/lib/types'
 const EarthMap = lazy(() => import('@/components/EarthMap'))
+const PlanetGlobe = lazy(() => import('@/components/PlanetGlobe'))
 
 type Mode = '2d' | 'globe'
 export default function Explorer() {
@@ -45,11 +46,13 @@ export default function Explorer() {
           <div className="space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <Tabs<Body> label="Body" value={body} onChange={setBody} tabs={[{ id: 'Earth', label: 'Earth' }, { id: 'Moon', label: 'Moon' }, { id: 'Mars', label: 'Mars' }]} />
-              {body === 'Earth' && <Tabs<Mode> label="Earth view" value={mode} onChange={setMode} tabs={[{ id: '2d', label: '2D map' }, { id: 'globe', label: '3D globe' }]} />}
+              <Tabs<Mode> label={`${body} view`} value={mode} onChange={setMode} tabs={[{ id: '2d', label: '2D map' }, { id: 'globe', label: '3D globe' }]} />
             </div>
             {body === 'Earth'
               ? <Suspense fallback={<Spinner label="Loading Earth map" />}><EarthMap pins={pins} footprints={footprints} globe={mode === 'globe'} layers={layers} /></Suspense>
-              : <PlanetMap body={body} pins={pins} footprints={footprints} layers={layers} />}
+              : mode === 'globe'
+                ? <Suspense fallback={<Spinner label={`Loading ${body} globe`} />}><PlanetGlobe body={body} pins={pins} footprints={footprints} layers={layers} /></Suspense>
+                : <PlanetMap body={body} pins={pins} footprints={footprints} layers={layers} />}
             <p className="text-xs text-mute">Coordinate system: <span className="mono">{CRS[body]}</span>{body === 'Earth' ? ' · basemap tiles load from NASA GIBS; markers remain if tiles are unavailable' : ' · basemap tiles load from NASA Trek; markers remain if tiles are unavailable'}</p>
           </div>
           <aside className="space-y-4">
