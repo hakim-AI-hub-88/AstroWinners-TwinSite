@@ -126,9 +126,34 @@ class Suite:
         self.error_body(text)
 
     def oversize(self):
-        blob = b'{"pad":"' + b'x' * 1_000_100 + b'"}'
-        code, _, text = self.c.call('/v1/missions', raw=blob, key='c5-oversize-' + uuid.uuid4().hex)
+        # A server may answer 413 from Content-Length alone and close early; read the status
+        # before streaming the body so an early close is not misread as a failure.
+        import http.client
+        from urllib.parse import urlparse
+        u = urlparse(self.c.base)
+        conn = http.client.HTTPConnection(u.hostname, u.port, timeout=15)
+        size = 1_000_100
+        conn.putrequest('POST', '/v1/missions')
+        conn.putheader('Content-Type', 'application/json')
+        conn.putheader('Idempotency-Key', 'c5-oversize-' + uuid.uuid4().hex)
+        conn.putheader('Content-Length', str(size))
+        conn.endheaders()
+        early = True
+        try:
+            conn.sock.settimeout(2)
+            resp = conn.getresponse()
+        except (TimeoutError, OSError):
+            early = False
+            conn.sock.settimeout(15)
+            try:
+                conn.send(b'{"pad":"' + b'x' * (size - 10) + b'"}')
+            except OSError:
+                pass
+            resp = conn.getresponse()
+        code = resp.status
+        conn.close()
         assert code == 413, f'>1,000,000-byte body expected 413, got {code}'
+        return 'PASS', '413 sent from Content-Length before body' if early else '413 after body'
 
     def bad_json(self):
         code, _, _ = self.c.call('/v1/missions', raw=b'{"schema_version":', key='c5-badjson-' + uuid.uuid4().hex)
