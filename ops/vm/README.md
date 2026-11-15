@@ -1,50 +1,115 @@
-# Linux VM configuration — prepared, not deployed
+# Linux VM deployment runbook — prepared, NOT deployed
 
-Use a dedicated unprivileged `twinsite` account. Install reviewed source under
-`/opt/twinsite`, Python 3.13 with `.venv`, `requirements-integration.txt`, and
-build the frontend using its committed lockfile (`npm ci && npm run build`).
-The backend has no paid inference dependency. No reference ARES package is needed.
+Status, 2026-11-15:
 
-Provision `/var/lib/twinsite` owned by twinsite, mode 0700. Copy the reviewed raw
-source tree to `/var/lib/twinsite/source-cache` with its relative object keys
-intact. SQLite, durable queue, reports and artifact blobs live in the persistent
-state directory. Back up SQLite using its online backup API or stop services;
-do not copy a live SQLite main file without its WAL. Preserve source-cache hashes.
+- **Not yet tested on Linux, and not deployed.** Docker and nginx were not available on the build machine.
+- **Tested locally on macOS:**
+  - The production build was served through `vite preview`, with the same SPA fallback and `/v1` proxy as nginx.
+  - `ops/vm/smoke.py`: 14/14 PASS.
+  - Restart and crash recovery: `make verify`, which includes the `c5_http_restart_e2e` and `measured_http_restart_e2e` suites.
+- **Not yet validated:** `nginx -t`, systemd sandboxing, and SELinux/AppArmor. Validate all three on the target VM before exposing it.
 
-Provision `/etc/twinsite/worker.env` separately, root-owned mode 0600. Set
-EARTHDATA_TOKEN through the host's secret manager or a protected editor. Systemd
-injects this into the worker process. The API and frontend do not receive it.
-Rotate the protected value and restart the worker; no code/image change is needed.
-The acquisition CLI supports EARTHDATA_TOKEN or TWINSITE_SECRET_ENV_FILE (0600,
-owned by the acquisition user). macOS Keychain is never needed for credentials.
+Deploy only to an approved host. Nothing here needs a paid API, an AI key, or an Earthdata token.
 
-Install the two service units and nginx configuration only on an approved host.
-The nginx listener is deliberately loopback-only until host/TLS configuration is
-reviewed. Put it behind the host's TLS proxy or configure the approved hostname and
-certificates. Do not expose Python's development HTTP server directly to the internet.
+## 1. Host layout
 
-Systemd restarts failed processes. C3's persisted leases recover interrupted jobs;
-result commits are fenced. Check `/v1/health` through nginx and confirm the worker
-with `systemctl is-active twinsite-worker`; API health alone does not prove worker
-liveness. Observe actual P00–P90 events during a smoke mission. Logs omit headers,
-query strings, payloads, secret values and exception text.
+| Path | Owner / mode | Contents |
+| --- | --- | --- |
+| `/opt/twinsite` | root, read-only to `twinsite` | Reviewed checkout at a tagged commit, `.venv`, `frontend/dist` |
+| `/var/lib/twinsite` | `twinsite`, 0700 | SQLite queue/results (WAL), artifact blobs, reports |
+| `/var/lib/twinsite/source-cache` | `twinsite`, 0700 | Pinned raw NASA assets and cleaned grids, addressed by `object_key` |
+| `/etc/twinsite/twinsite.env` | root, 0644, optional | **Non-secret** overrides only, such as `TWINSITE_CORS_ORIGINS` |
 
-Run `make verify` after installation; perform HTTP/browser smoke checks, restart and
-SIGKILL recovery tests, then independent C5 scientific review. Scientific releases
-remain blocked. This configuration has not been exercised on a Linux VM.
+The services receive **no credentials**. Both units point `TWINSITE_SECRET_ENV_FILE` at a path that does not exist, so a stray `.env` file is never read. Measured runs and the grid view read only the verified cache.
 
-## Post-merge recovery cache requirements
+## 2. Install (as root, on the approved VM)
 
-The published pair now references the official LP DAAC SRTM ZIP
-(`2493d4ce40b0…`), not the ESA mirror ZIP (`a9c6dd5d6e41…`). The decoded
-rasters are byte-identical, but the ZIP object keys and evidence IDs differ.
-Deploy all five assets referenced by the published pair and their `asset.json`
-metadata (including MOLA subset byte ranges) into the configured source cache.
-Both the worker and `make verify` honor `TWINSITE_SOURCE_DATA_DIR`. Do not copy
-only the old mirror cache. Preserve cached raw bytes and their metadata.
+```sh
+useradd --system --home /var/lib/twinsite --shell /usr/sbin/nologin twinsite
+install -d -o twinsite -g twinsite -m 0700 /var/lib/twinsite /var/lib/twinsite/source-cache
+git clone <reviewed remote> /opt/twinsite && git -C /opt/twinsite checkout <release tag>
+python3.13 -m venv /opt/twinsite/.venv
+/opt/twinsite/.venv/bin/pip install -r /opt/twinsite/requirements-integration.txt
+(cd /opt/twinsite/frontend && npm ci && npm run build)
+```
 
-The previously exposed Earthdata token is compromised: do not deploy or reuse
-it. Cached measured analysis requires no token. Future authenticated acquisition
-requires a replacement credential provisioned server-side. Offline C5 arithmetic
-and checksums pass; fresh independent origin checks and live VM/browser acceptance
-are still pending. Scientific release remains BLOCK.
+## 3. Provision the source cache (offline, hash-verified)
+
+Copy the build machine's verified caches to the VM. Use `rsync`, or a tarball of
+`.runtime/data` and `.runtime/official-data`. Then install exactly the objects named by the published pair:
+
+```sh
+sudo -u twinsite /opt/twinsite/.venv/bin/python /opt/twinsite/ops/provision_source_cache.py \
+  --to /var/lib/twinsite/source-cache --from /tmp/twinsite-cache/data --from /tmp/twinsite-cache/official-data
+sudo -u twinsite /opt/twinsite/.venv/bin/python /opt/twinsite/ops/provision_source_cache.py \
+  --to /var/lib/twinsite/source-cache --check      # must print "Source cache ready"
+```
+
+The script verifies every SHA-256, never overwrites, and never downloads anything. Without this
+step, measured runs fail with "Source bytes missing" and the grid view returns 404.
+
+## 4. Services
+
+```sh
+install -m 0644 /opt/twinsite/ops/vm/twinsite-api.service /opt/twinsite/ops/vm/twinsite-worker.service /etc/systemd/system/
+systemctl daemon-reload && systemctl enable --now twinsite-api twinsite-worker
+```
+
+- **Restarts:** both units use `Restart=always`, which allows 10 restarts per 60 s.
+- **Sandboxing:** `ProtectSystem=strict` and `ProtectHome` are set, and the only writable path is `/var/lib/twinsite`.
+- **Recovery:** the persisted job leases recover interrupted runs after a crash or reboot, and result commits are fenced.
+- **Network:** the API binds to `127.0.0.1:8080` only.
+
+## 5. nginx
+
+```sh
+cp /opt/twinsite/ops/vm/nginx.conf /etc/nginx/conf.d/twinsite.conf   # loopback :8081 only
+nginx -t && systemctl reload nginx
+```
+
+`nginx-common.conf` covers:
+
+- Static files from `frontend/dist`.
+- An SPA fallback, so deep links such as `/analysis/run-…` work.
+- The `/v1/` reverse proxy, with the prefix kept.
+- Immutable caching for `/assets/`.
+- A rate limit.
+- Security headers (`nginx-headers.conf`): CSP allowing only self, Google Fonts and NASA GIBS tiles; nosniff; DENY framing.
+
+**HTTPS (public exposure):** copy `nginx-https.conf.example`, replace the hostname, then obtain certificates with
+certbot (webroot) or the host's managed TLS. Keep the loopback block for health checks, and open only ports 80/443
+in the firewall.
+
+## 6. Health and acceptance
+
+```sh
+systemctl is-active twinsite-api twinsite-worker
+/opt/twinsite/.venv/bin/python /opt/twinsite/ops/vm/smoke.py --base-url http://127.0.0.1:8081 --expect-security-headers
+```
+
+The smoke test checks the following:
+
+- The index page and a hashed asset are served.
+- Three deep links resolve.
+- Health is ready, with AI off.
+- The live catalog and the verified grid are served.
+- One measured run completes with C2, P00–P90, BLOCK and a report.
+
+API health alone does not prove the worker is running, which is why the smoke test submits a real run.
+
+For restart behaviour, run `systemctl restart twinsite-worker` while a run is queued, and `kill -9` the worker
+in the middle of a run. Both runs must still complete. `tests/e2e/measured_live.py` automates these checks on any host.
+
+## 7. Operations
+
+- **Backups:** use `sqlite3 /var/lib/twinsite/twinsite.sqlite ".backup /backup/twinsite-$(date +%F).sqlite"`, which is an online, WAL-safe backup. Also back up `source-cache`, and never alter its files in place.
+- **Logs:** use `journalctl -u twinsite-api -u twinsite-worker`. Request headers, query strings, payloads and secrets are never logged. Full exception tracebacks appear only in the protected journal; public run errors stay redacted.
+- **Upgrades:** check out the new tag, `pip install`, `npm ci && npm run build`, then `systemctl restart twinsite-api twinsite-worker`. Rerun the smoke test.
+
+## 8. Credentials
+
+The Earthdata token used earlier was exposed. It must be revoked and must never be deployed.
+Acquiring new NASA data needs a replacement token. Run that acquisition from an operator account, not
+from these services: use `scripts/integration/provision_earthdata.py` (mode 0600 file, value never echoed),
+then publish the new pair through review and redeploy the cache. Scientific release remains **BLOCK**
+(see `docs/release/SCIENTIFIC_REVIEW.md`).

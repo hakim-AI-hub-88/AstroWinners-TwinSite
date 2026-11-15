@@ -1,6 +1,8 @@
 [Unit]
 Description=TwinSite deterministic worker
 After=network.target
+StartLimitIntervalSec=60
+StartLimitBurst=10
 [Service]
 Type=simple
 User=twinsite
@@ -10,16 +12,27 @@ Environment=PYTHONPATH=/opt/twinsite/backend:/opt/twinsite
 Environment=TWINSITE_DATA_DIR=/var/lib/twinsite
 Environment=TWINSITE_SOURCE_DATA_DIR=/var/lib/twinsite/source-cache
 Environment=TWINSITE_AI_ENABLED=false
-# Root-owned 0600 file, provisioned separately. Never included in source/image.
-EnvironmentFile=/etc/twinsite/worker.env
+Environment=TWINSITE_UPLOADS_ENABLED=false
+# Services never hold Earthdata credentials: measured runs read only the verified cache.
+# Point the optional secret file at a path that does not exist so a stray /opt/twinsite/.env is never read.
+Environment=TWINSITE_SECRET_ENV_FILE=/etc/twinsite/services-have-no-secrets
 ExecStart=/opt/twinsite/.venv/bin/python -m twinsite.jobs
-Restart=on-failure
+Restart=always
 RestartSec=3
 UMask=0077
 NoNewPrivileges=true
 PrivateTmp=true
+PrivateDevices=true
 ProtectSystem=strict
 ProtectHome=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
 ReadWritePaths=/var/lib/twinsite
+# Optional non-secret overrides (e.g. TWINSITE_CORS_ORIGINS); never put tokens here.
+EnvironmentFile=-/etc/twinsite/twinsite.env
+# The worker needs no network for measured runs; uncomment to enforce once acquisition runs elsewhere.
+# IPAddressDeny=any
 [Install]
 WantedBy=multi-user.target

@@ -1,5 +1,9 @@
 # TwinSite deployment runbook (C5) — PREPARED, NOT EXECUTED
 
+> **Superseded for installation steps by [`ops/vm/README.md`](../../ops/vm/README.md)**
+> (2026-11-15). That runbook covers hardened units, the nginx SPA/proxy/TLS config, source-cache
+> provisioning and `ops/vm/smoke.py`. The VM-only rationale below still applies.
+
 **Nothing is deployed.** No host, VM or account was named to C5 and none was created. Deploying needs the user's explicit OK plus a host and access (see Blockers).
 
 ## Why not free serverless hosting

@@ -1,5 +1,13 @@
 # QA_STATUS — C5 (TWIN-QA), 2026-11-15 04:10 UTC
 
+> **Update (later on 2026-11-15, after the C0 integration):** this snapshot is historical.
+> - The C2 engine is wired in.
+> - The official SRTM tile is cached, and the MOLA origin bytes are re-verified.
+> - `make verify` gives 16 automated PASS and 0 FAIL. Live HTTP, browser, restart and crash checks pass.
+>
+> Current status: [`LIVE_ACCEPTANCE.md`](LIVE_ACCEPTANCE.md) and [`SCIENTIFIC_REVIEW.md`](SCIENTIFIC_REVIEW.md).
+> Recommendation is still **HOLD** for scientific release (BLOCK) and for deployment, because no VM has been approved.
+
 **Recommendation: HOLD.**
 - Synthetic end-to-end works and survives restarts and crashes.
 - G2 has half a pair: the Mars MOLA bytes are independently verified against NASA PDS, but no Earth bytes exist.
