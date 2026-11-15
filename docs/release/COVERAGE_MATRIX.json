@@ -1,6 +1,6 @@
 {
  "schema": "twinsite.coverage_matrix/1",
- "generated_at": "2026-11-15T10:24:53.117484+00:00",
+ "generated_at": "2026-11-15T12:26:41.608106+00:00",
  "generated_from": "science.sqlite + published G2 pair (actual persisted evidence)",
  "status_legend": {
   "real_data": "retrieved, decoded, QA-checked and persisted",
@@ -14,8 +14,8 @@
  },
  "summary": {
   "implemented": 6,
-  "missing": 21,
-  "real_data": 6,
+  "missing": 18,
+  "real_data": 9,
   "reference_constant": 2,
   "user_input": 3,
   "user_input_only": 3,
@@ -85,7 +85,7 @@
    "observations_persisted": 0,
    "sites": 0,
    "real_data_status": "real_data",
-   "validation": "checksum + C5 provenance check (release BLOCK pending independent review)",
+   "validation": "checksum-verified raw assets, label-driven decode, QA verdict, provenance (release BLOCK pending independent review)",
    "database_persistence": true,
    "simple_analysis": true,
    "ai_agents": true,
@@ -95,18 +95,24 @@
   {
    "domain": "topography",
    "body": "Moon",
-   "sources": [],
+   "sources": [
+    "LRO-L-LOLA-4-GDR-V1.0:LDEM_64"
+   ],
    "kinds": [],
-   "quantities": [],
+   "quantities": [
+    "local_relief_m",
+    "roughness_m",
+    "slope_deg"
+   ],
    "observations_persisted": 0,
    "sites": 0,
-   "real_data_status": "missing",
-   "validation": "none",
-   "database_persistence": false,
-   "simple_analysis": false,
-   "ai_agents": false,
-   "data_explorer": false,
-   "limitations": "LRO LOLA (PDS) connector not implemented"
+   "real_data_status": "real_data",
+   "validation": "checksum-verified raw assets, label-driven decode, QA verdict, provenance (release BLOCK pending independent review)",
+   "database_persistence": true,
+   "simple_analysis": true,
+   "ai_agents": true,
+   "data_explorer": true,
+   "limitations": "LOLA LDEM_64 gridded surface partly interpolated (no per-cell shot counts at 64 ppd)"
   },
   {
    "domain": "topography",
@@ -123,7 +129,7 @@
    "observations_persisted": 0,
    "sites": 0,
    "real_data_status": "real_data",
-   "validation": "checksum + C5 provenance check (release BLOCK pending independent review)",
+   "validation": "checksum-verified raw assets, label-driven decode, QA verdict, provenance (release BLOCK pending independent review)",
    "database_persistence": true,
    "simple_analysis": true,
    "ai_agents": true,
@@ -155,18 +161,23 @@
   {
    "domain": "thermal",
    "body": "Moon",
-   "sources": [],
+   "sources": [
+    "LRO-L-DLRE-5-GCP-V1.0"
+   ],
    "kinds": [],
-   "quantities": [],
+   "quantities": [
+    "surface_temperature_day_K",
+    "surface_temperature_night_K"
+   ],
    "observations_persisted": 0,
    "sites": 0,
-   "real_data_status": "missing",
-   "validation": "none",
-   "database_persistence": false,
+   "real_data_status": "real_data",
+   "validation": "checksum-verified raw assets, label-driven decode, QA verdict, provenance (release BLOCK pending independent review)",
+   "database_persistence": true,
    "simple_analysis": false,
-   "ai_agents": false,
-   "data_explorer": false,
-   "limitations": "LRO Diviner (PDS) connector not implemented"
+   "ai_agents": true,
+   "data_explorer": true,
+   "limitations": "Diviner 0.5-deg bins (~15 km); bolometric day max / night min only; not weighted in missions because Earth has no keyless calibrated LST"
   },
   {
    "domain": "thermal",
@@ -259,17 +270,21 @@
   {
    "domain": "temporal",
    "body": "Moon",
-   "sources": [],
+   "sources": [
+    "LRO-L-DLRE-5-GCP-V1.0"
+   ],
    "kinds": [],
-   "quantities": [],
+   "quantities": [
+    "surface_temperature_diurnal_range_K"
+   ],
    "observations_persisted": 0,
    "sites": 0,
-   "real_data_status": "missing",
-   "validation": "none",
-   "database_persistence": false,
+   "real_data_status": "real_data",
+   "validation": "checksum-verified raw assets, label-driven decode, QA verdict, provenance (release BLOCK pending independent review)",
+   "database_persistence": true,
    "simple_analysis": false,
-   "ai_agents": false,
-   "data_explorer": false,
+   "ai_agents": true,
+   "data_explorer": true,
    "limitations": ""
   },
   {

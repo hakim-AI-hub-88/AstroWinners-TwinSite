@@ -82,6 +82,7 @@ class MOLAMEGDRAdapter(SourceAdapter):
     license_url = "https://pds.nasa.gov/datastandards/about/"
     doc_url = "https://pds-geosciences.wustl.edu/missions/mgs/megdr.html"
     approved_rules = ("mola_flag_interpolated",)
+    asset_prefix = "mola"
 
     def __init__(self, root: Optional[Path] = None, offline: bool = False, workers: int = 6) -> None:
         self.root = root
@@ -188,7 +189,7 @@ class MOLAMEGDRAdapter(SourceAdapter):
             raise AcquisitionError("offline and no verified cached label", url=cand.url)
         data, _ = fetch.http_get(cand.url, tr, max_bytes=max_bytes, timeout=60, retries=4)
         meta = self._meta(g, cand, len(data), "PDS3 ODL label (ASCII)", tr)
-        meta["asset_id"] = f"mola-{cand.filename.lower()}-{fetch.sha256_bytes(data)[:12]}"
+        meta["asset_id"] = f"{self.asset_prefix}-{cand.filename.lower()}-{fetch.sha256_bytes(data)[:12]}"
         path, key, digest = fetch.store_raw(data, filename=cand.filename, meta=meta, root=self.root)
         meta.update(path=str(path), object_key=key, sha256=digest)
         return fetch.asset_from_meta(meta, g.observation, from_cache=False)
@@ -212,7 +213,7 @@ class MOLAMEGDRAdapter(SourceAdapter):
         data = b"".join(parts)
         fname = f"{cand.filename}.r{ranges[0][0]}-{ranges[-1][1]}.n{len(ranges)}.bin"
         meta = self._meta(g, cand, len(data), "concatenated HTTP byte ranges of PDS3 IMG", tr, ranges, parent)
-        meta["asset_id"] = f"mola-{cand.filename.lower()}-sub-{fetch.sha256_bytes(data)[:12]}"
+        meta["asset_id"] = f"{self.asset_prefix}-{cand.filename.lower()}-sub-{fetch.sha256_bytes(data)[:12]}"
         path, key, digest = fetch.store_raw(data, filename=fname, meta=meta, root=self.root)
         meta.update(path=str(path), object_key=key, sha256=digest)
         return fetch.asset_from_meta(meta, g.observation, from_cache=False)
@@ -228,6 +229,8 @@ class MOLAMEGDRAdapter(SourceAdapter):
         st = str(img["SAMPLE_TYPE"])
         if (bits, st) == (16, "MSB_INTEGER"):
             fmt = ">h"
+        elif (bits, st) == (16, "LSB_INTEGER"):
+            fmt = "<h"
         elif (bits, st) == (8, "UNSIGNED_INTEGER"):
             fmt = ">B"
         else:
@@ -343,7 +346,7 @@ class MOLAMEGDRAdapter(SourceAdapter):
         if len(raw) != ncols * nb * (l1 - l0 + 1):
             raise TruncatedAssetError("subset byte length does not match window", expected=ncols * nb * (l1 - l0 + 1),
                                       actual=len(raw))
-        return list(struct.unpack(f">{ncols * (l1 - l0 + 1)}{L['fmt'][1]}", raw))
+        return list(struct.unpack(f"{L['fmt'][0]}{ncols * (l1 - l0 + 1)}{L['fmt'][1]}", raw))
 
     # ------------------------------------------------------------------ validate / clean / features
     def validate(self, decoded: Decoded) -> Validation:

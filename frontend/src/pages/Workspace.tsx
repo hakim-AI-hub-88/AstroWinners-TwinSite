@@ -103,8 +103,8 @@ export default function Workspace() {
     onError: (e) => fail(e),
   })
   const published = useMutation({
-    mutationFn: postPublishedMission,
-    onSuccess: (r) => { rememberRun({ runId: r.run_id, title: 'Measured Zagora–Gale', body: 'Earth + Mars', demo: false, at: Date.now() }); nav(`/analysis/${r.run_id}`) },
+    mutationFn: (ds: 'zagora-gale-v1' | 'zagora-taurus-littrow-v1') => postPublishedMission(ds),
+    onSuccess: (r, ds) => { rememberRun({ runId: r.run_id, title: ds === 'zagora-gale-v1' ? 'Measured Zagora–Gale' : 'Measured Zagora–Taurus-Littrow', body: ds === 'zagora-gale-v1' ? 'Earth + Mars' : 'Earth + Moon', demo: false, at: Date.now() }); nav(`/analysis/${r.run_id}`) },
     onError: (e) => fail(e),
   })
   const problems: string[] = []
@@ -119,10 +119,13 @@ export default function Workspace() {
       {!live && !health.isLoading && <DemoBanner>API offline: “Run” opens a pre-computed synthetic fixture. Your parameters are NOT scored.</DemoBanner>}
       <div className="mx-auto max-w-7xl px-4 py-8">
         <PageHeader eyebrow="Mission setup" title="Define your mission" sub="Pick the target region on the Moon or Mars, tell TwinSite which features matter, then run. Nothing is computed until you press Run; costs and effort are only what you provide." />
-        <div className="mb-5"><Notice title="Published Earth / Mars evidence — review pending" tone="mute">
-          Zagora SRTM and Gale MOLA at 1852.3 m scale, using cached NASA LP DAAC and PDS products with recorded source hashes.
-          This preset uses fixed scenario weights and tolerances, unknown access/cost/duration, and keeps missing measurements missing. Scientific release stays blocked.
-          <div className="mt-3"><Btn disabled={!live || published.isPending} onClick={() => published.mutate()}>Analyze measured Zagora–Gale pair</Btn></div>
+        <div className="mb-5"><Notice title="Published measured evidence — independent review pending" tone="mute">
+          <strong>Mars:</strong> Zagora SRTM vs Gale crater MOLA at 1852.3 m. <strong>Moon:</strong> Zagora SRTM vs Taurus–Littrow (Apollo 17) LRO LOLA topography at 1895.3 m, with LRO Diviner day/night surface temperatures as lunar thermal evidence; AOIs are metric-matched (~33 km).
+          All values come from cached NASA LP DAAC and PDS products with recorded source hashes. Presets use fixed scenario weights and tolerances, unknown access/cost/duration, and keep missing measurements missing. Scientific release stays blocked pending independent review.
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Btn disabled={!live || published.isPending} onClick={() => published.mutate('zagora-gale-v1')}>Analyze measured Zagora–Gale pair (Mars)</Btn>
+            <Btn disabled={!live || published.isPending} onClick={() => published.mutate('zagora-taurus-littrow-v1')}>Analyze measured Zagora–Taurus-Littrow pair (Moon)</Btn>
+          </div>
         </Notice></div>
         <div className="grid gap-5 lg:grid-cols-[1fr_22rem]">
           <div className="space-y-5">
@@ -212,7 +215,7 @@ export default function Workspace() {
               </>) : (
                 <Btn variant="primary" className="mt-4 w-full py-3" disabled={problems.length > 0 || run.isPending || health.isLoading} onClick={() => { setErr(null); run.mutate() }}>{health.isLoading ? 'Checking API…' : 'Open demo result →'}</Btn>
               )}
-              <p className="mt-2 text-xs text-mute">Run is the only action that starts a job. Page loads never do.{live && ' The fixture button exercises the real pipeline with labelled synthetic values. Measured analysis is resolved server-side from published NASA evidence only: use “Analyze measured Zagora–Gale pair” above. Custom regions have no measured evidence yet, so they cannot be submitted as measured runs.'}</p>
+              <p className="mt-2 text-xs text-mute">Run is the only action that starts a job. Page loads never do.{live && ' The fixture button exercises the real pipeline with labelled synthetic values. Measured analysis is resolved server-side from published NASA evidence only: use the measured Mars or Moon pair buttons above. Custom regions have no measured evidence yet, so they cannot be submitted as measured runs.'}</p>
             </Panel>
             {!live && (
               <Panel eyebrow="Demo fixtures" title="Pre-computed synthetic runs">

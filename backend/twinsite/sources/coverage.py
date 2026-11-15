@@ -8,14 +8,17 @@ DOMAINS = ('spatial_identity', 'topography', 'thermal', 'atmosphere_climate', 't
            'geology_mineralogy', 'mechanics_mobility', 'resources_volatiles', 'planetary_constraints',
            'accessibility_environment', 'operations_economics', 'mission_requirements', 'evidence_quality')
 BODIES = ('Earth', 'Moon', 'Mars')
-PAIR = Path(__file__).resolve().parents[1] / 'processing/published/g2_feature_pair.json'
+FEATURE_DOMAIN = {'slope_deg': 'topography', 'roughness_m': 'topography', 'local_relief_m': 'topography',
+                  'surface_temperature_day_K': 'thermal', 'surface_temperature_night_K': 'thermal',
+                  'surface_temperature_diurnal_range_K': 'temporal'}
+ENGINE_FEATURES = {'slope_deg', 'roughness_m', 'local_relief_m'}
 
 # Dependencies that are NOT implemented: named so nobody mistakes absence for coverage.
 MISSING = {
     ('thermal', 'Earth'): 'MOD11A2 LST download needs a new Earthdata token (granules discovered only)',
-    ('thermal', 'Moon'): 'LRO Diviner (PDS) connector not implemented',
+    ('thermal', 'Moon'): 'Diviner 0.5-deg bins (~15 km); bolometric day max / night min only; not weighted in missions because Earth has no keyless calibrated LST',
     ('thermal', 'Mars'): 'THEMIS / MGS TES connector not implemented',
-    ('topography', 'Moon'): 'LRO LOLA (PDS) connector not implemented',
+    ('topography', 'Moon'): 'LOLA LDEM_64 gridded surface partly interpolated (no per-cell shot counts at 64 ppd)',
     ('atmosphere_climate', 'Mars'): 'Curiosity REMS / Perseverance MEDA (PDS Atmospheres) not implemented; local rover data only',
     ('atmosphere_climate', 'Moon'): 'No atmosphere (exosphere); bulk constant only',
     ('surface_composition', 'Earth'): 'HLS / Sentinel-2 reflectance not implemented; GIBS imagery is visualization only',
@@ -33,10 +36,12 @@ MISSING = {
 def matrix(data_dir):
     db = science_db(Path(data_dir))
     persisted = db.coverage()
-    pair = json.loads(PAIR.read_text())
-    g2 = {}
-    for o in pair['observations']:
-        g2.setdefault(o['body'], set()).add((o['feature_id'], o['source_product'], o['value'] is not None))
+    from twinsite.jobs.measured import load_all
+    pairs = {}
+    for o in load_all()['observations']:
+        dom = FEATURE_DOMAIN.get(o['feature_id'])
+        if dom:
+            pairs.setdefault((dom, o['body']), set()).add((o['feature_id'], o['source_product'], o['value'] is not None))
     rows = []
     for domain in DOMAINS:
         for body in BODIES:
@@ -45,12 +50,14 @@ def matrix(data_dir):
             kinds = sorted({p['kind'] for p in hits})
             quantities, simple, ai, explorer = [], False, False, bool(hits)
             status, validation = 'missing', 'none'
-            if domain == 'topography' and body in g2:
-                feats = sorted({f for f, _, has in g2[body] if has})
-                products = sorted({p for _, p, _ in g2[body]})
-                quantities = feats
-                sources = sorted(set(sources) | set(products))
-                status, validation, simple, ai, explorer = 'real_data', 'checksum + C5 provenance check (release BLOCK pending independent review)', True, True, True
+            if (domain, body) in pairs:
+                got = pairs[(domain, body)]
+                feats = sorted({f for f, _, has in got if has})
+                quantities = sorted(set(quantities) | set(feats))
+                sources = sorted(set(sources) | {p for _, p, _ in got})
+                status, ai, explorer = 'real_data', True, True
+                validation = 'checksum-verified raw assets, label-driven decode, QA verdict, provenance (release BLOCK pending independent review)'
+                simple = bool(set(feats) & ENGINE_FEATURES)
             elif 'reanalysis_model' in kinds or 'measurement' in kinds or 'derived_measurement' in kinds:
                 status, validation, ai = 'real_data', 'fill-value mask, unit check, offline parser test', True
             elif 'reference_constant' in kinds:

@@ -47,7 +47,18 @@ def parse_label(text: str) -> Dict[str, Any]:
         key, val = line.split("=", 1)
         key = key.strip()
         val = val.strip()
-        if val.startswith('"') and (val.count('"') % 2 == 1):
+        if val[:1] in "{(" and val.count(val[0]) > val.count("})"[val[0] == "("]):
+            # multi-line set/sequence, e.g. MISSION_PHASE_NAME = {"A","B
+            #   C"}  -> accumulate until the bracket closes
+            opener, closer = val[0], "})"[val[0] == "("]
+            buf = [val]
+            while i < len(lines) and "\n".join(buf).count(opener) > "\n".join(buf).count(closer):
+                buf.append(lines[i].split("/*")[0].rstrip())
+                i += 1
+            if "\n".join(buf).count(opener) > "\n".join(buf).count(closer):
+                raise DecodeError("unterminated set/sequence in label")
+            val = " ".join(x.strip() for x in buf)
+        elif val.startswith('"') and (val.count('"') % 2 == 1):
             buf = [val]
             while i < len(lines):
                 nxt = lines[i]

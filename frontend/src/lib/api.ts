@@ -75,9 +75,9 @@ export const postCompare = (l: string, r: string, stage: Stage, columns: string[
     body: JSON.stringify({ schema_version: '1.0', left_dataset_id: l, right_dataset_id: r, left_record_ids: lIds, right_record_ids: rIds, columns, stage }),
   }), () => demo.demoCompare(l, r, stage, columns))
 
-export const postPublishedMission = () => http<MissionAccepted>(`/missions/measured?analysis_mode=${getAnalysisMode()}`, {
+export const postPublishedMission = (datasetId: 'zagora-gale-v1' | 'zagora-taurus-littrow-v1' = 'zagora-gale-v1') => http<MissionAccepted>(`/missions/measured?analysis_mode=${getAnalysisMode()}`, {
   method: 'POST', headers: { 'Content-Type': 'application/json', 'Idempotency-Key': crypto.randomUUID() },
-  body: JSON.stringify({ schema_version: '1.0', dataset_id: 'zagora-gale-v1' }),
+  body: JSON.stringify({ schema_version: '1.0', dataset_id: datasetId }),
 })
 
 // Cleaned grid: real data only. There is no demo fallback for raster views.

@@ -3,7 +3,7 @@ import hashlib
 import json
 import math
 
-from twinsite.jobs.measured import load_pair, source_root
+from twinsite.jobs.measured import load_all as load_pair, source_root
 
 RADIUS_M = {"Earth": 6371008.8, "Mars": 3396000.0}  # spherical approximation, display of extent only
 DISPLAY_MAX_CELLS = 72
@@ -35,8 +35,10 @@ def catalog():
         obs = observations(site["site_id"])
         title = site.get("provenance", {}).get("description") or site["site_id"]
         items.append({"dataset_id": site["site_id"], "title": title, "body": site["body"], "temporal_coverage": _period(obs),
-                      "source": obs[0]["source_product"], "domain": "terrain", "data_status": "measured",
-                      "resolution": str(pair["analysis_scale_m"]) + " m analysis scale", "records": len(obs),
+                      "source": ", ".join(sorted({o["source_product"] for o in obs})),
+                      "domain": "terrain + thermal" if any(o["unit"] == "K" for o in obs) else "terrain", "data_status": "measured",
+                      "resolution": str(site.get("provenance", {}).get("analysis_scale_m", obs[0]["analysis_scale_m"])) + " m analysis scale",
+                      "records": len(obs),
                       "qa_status": "RELEASE BLOCKED — independent review pending"})
     return {"items": items}
 
@@ -106,8 +108,8 @@ def grid(dataset):
                         "step_deg": [k * g["dlon"], k * g["dlat"]], "min": min(valid, default=None), "max": max(valid, default=None),
                         "trimmed_native_rows": rows - out_rows * k, "trimmed_native_cols": cols - out_cols * k},
             "method": (f"Display-only mean of {k}x{k} native samples (null if any sample is null); "
-                       "not the 1852.3 m analysis grid and not used by any score.") if k > 1 else
-                      "Native cleaned cells, no display aggregation; not the 1852.3 m analysis grid.",
+                       f"not the {prov.get('analysis_scale_m')} m analysis grid and not used by any score.") if k > 1 else
+                      f"Native cleaned cells, no display aggregation; not the {prov.get('analysis_scale_m')} m analysis grid.",
             "transformations": [str(t) for t in doc.get("transformations", [])],
             "caveats": ["Absolute elevations use body-specific vertical datums and are never compared across bodies.",
                         *sorted({f for o in observations(dataset) for f in o["quality_flags"]})]}
