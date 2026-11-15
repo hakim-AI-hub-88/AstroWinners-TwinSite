@@ -151,28 +151,28 @@ cd frontend &amp;&amp; npm ci &amp;&amp; npm run build</code></pre>
     <figure class="figure">
       <div class="figure__scroll"><img src="{{ url_for('static', filename='img/diagrams/system-architecture.svg') }}" width="1120" height="600" loading="lazy"
         alt="Browser to Flask web on port 5050 (pages, /api blueprints, /v1 reverse proxy, bundled data_ready grids), to the platform API on port 8080 with the mission worker and SQLite plus blob store, to NASA and OpenStreetMap sources and free AI providers."></div>
-      <figcaption>The browser talks only to Flask. <code>/v1</code> requests are proxied to the platform API (in production nginx routes them directly). Outbound calls go to public data services and, when configured, AI providers.</figcaption>
+      <figcaption>The browser talks only to Flask. <code>/v1</code> requests are proxied to the platform API (in production nginx routes them directly). Outbound calls go to public data services and, when configured, AI providers. <a href="{{ url_for('static', filename='img/diagrams/system-architecture.svg') }}">Open full size</a></figcaption>
     </figure>
 
     <h3>Mission data flow</h3>
     <figure class="figure">
       <div class="figure__scroll"><img src="{{ url_for('static', filename='img/diagrams/mission-data-flow.svg') }}" width="1120" height="420" loading="lazy"
         alt="Six steps: plan the target, acquire bundled and optional live data, clean with a profile, analyze similarity on every Earth zone, run the agents, build the report."></div>
-      <figcaption>The same six steps drive Auto Mode. Options <code>data_mode</code> and <code>cleaning</code> are accepted by every mission entry point and echoed in every response.</figcaption>
+      <figcaption>The same six steps drive Auto Mode. Options <code>data_mode</code> and <code>cleaning</code> are accepted by every mission entry point and echoed in every response. <a href="{{ url_for('static', filename='img/diagrams/mission-data-flow.svg') }}">Open full size</a></figcaption>
     </figure>
 
     <h3>Agent pipeline A01–A13</h3>
     <figure class="figure">
       <div class="figure__scroll"><img src="{{ url_for('static', filename='img/diagrams/agent-pipeline.svg') }}" width="1120" height="470" loading="lazy"
         alt="Thirteen agents in phases P10 to P90. Deterministic: A01, A03, A04, A08, A10, A11. AI: A02, A05, A06, A07, A09, A12, A13."></div>
-      <figcaption>Roles run in phase order. Blue roles are deterministic code; violet roles call AI providers and must cite evidence IDs. See <a href="#agents">Agents</a>.</figcaption>
+      <figcaption>Roles run in phase order. Blue roles are deterministic code; violet roles call AI providers and must cite evidence IDs. See <a href="#agents">Agents</a>. <a href="{{ url_for('static', filename='img/diagrams/agent-pipeline.svg') }}">Open full size</a></figcaption>
     </figure>
 
     <h3>Deployment topology</h3>
     <figure class="figure">
       <div class="figure__scroll"><img src="{{ url_for('static', filename='img/diagrams/deployment-topology.svg') }}" width="1120" height="400" loading="lazy"
         alt="Prepared target topology: optional Vercel edge, then one VM with nginx routing /v1 to the platform API on 8080 and everything else to gunicorn and Flask on 5050, plus one worker and a persistent disk."></div>
-      <figcaption>The prepared target shape, not a statement that a deployment is live. The worker needs a durable disk and a long-lived process, which is why the backend runs on a VM rather than serverless functions.</figcaption>
+      <figcaption>The prepared target shape, not a statement that a deployment is live. The worker needs a durable disk and a long-lived process, which is why the backend runs on a VM rather than serverless functions. <a href="{{ url_for('static', filename='img/diagrams/deployment-topology.svg') }}">Open full size</a></figcaption>
     </figure>
   </section>
 

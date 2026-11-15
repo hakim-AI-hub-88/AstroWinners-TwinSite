@@ -236,6 +236,7 @@ dl.glossary dt:last-of-type, dl.glossary dd:last-of-type { border-bottom: 0; }
 @media (max-width: 560px) { .link-list a { flex-direction: column; gap: 2px; } .link-list a span { text-align: left; } }
 .status-page { max-width: 760px; }
 .status-page .panel { margin-top: 24px; }
+.status-page pre { white-space: pre-wrap; overflow-wrap: anywhere; }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after { transition: none !important; animation: none !important; }

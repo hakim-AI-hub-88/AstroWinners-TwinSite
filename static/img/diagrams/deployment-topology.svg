@@ -39,6 +39,5 @@
   <path class="ln" d="M864 216 H900" marker-end="url(#a)"/>
   <path class="ln" d="M764 256 V272" marker-end="url(#a)"/>
   <path class="ln" d="M990 256 V272" marker-end="url(#a)"/>
-  <path class="ln" d="M864 114 H884 V150 H780 V172" marker-end="url(#a)"/>
   <text class="s" x="24" y="380">Prepared, not a claim of a live deployment. Runbook: ops/vm/README.md. Flask also proxies /v1 itself, so a single process pair works locally.</text>
 </svg>

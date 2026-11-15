@@ -204,14 +204,14 @@ body.home main { position: relative; z-index: 1; flex: 1; }
 }
 @media (max-width: 560px) {
   .hero__text { padding: 32px 16px 24px; }
-  .title { font-size: clamp(2rem, 10.5vw, 2.6rem); }
+  .title { font-size: clamp(1.9rem, 9.4vw, 2.6rem); }
   .hero__visual { height: 440px; }
   .earth { left: 18%; width: 620px; }
   .body--moon { width: 120px; left: 22%; }
   .body--mars { width: 130px; left: 76%; }
   .terrain { width: 230px; }
   .cta { width: 100%; }
-  .ld-sources ul { grid-template-columns: minmax(0, 1fr); }
+  .ld-sources li { padding: 12px 14px; }
   .ld-stats dd { font-size: 1.3rem; }
   .ld-stats div { padding: 18px 16px; }
 }
