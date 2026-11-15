@@ -28,7 +28,7 @@ async function http<T>(path: string, init?: RequestInit, as: 'json' | 'text' = '
 export const getHealth = () => (FORCE_DEMO ? Promise.reject(new ApiError(0, 'forced_demo', 'VITE_FORCE_DEMO=1')) : http<Health>('/health'))
 
 export async function postMission(req: MissionRequest, key: string): Promise<MissionAccepted> {
-  return http<MissionAccepted>('/missions', {
+  return http<MissionAccepted>(`/missions?analysis_mode=${getAnalysisMode()}`, {
     method: 'POST', headers: { 'Content-Type': 'application/json', 'Idempotency-Key': key }, body: JSON.stringify(req),
   })
 }
@@ -75,10 +75,36 @@ export const postCompare = (l: string, r: string, stage: Stage, columns: string[
     body: JSON.stringify({ schema_version: '1.0', left_dataset_id: l, right_dataset_id: r, left_record_ids: lIds, right_record_ids: rIds, columns, stage }),
   }), () => demo.demoCompare(l, r, stage, columns))
 
-export const postPublishedMission = () => http<MissionAccepted>('/missions/measured', {
+export const postPublishedMission = () => http<MissionAccepted>(`/missions/measured?analysis_mode=${getAnalysisMode()}`, {
   method: 'POST', headers: { 'Content-Type': 'application/json', 'Idempotency-Key': crypto.randomUUID() },
   body: JSON.stringify({ schema_version: '1.0', dataset_id: 'zagora-gale-v1' }),
 })
 
 // Cleaned grid: real data only. There is no demo fallback for raster views.
 export const getGrid = (id: string) => http<DatasetGrid>(`/data/${encodeURIComponent(id)}/grid`)
+
+// ---------------------------------------------------------------- AI-Powered Analysis (default) / Simple Analysis
+export type AnalysisMode = 'ai' | 'simple'
+const MODE_KEY = 'twinsite.analysisMode'
+export function getAnalysisMode(): AnalysisMode {
+  try { return localStorage.getItem(MODE_KEY) === 'simple' ? 'simple' : 'ai' } catch { return 'ai' }
+}
+export function setAnalysisMode(m: AnalysisMode) { try { localStorage.setItem(MODE_KEY, m) } catch { /* per-viewer convenience only */ } }
+
+export interface AgentInference { ok: boolean; provider: string | null; model: string | null; cached: boolean; latency_ms: number; error: string | null; attempts: Array<Record<string, unknown>> }
+export interface AgentRecord { agent_id: string; role: string; phase: string; execution: 'ai' | 'ai_cached' | 'deterministic' | 'skipped' | 'failed' | 'fallback'; purpose: string; summary: string; output?: Record<string, unknown> | null; inference?: AgentInference }
+export interface AgentTrace { run_id: string; analysis_mode: AnalysisMode; ai_available?: boolean; fallback_reason?: string | null; ai_roles_executed?: string[]; ai_calls_attempted?: number; records: AgentRecord[]; pending?: boolean }
+export const getAgents = (id: string): Promise<AgentTrace> => http(`/missions/${id}/agents`)
+export const getAiStatus = (): Promise<{ ai_enabled: boolean; providers: { enabled: boolean; disabled_reason: string | null; providers: Array<{ id: string; name: string; state: string; accounts: number; quota_groups: number; verified_models: string[]; calls_today: number; data_policy: string }> } }> => http('/ai/status')
+
+// ---------------------------------------------------------------- Scientific Data Gateway (read-only + bounded Earth site acquisition)
+export interface SciSite { site_id: string; name: string; body: string; lon: number | null; lat: number | null; observation_count: number }
+export interface SciObs { evidence_id: string; site_id: string; body: string; domain: string; quantity: string; value: number | null; unit: string | null; kind: string; statistic: string | null; temporal_support: string | null; spatial_support: string | null; qa_status: string; quality_flags: string[] | null; uncertainty: { low?: number | null; high?: number | null; basis?: string } | null; missing_reason: string | null; source_id: string; product_id: string; asset_id: string | null; comparability: string | null }
+export interface CoverageRow { domain: string; body: string; sources: string[]; real_data_status: string; validation: string; simple_analysis: boolean; ai_agents: boolean; data_explorer: boolean; observations_persisted: number; limitations: string }
+export const getSciSites = (): Promise<{ sites: SciSite[] }> => http('/science/sites')
+export const getSciObservations = (sites: string[], limit = 200): Promise<{ total: number; observations: SciObs[] }> =>
+  http(`/science/observations?${sites.map((s) => `site=${encodeURIComponent(s)}`).join('&')}&limit=${limit}`)
+export const getCoverage = (): Promise<{ rows: CoverageRow[] }> => http('/science/coverage')
+export const postSciSite = (name: string, longitude: number, latitude: number): Promise<{ site_id: string; observations: number }> =>
+  http('/science/sites', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, longitude, latitude }) })
+export const sciAssetUrl = (assetId: string) => `${BASE}/science/assets/${assetId}`

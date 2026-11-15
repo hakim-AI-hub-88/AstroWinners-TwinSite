@@ -214,8 +214,6 @@ def _numbers(value, out):
         return out
     if isinstance(value, (int, float)):
         out.append(float(value))
-    elif isinstance(value, str):
-        out.extend(float(x) for x in _NUM.findall(value))
     elif isinstance(value, dict):
         for v in value.values():
             _numbers(v, out)
@@ -226,8 +224,9 @@ def _numbers(value, out):
 
 
 def numeric_mismatches(claim, packet_by_id, mission_numbers=()):
-    """Every number quoted in a claim must appear (2% / rounding tolerance) in the cited evidence items or the
-    mission parameters; small integers are exempt. Unit misuse is left to the independent AI reviewer."""
+    """Every number quoted in a claim must appear (2% / rounding tolerance) among the NUMERIC fields of the cited
+    evidence items or the mission parameters; small integers are exempt. Numbers embedded in free-text strings
+    (e.g. blocking-issue codes) do not count, so unit-less counts cannot be re-labelled as km2."""
     allowed = list(mission_numbers)
     for i in claim.get('evidence_ids', []):
         if i in packet_by_id:

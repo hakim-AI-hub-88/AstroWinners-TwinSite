@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Badge, Btn, DemoBanner, Empty, Meter, Notice, PageHeader, Panel, Scroll, Spinner, Tabs } from '@/components/ui'
 import { EventLog, PhaseTimeline } from '@/components/Progress'
+import { AgentActivity } from '@/components/AgentActivity'
 import { useEvents, useEvidence, useResult, useStatus } from '@/lib/hooks'
 import { TERMINAL, type ReleaseEvidence, type MissionResult } from '@/lib/types'
 import { isReleased, prosCons, qaCounts, rankSites, stability, timeBasis, unresolvedGaps } from '@/lib/analysis'
@@ -34,6 +35,7 @@ export default function Analysis() {
             <Panel eyebrow="P00 – P90" title="Pipeline"><PhaseTimeline events={events} /></Panel>
             <Panel eyebrow="Event stream" title="Live events">{evErr && <Notice tone="warn" title="Event polling issue">{evErr} — retrying.</Notice>}<EventLog events={events} /></Panel>
           </div>
+          <div className="mt-5"><AgentActivity runId={runId} live /></div>
         </div>
       </>
     )
@@ -47,7 +49,12 @@ export default function Analysis() {
   }
   if (result.isLoading || evidence.isLoading) return <Spinner label="Loading result and evidence" />
   if (result.isError) return <div className="mx-auto max-w-3xl px-4 py-10"><Notice tone="bad" title="Result unavailable">{(result.error as Error).message}</Notice></div>
-  return <Results runId={runId} r={result.data!} ev={evidence.data ?? null} evErr={evidence.isError ? (evidence.error as Error).message : null} demo={demo} />
+  return (
+    <>
+      <Results runId={runId} r={result.data!} ev={evidence.data ?? null} evErr={evidence.isError ? (evidence.error as Error).message : null} demo={demo} />
+      <div className="mx-auto max-w-7xl px-4 pb-10"><AgentActivity runId={runId} live={false} /></div>
+    </>
+  )
 }
 
 function Results({ runId, r, ev, evErr, demo }: { runId: string; r: MissionResult; ev: ReleaseEvidence | null; evErr: string | null; demo: boolean }) {

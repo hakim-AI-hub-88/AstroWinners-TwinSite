@@ -166,8 +166,12 @@ class Worker:
                      '. Continuing with Simple Analysis (deterministic, no AI).')
             context, image = [], None
             try:
+                if not router.enabled():
+                    raise LookupError('AI disabled: no external context retrieval')
                 from twinsite.sources.gateway import mission_context
                 context, image = mission_context(payload, observations, self.settings.data_dir)
+            except LookupError:
+                pass
             except Exception:  # noqa: BLE001 - context is optional evidence
                 log.warning('run %s: scientific context gateway unavailable', run['run_id'], exc_info=True)
             rescore = rescore_function(payload, observations,

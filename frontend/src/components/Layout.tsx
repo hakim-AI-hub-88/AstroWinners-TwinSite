@@ -59,7 +59,7 @@ export default function Layout() {
             ))}
           </nav>
           <div className="text-xs text-mute" data-testid="api-mode">
-            {health.isLoading ? 'Checking API…' : live ? <>API connected · AI {health.data?.ai_enabled ? 'on' : 'off'}</> : <span className="text-warn">API offline · demo fixtures</span>}
+            {health.isLoading ? 'Checking API…' : live ? <>API connected · AI-Powered Analysis {health.data?.ai_enabled ? 'available' : 'unavailable (Simple Analysis)'}</> : <span className="text-warn">API offline · demo fixtures</span>}
           </div>
         </div>
       </header>

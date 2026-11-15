@@ -6,6 +6,7 @@ import { postMission, postPublishedMission, ApiError } from '@/lib/api'
 import { useHealth } from '@/lib/hooks'
 import { FIXTURES, pickFixture, demoRunIdFor, demoStart, demoRequest } from '@/lib/demo'
 import { rememberRun } from '@/lib/recent'
+import { getAnalysisMode, setAnalysisMode, type AnalysisMode } from '@/lib/api'
 import { CRS, PRESETS } from '@/lib/regions'
 import type { Body, MissionRequest } from '@/lib/types'
 
@@ -64,6 +65,8 @@ export default function Workspace() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [title, targets, region, custom, mode, earthArea, feats, minCov, maxSites, budget, maxDays, allowUnknown, pm])
 
+  const [analysis, setAnalysis] = useState<AnalysisMode>(getAnalysisMode())
+  const pickAnalysis = (m: AnalysisMode) => { setAnalysis(m); setAnalysisMode(m) }
   const fail = (e: unknown) => {
     const net = e instanceof ApiError && e.status === 0
     setUnreachable(net)
@@ -185,12 +188,21 @@ export default function Workspace() {
 
           <aside className="space-y-4 lg:sticky lg:top-4 lg:self-start">
             <Panel eyebrow="4 · Run" title="Review and start">
+              <label className="fld">Analysis engine</label>
+              <div role="radiogroup" aria-label="Analysis engine: AI-Powered or Simple" className="mb-3 flex gap-2">
+                {(['ai', 'simple'] as const).map((m) => (
+                  <button key={m} role="radio" aria-checked={analysis === m} onClick={() => pickAnalysis(m)}
+                    className={`flex-1 rounded-full border px-3 py-2 text-sm ${analysis === m ? 'border-ember bg-ember text-ink' : 'border-line text-ivory-dim'}`}>
+                    {m === 'ai' ? 'AI-Powered Analysis' : 'Simple Analysis (no AI)'}</button>))}
+              </div>
+              <p className="mb-3 text-xs text-mute">{analysis === 'ai' ? 'Default. Specialised agents interpret imagery, analyse domains, propose labelled scenarios, synthesise and independently review, using free AI providers only. Deterministic code still computes every number. If AI is unavailable the real reason is shown and Simple Analysis completes.' : 'Deterministic engine only; no data leaves the server for AI providers.'}</p>
               <label className="fld" htmlFor="mid">Mission name</label>
               <input id="mid" value={title} onChange={(e) => setTitle(e.target.value.replace(/\s+/g, '-'))} />
               <dl className="mt-4 space-y-1 text-sm">
                 <div className="flex justify-between"><dt className="text-mute">Targets</dt><dd>{selected.join(' + ') || '—'}</dd></div>
                 <div className="flex justify-between"><dt className="text-mute">Mode</dt><dd>{mode}</dd></div>
                 <div className="flex justify-between"><dt className="text-mute">Features</dt><dd>{feats.filter((f) => f.on).length}</dd></div>
+                <div className="flex justify-between"><dt className="text-mute">Analysis</dt><dd>{analysis === 'ai' ? 'AI-Powered' : 'Simple'}</dd></div>
                 <div className="flex justify-between"><dt className="text-mute">Data source</dt><dd>{live ? 'Live API' : 'Demo fixture'}</dd></div>
               </dl>
               {problems.length > 0 && <ul className="mt-3 list-disc pl-5 text-sm text-bad">{problems.map((p) => <li key={p}>{p}</li>)}</ul>}

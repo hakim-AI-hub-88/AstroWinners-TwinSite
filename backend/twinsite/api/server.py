@@ -34,6 +34,12 @@ ROUTES = [
     ('POST', re.compile(rf'^/v1/missions/{RUN}/cancel$'), 'cancel'),
     ('GET', re.compile(rf'^/v1/missions/{RUN}/agents$'), 'agents'),
     ('GET', re.compile(r'^/v1/ai/status$'), 'ai_status'),
+    ('GET', re.compile(r'^/v1/science/sources$'), 'sci_sources'),
+    ('GET', re.compile(r'^/v1/science/sites$'), 'sci_sites'),
+    ('POST', re.compile(r'^/v1/science/sites$'), 'sci_add_site'),
+    ('GET', re.compile(r'^/v1/science/observations$'), 'sci_observations'),
+    ('GET', re.compile(r'^/v1/science/coverage$'), 'sci_coverage'),
+    ('GET', re.compile(r'^/v1/science/assets/(?P<asset_id>gibs-[0-9a-f]{16})$'), 'sci_asset'),
     # Reserved G3 routes: explicit 501 (contract: response schemas need C0 review first).
     ('POST', re.compile(rf'^/v1/missions/{RUN}/portfolios/alternatives$'), 'not_implemented'),
     ('GET', re.compile(r'^/v1/data/catalog$'), 'data_catalog'),
@@ -302,6 +308,83 @@ class Handler(BaseHTTPRequestHandler):
     def route_ai_status(self, query):
         from twinsite.ai import registry
         self.send_json(200, registry(self.app.settings))
+
+    # ------------------------------------------------------------ science gateway (read-only + bounded acquisition)
+    def _sci(self):
+        from twinsite.storage.science_db import science_db
+        db = science_db(self.app.settings.data_dir)
+        from twinsite.sources import gateway
+        gateway._register_sources(db)
+        if not any(s['site_id'] == 'body-moon' for s in db.sites()):
+            gateway.store_constants(self.app.settings.data_dir, ['Earth', 'Moon', 'Mars'])
+        return db
+
+    def route_sci_sources(self, query):
+        self.send_json(200, {'sources': self._sci().sources()})
+
+    def route_sci_sites(self, query):
+        self.send_json(200, {'sites': self._sci().sites()})
+
+    def route_sci_observations(self, query):
+        def one(name):
+            v = (query.get(name) or [None])[0]
+            if v is not None and (len(v) > 80 or not re.fullmatch(r'[A-Za-z0-9_.\-]+', v)):
+                raise ApiError(422, 'INVALID_QUERY', f'{name} has invalid characters', name)
+            return v
+        sites = query.get('site') or []
+        if len(sites) > 6 or any(not re.fullmatch(r'[A-Za-z0-9_.\-]{1,80}', s) for s in sites):
+            raise ApiError(422, 'INVALID_QUERY', 'site: up to 6 ids', 'site')
+        try:
+            limit = int((query.get('limit') or ['100'])[0]); offset = int((query.get('offset') or ['0'])[0])
+        except ValueError:
+            raise ApiError(422, 'INVALID_QUERY', 'limit/offset must be integers') from None
+        if not 1 <= limit <= 200 or not 0 <= offset <= 100_000:
+            raise ApiError(422, 'INVALID_QUERY', 'limit 1-200, offset 0-100000', 'limit')
+        total, rows = self._sci().observations(sites, one('domain'), one('body'), one('kind'), limit, offset)
+        self.send_json(200, {'total': total, 'limit': limit, 'offset': offset, 'observations': rows})
+
+    def route_sci_coverage(self, query):
+        from twinsite.sources.coverage import matrix
+        self.send_json(200, {'schema': 'twinsite.coverage_matrix/1', 'rows': matrix(self.app.settings.data_dir)})
+
+    def route_sci_asset(self, query, asset_id):
+        row = self._sci().asset(asset_id)
+        if not row or row['media_type'] != 'image/jpeg':
+            raise ApiError(404, 'NOT_FOUND', 'Unknown asset')
+        path = (self.app.settings.data_dir / row['object_key']).resolve()
+        if not path.is_relative_to(self.app.settings.data_dir.resolve()) or not path.is_file():
+            raise ApiError(404, 'NOT_FOUND', 'Asset bytes missing')
+        self._send(200, path.read_bytes(), 'image/jpeg')
+
+    def route_sci_add_site(self, query):
+        """Acquire public NASA POWER (+GIBS) evidence for an Earth point so sites can be compared side by side."""
+        raw = self._read_json_body()
+        try:
+            body = json.loads(raw.decode('utf-8'), parse_constant=_reject_constant)
+            lon, lat = float(body['longitude']), float(body['latitude'])
+        except (ValueError, KeyError, TypeError, UnicodeDecodeError):
+            raise ApiError(422, 'INVALID_SITE', 'Provide numeric longitude and latitude') from None
+        if not (-180 <= lon <= 180 and -60 <= lat <= 82):
+            raise ApiError(422, 'INVALID_SITE', 'Earth longitude -180..180, latitude -60..82')
+        db = self._sci()
+        from twinsite.sources import gateway
+        site_id = gateway.site_id_for(lon, lat)
+        if len([s for s in db.sites() if s['body'] == 'Earth']) >= 40 and site_id not in {s['site_id'] for s in db.sites()}:
+            raise ApiError(429, 'SITE_LIMIT', 'Site acquisition limit reached on this server')
+        try:
+            power = gateway.acquire_power(self.app.settings.data_dir, site_id, lon, lat)
+        except Exception as error:  # noqa: BLE001
+            raise ApiError(502, 'SOURCE_UNAVAILABLE', 'NASA POWER retrieval failed: ' + error.__class__.__name__) from None
+        image = None
+        try:
+            image = gateway.acquire_gibs(self.app.settings.data_dir, site_id, [lon - 0.5, lat - 0.5, lon + 0.5, lat + 0.5])
+        except Exception:  # noqa: BLE001 - imagery is optional
+            pass
+        name = str(body.get('name') or site_id)[:80]
+        db.upsert_site(site_id=site_id, name=name, body='Earth', crs='EPSG:4326', lon=lon, lat=lat,
+                       bbox=[lon - 0.5, lat - 0.5, lon + 0.5, lat + 0.5])
+        self.send_json(201, {'site_id': site_id, 'name': name, 'observations': len(power['observations']),
+                             'power_asset': power['asset_id'], 'image_asset': image and image['asset_id']})
 
     def route_cancel(self, query, run_id):
         # Provisional (pending C0 contract addition): request cancellation; worker stops at next phase boundary.

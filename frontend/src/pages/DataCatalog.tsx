@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Badge, Btn, DemoBanner, Empty, PageHeader, QueryError, Scroll, Spinner } from '@/components/ui'
 import { getCatalog } from '@/lib/api'
+import { ScienceGateway } from '@/components/ScienceGateway'
 
 export default function DataCatalog() {
   const nav = useNavigate()
@@ -35,6 +36,7 @@ export default function DataCatalog() {
                 <td><Badge tone={d.data_status === 'synthetic' ? 'warn' : d.qa_status === 'ACCEPT' ? 'ok' : 'mute'}>{d.data_status === 'synthetic' ? 'synthetic' : (d.qa_status ?? 'unknown')}</Badge></td>
               </tr>))}</tbody>
           </table></Scroll>)}
+        {!q.data?.demo && <div className="mt-8"><ScienceGateway /></div>}
       </div>
     </>
   )

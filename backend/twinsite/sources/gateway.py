@@ -99,10 +99,11 @@ def _register_sources(db):
 
 
 def site_id_for(lon, lat):
-    return f'earth-{lat:+.3f}{lon:+.3f}'.replace('+', 'p').replace('-', 'm').replace('.', '_')
+    coords = f'{lat:+.3f}{lon:+.3f}'.replace('+', 'p').replace('-', 'm').replace('.', '_')
+    return 'earth-' + coords
 
 
-def acquire_power(data_dir, site_id, lon, lat, refresh=False):
+def acquire_power(data_dir, site_id, lon, lat, refresh=False, timeout=60):
     db = science_db(data_dir)
     _register_sources(db)
     query = urllib.parse.urlencode({'parameters': ','.join(POWER_PARAMS), 'community': 'RE', 'longitude': f'{lon:.4f}',
@@ -112,7 +113,7 @@ def acquire_power(data_dir, site_id, lon, lat, refresh=False):
     if cache.exists() and not refresh:
         raw = (data_dir / cache.read_text()).read_bytes()
     else:
-        raw, _ = _get(url)
+        raw, _ = _get(url, timeout=timeout)
     sha, key = _store_asset(data_dir, 'nasa-power', raw, 'json')
     cache.parent.mkdir(parents=True, exist_ok=True)
     cache.write_text(key)
@@ -166,15 +167,24 @@ def acquire_power(data_dir, site_id, lon, lat, refresh=False):
     return {'asset_id': asset_id, 'sha256': sha, 'grid_point': geometry, 'observations': out}
 
 
-def acquire_gibs(data_dir, site_id, bbox, date=GIBS_DATE):
+def acquire_gibs(data_dir, site_id, bbox, date=GIBS_DATE, timeout=60):
     db = science_db(data_dir)
     _register_sources(db)
+    # Cache: reuse a previously retrieved image for this site/date (bytes verified against the stored hash).
+    _, rows = db.observations([site_id], kind='visualization', limit=20)
+    for row in rows:
+        asset = db.asset(row['asset_id']) if row.get('asset_id') else None
+        if asset and asset['granule_id'] == date and (data_dir / asset['object_key']).is_file():
+            data = (data_dir / asset['object_key']).read_bytes()
+            if hashlib.sha256(data).hexdigest() == asset['sha256']:
+                return {'evidence_id': row['evidence_id'], 'asset_id': asset['asset_id'], 'bytes': data,
+                        'mime': 'image/jpeg', 'label': f'NASA GIBS {GIBS_LAYER} {date} over bbox {bbox}'}
     w, s, e, n = bbox
     query = urllib.parse.urlencode({'SERVICE': 'WMS', 'REQUEST': 'GetMap', 'VERSION': '1.3.0', 'LAYERS': GIBS_LAYER,
                                     'CRS': 'EPSG:4326', 'BBOX': f'{s},{w},{n},{e}', 'WIDTH': 512, 'HEIGHT': 512,
                                     'FORMAT': 'image/jpeg', 'TIME': date})
     url = f'{GIBS_WMS}?{query}'
-    data, ctype = _get(url, limit=5_000_000)
+    data, ctype = _get(url, timeout=timeout, limit=5_000_000)
     if not ctype.startswith('image/') or data[:2] != b'\xff\xd8':
         raise ValueError('GIBS did not return a JPEG (service exception)')
     sha, key = _store_asset(data_dir, 'nasa-gibs', data, 'jpg')
@@ -254,13 +264,13 @@ def mission_context(payload, observations, data_dir, fetch_image=True):
             continue
         lon, lat = site['longitude'], site['latitude']
         try:
-            power = acquire_power(data_dir, site['id'], lon, lat)
+            power = acquire_power(data_dir, site['id'], lon, lat, timeout=15)
             context += [packet_item(r) for r in power['observations'] if r['value'] is not None]
         except (urllib.error.URLError, TimeoutError, ValueError, KeyError):
             pass
         if fetch_image and image is None:
             try:
-                image = acquire_gibs(data_dir, site['id'], [lon - 0.5, lat - 0.5, lon + 0.5, lat + 0.5])
+                image = acquire_gibs(data_dir, site['id'], [lon - 0.5, lat - 0.5, lon + 0.5, lat + 0.5], timeout=15)
             except (urllib.error.URLError, TimeoutError, ValueError):
                 image = None
     return context, image
