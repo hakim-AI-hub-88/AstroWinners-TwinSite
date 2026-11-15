@@ -5,7 +5,7 @@ import math
 
 from twinsite.jobs.measured import load_all as load_pair, source_root
 
-RADIUS_M = {"Earth": 6371008.8, "Mars": 3396000.0}  # spherical approximation, display of extent only
+RADIUS_M = {"Earth": 6371008.8, "Mars": 3396000.0, 'Moon': 1737400.0}  # spherical approximation, display of extent only
 DISPLAY_MAX_CELLS = 72
 
 
@@ -125,7 +125,7 @@ def metadata(dataset):
     return {"dataset_id": dataset, "source": obs[0]["source_product"], "product": obs[0]["source_product"],
             "version": "; ".join(versions) or None,
             "license": ("Provider data policy: " + "; ".join(licenses)) if licenses else None,
-            "data_status": "measured", "crs": obs[0]["geometry"]["crs"], "unit_notes": "degree and metre; spatial variability is not measurement uncertainty",
+            "data_status": "measured", "crs": obs[0]["geometry"]["crs"], "unit_notes": "degree, metre and kelvin; spatial variability is not measurement uncertainty",
             "time_basis": _period(obs) + " (source acquisition period)", "qa": "Scientific release BLOCKED pending independent C5 review; " + "; ".join(sorted({f for o in obs for f in o["quality_flags"]})),
             "lineage": [o["evidence_id"] + " | " + o["source_url"] for o in obs],
             "transforms": [str(x) for x in p["transformations"]],

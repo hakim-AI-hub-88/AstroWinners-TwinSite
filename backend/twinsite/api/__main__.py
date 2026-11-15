@@ -25,7 +25,10 @@ def main(argv=None):
     logging.basicConfig(level=logging.INFO, format='%(asctime)s api %(levelname)s %(message)s')
     server = make_server(host=args.host, port=args.port)
     host, port = server.server_address[:2]
-    logging.getLogger('twinsite.api').info('listening on http://%s:%s (AI disabled, uploads disabled)', host, port)
+    from twinsite.ai.registry import router as _ai_router
+    _r = _ai_router()
+    logging.getLogger('twinsite.api').info('listening on http://%s:%s (AI-Powered Analysis %s, uploads disabled)', host, port,
+                                           'available' if _r.enabled() else 'unavailable: ' + str(_r.disabled_reason()))
     signal.signal(signal.SIGTERM, lambda *_: threading.Thread(target=server.shutdown, daemon=True).start())
     try:
         server.serve_forever()

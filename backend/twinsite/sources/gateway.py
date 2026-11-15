@@ -162,7 +162,7 @@ def acquire_power(data_dir, site_id, lon, lat, refresh=False, timeout=60):
                         comparability='Seasonal behaviour of Earth air temperature; Mars/Moon equivalents need a thermal source.')
             db.upsert_observation(**row2)
             out.append(row2)
-    db.upsert_site(site_id=site_id, name=site_id, body='Earth', crs='EPSG:4326', lon=lon, lat=lat,
+    db.upsert_site(keep_name=True, site_id=site_id, name=site_id, body='Earth', crs='EPSG:4326', lon=lon, lat=lat,
                    bbox=[lon - 0.15, lat - 0.15, lon + 0.15, lat + 0.15])
     return {'asset_id': asset_id, 'sha256': sha, 'grid_point': geometry, 'observations': out}
 
@@ -268,6 +268,9 @@ def mission_context(payload, observations, data_dir, fetch_image=True):
             context += [packet_item(r) for r in power['observations'] if r['value'] is not None]
         except (urllib.error.URLError, TimeoutError, ValueError, KeyError):
             pass
+        # Persisted accessibility evidence (OSM) for this site, if retrieved earlier; never fetched inside a mission.
+        _, osm = science_db(data_dir).observations([site['id']], domain='accessibility_environment', limit=10)
+        context += [packet_item(r) for r in osm if r['value'] is not None]
         if fetch_image and image is None:
             try:
                 image = acquire_gibs(data_dir, site['id'], [lon - 0.5, lat - 0.5, lon + 0.5, lat + 0.5], timeout=15)

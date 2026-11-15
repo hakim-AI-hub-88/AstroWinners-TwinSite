@@ -214,11 +214,17 @@ def _v_recheck(known, indexes):
 _CITE = re.compile(r'\[([A-Za-z0-9_.:\-]{3,120})\]')
 
 
-def _v_narrative(known):
+def _v_narrative(known, allowed_numbers=()):
     def check(text):
         cited = set(_CITE.findall(text))
         if not cited & known:
             return ['narrative must cite at least one evidence ID in [brackets]']
+        if allowed_numbers:
+            plain = _CITE.sub(' ', text)
+            bad = [t for t in _NUM.findall(plain) if not (float(t) <= 12 and float(t).is_integer())
+                   and not any(abs(float(t) - a) <= max(0.02 * abs(a), 0.051 if '.' in t else 0.51) for a in allowed_numbers)]
+            if bad:
+                return [f'narrative quotes numbers not present in the evidence/facts: {bad[:4]}']
         unknown = {c for c in cited if c not in known and c.startswith(('ev-', 'syn', 'synthetic-', 'power-', 'gibs-', 'ctx-',
                                                                          'result-', 'cmr-'))}
         return [f'cites unknown evidence IDs: {sorted(unknown)[:3]}'] if unknown else []
@@ -318,7 +324,17 @@ class Orchestrator:
         digest = _result_digest(result)
         digest['sites'] = sorted(digest['sites'], key=lambda x: -(x['similarity'] or 0))[:8]
         features = sorted(payload['mission']['features'])
-        ctx = json.dumps({'mission_features': payload['mission']['features'], 'deterministic_result': digest,
+        sims = [x['observed_similarity'] for x in result.get('sites', []) if x.get('observed_similarity') is not None]
+        facts = {'candidate_sites': len(result.get('sites', [])),
+                 'eligible_sites': sum(1 for x in result.get('sites', []) if x.get('eligible')),
+                 'similarity_min': round(min(sims), 4) if sims else None, 'similarity_max': round(max(sims), 4) if sims else None,
+                 'feasible_portfolios': result.get('feasible_portfolio_count'), 'release_action': sidecar.get('release_action'),
+                 'rules': ['Feature tolerances are scoring tolerances, not hard limits.',
+                           'If release_action is BLOCK, similarities and rankings are UNRELEASED DIAGNOSTIC values: say so and '
+                           'never present them as findings.',
+                           'Use these facts verbatim for counts and ranges.']}
+        self.facts = facts
+        ctx = json.dumps({'facts': facts, 'mission_features': payload['mission']['features'], 'deterministic_result': digest,
                           'release_action': sidecar.get('release_action'), 'blocking_issues': sidecar.get('blocking_issues'),
                           'evidence': prompt_packet(packet, result)}, separators=(',', ':'), default=str)
         ai_available = self.router.enabled()
@@ -538,8 +554,11 @@ class Orchestrator:
                           ' Write plain prose, no markdown headings, 120-220 words.',
                           'Write the mission narrative for a scientific reader. Cite evidence IDs in square brackets, e.g. '
                           '[ev-...]. State the deterministic release action and that AI review is advisory. Mention flagged '
-                          'claims only as unverified.\nCLAIMS:' + json.dumps(accepted, separators=(',', ':')) + '\nCONTEXT:' + ctx,
-                          priority=priority, validate=_v_narrative(known), max_output_tokens=900))
+                          'claims only as unverified. Use the facts block for every count and range; if release_action is '
+                          'BLOCK, describe similarities as unreleased diagnostic values, not findings.\nCLAIMS:' + json.dumps(accepted, separators=(',', ':')) + '\nCONTEXT:' + ctx,
+                          priority=priority, validate=_v_narrative(known, _numbers(packet, []) + _numbers(payload['mission'], [])
+                                                                   + _numbers(getattr(self, 'facts', {}), [])),
+                          max_output_tokens=900))
         if o and o.ok:
             self._record('A13', 'ai_cached' if o.cached else 'ai', 'Evidence-cited narrative written.', {'narrative': o.output},
                          o, set(_CITE.findall(o.output)) & known, run_id=run_id)

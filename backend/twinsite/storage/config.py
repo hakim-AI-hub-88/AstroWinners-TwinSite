@@ -54,7 +54,7 @@ def load_settings(data_dir=None):
         port=_int('TWINSITE_API_PORT', 8080, 1024, 65535),
         queue_limit=_int('TWINSITE_QUEUE_LIMIT', 20, 1, 20),
         lease_seconds=_int('TWINSITE_LEASE_SECONDS', 30, 2, 600),
-        # The optional AI router is a deterministic stub; no inference provider is wired.
+        # Legacy field: live AI availability is reported by twinsite.ai (free-provider router), not by this flag.
         ai_enabled=False,
         # Private uploads stay disabled until C3/C5 verify capability isolation.
         uploads_enabled=False,

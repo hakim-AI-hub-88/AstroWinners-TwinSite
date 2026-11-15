@@ -28,7 +28,7 @@ MISSING = {
     ('resources_volatiles', 'Moon'): 'LEND / LP-NS hydrogen not implemented',
     ('resources_volatiles', 'Mars'): 'MONS/GRS hydrogen not implemented',
     ('mechanics_mobility', 'Earth'): 'Only slope/roughness proxies; no strength/traversability product',
-    ('accessibility_environment', 'Earth'): 'OSM Overpass and Protected Planet not implemented; access is user-provided or unknown',
+    ('accessibility_environment', 'Earth'): 'OSM mapped roads/tracks counts only (completeness varies); protected areas (Protected Planet) not integrated; mission access stays user-provided or unknown',
     ('operations_economics', 'Earth'): 'Costs/days only as user-provided mission inputs; never estimated',
 }
 

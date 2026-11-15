@@ -63,8 +63,13 @@ class ScienceDB:
         row.setdefault('retrieved_at', _now())
         self._upsert('assets', row)
 
-    def upsert_site(self, **row):
+    def upsert_site(self, keep_name=False, **row):
         row.setdefault('created_at', _now())
+        if keep_name:
+            with self._db() as db:
+                old = db.execute('SELECT name FROM sites WHERE site_id=?', (row['site_id'],)).fetchone()
+            if old and old[0] and old[0] != row['site_id']:
+                row['name'] = old[0]
         if isinstance(row.get('bbox'), (list, tuple)):
             row['bbox'] = json.dumps(list(row['bbox']))
         self._upsert('sites', row)

@@ -36,7 +36,7 @@ SITES = [
     ('Earth', -67.5, -20.25, 'Salar de Uyuni'), ('Earth', -67.88, -22.83, 'Licancabur, Altiplano'),
     ('Earth', 103.7, 44.1, 'Flaming Cliffs, Gobi'), ('Earth', 35.42, 29.58, 'Wadi Rum'),
     ('Earth', -119.0, 38.0, 'Mono Lake'), ('Earth', -115.79, 34.54, 'Amboy crater'),
-    ('Earth', -113.85, 40.77, 'Bonneville Salt Flats'), ('Earth', -5.8, 30.35, 'Zagora, Draa valley'),
+    ('Earth', -113.85, 40.77, 'Bonneville Salt Flats'), ('Earth', -5.8, 30.35, 'Zagora, Draa valley (seeded 1900 m site)'),
     # Moon targets
     ('Moon', 23.47, 0.67, 'Apollo 11, Mare Tranquillitatis'), ('Moon', -23.42, -3.01, 'Apollo 12, Oceanus Procellarum'),
     ('Moon', -17.47, -3.65, 'Apollo 14, Fra Mauro'), ('Moon', 3.63, 26.13, 'Apollo 15, Hadley Rille'),

@@ -1,6 +1,6 @@
 {
  "schema": "twinsite.coverage_matrix/1",
- "generated_at": "2026-11-15T12:26:41.608106+00:00",
+ "generated_at": "2026-11-15T14:00:18.149380+00:00",
  "generated_from": "science.sqlite + published G2 pair (actual persisted evidence)",
  "status_legend": {
   "real_data": "retrieved, decoded, QA-checked and persisted",
@@ -14,8 +14,8 @@
  },
  "summary": {
   "implemented": 6,
-  "missing": 18,
-  "real_data": 9,
+  "missing": 17,
+  "real_data": 10,
   "reference_constant": 2,
   "user_input": 3,
   "user_input_only": 3,
@@ -74,16 +74,20 @@
    "domain": "topography",
    "body": "Earth",
    "sources": [
-    "SRTMGL1"
+    "SRTMGL1",
+    "aws-terrain-tiles",
+    "aws-terrain-tiles-skadi"
    ],
-   "kinds": [],
+   "kinds": [
+    "derived_measurement"
+   ],
    "quantities": [
     "local_relief_m",
     "roughness_m",
     "slope_deg"
    ],
-   "observations_persisted": 0,
-   "sites": 0,
+   "observations_persisted": 114,
+   "sites": 38,
    "real_data_status": "real_data",
    "validation": "checksum-verified raw assets, label-driven decode, QA verdict, provenance (release BLOCK pending independent review)",
    "database_persistence": true,
@@ -96,16 +100,19 @@
    "domain": "topography",
    "body": "Moon",
    "sources": [
-    "LRO-L-LOLA-4-GDR-V1.0:LDEM_64"
+    "LRO-L-LOLA-4-GDR-V1.0:LDEM_64",
+    "lro-lola-ldem64"
    ],
-   "kinds": [],
+   "kinds": [
+    "derived_measurement"
+   ],
    "quantities": [
     "local_relief_m",
     "roughness_m",
     "slope_deg"
    ],
-   "observations_persisted": 0,
-   "sites": 0,
+   "observations_persisted": 51,
+   "sites": 17,
    "real_data_status": "real_data",
    "validation": "checksum-verified raw assets, label-driven decode, QA verdict, provenance (release BLOCK pending independent review)",
    "database_persistence": true,
@@ -118,16 +125,19 @@
    "domain": "topography",
    "body": "Mars",
    "sources": [
-    "MGS-M-MOLA-5-MEGDR-L3-V1.0"
+    "MGS-M-MOLA-5-MEGDR-L3-V1.0",
+    "pds-mola-megdr"
    ],
-   "kinds": [],
+   "kinds": [
+    "derived_measurement"
+   ],
    "quantities": [
     "local_relief_m",
     "roughness_m",
     "slope_deg"
    ],
-   "observations_persisted": 0,
-   "sites": 0,
+   "observations_persisted": 45,
+   "sites": 15,
    "real_data_status": "real_data",
    "validation": "checksum-verified raw assets, label-driven decode, QA verdict, provenance (release BLOCK pending independent review)",
    "database_persistence": true,
@@ -148,8 +158,8 @@
     "reanalysis_model"
    ],
    "quantities": [],
-   "observations_persisted": 3,
-   "sites": 3,
+   "observations_persisted": 41,
+   "sites": 41,
    "real_data_status": "real_data",
    "validation": "fill-value mask, unit check, offline parser test",
    "database_persistence": true,
@@ -162,15 +172,18 @@
    "domain": "thermal",
    "body": "Moon",
    "sources": [
-    "LRO-L-DLRE-5-GCP-V1.0"
+    "LRO-L-DLRE-5-GCP-V1.0",
+    "lro-diviner-gcp"
    ],
-   "kinds": [],
+   "kinds": [
+    "derived_measurement"
+   ],
    "quantities": [
     "surface_temperature_day_K",
     "surface_temperature_night_K"
    ],
-   "observations_persisted": 0,
-   "sites": 0,
+   "observations_persisted": 34,
+   "sites": 17,
    "real_data_status": "real_data",
    "validation": "checksum-verified raw assets, label-driven decode, QA verdict, provenance (release BLOCK pending independent review)",
    "database_persistence": true,
@@ -205,8 +218,8 @@
     "reanalysis_model"
    ],
    "quantities": [],
-   "observations_persisted": 10,
-   "sites": 2,
+   "observations_persisted": 200,
+   "sites": 40,
    "real_data_status": "real_data",
    "validation": "fill-value mask, unit check, offline parser test",
    "database_persistence": true,
@@ -257,8 +270,8 @@
     "reanalysis_model"
    ],
    "quantities": [],
-   "observations_persisted": 2,
-   "sites": 2,
+   "observations_persisted": 40,
+   "sites": 40,
    "real_data_status": "real_data",
    "validation": "fill-value mask, unit check, offline parser test",
    "database_persistence": true,
@@ -271,14 +284,17 @@
    "domain": "temporal",
    "body": "Moon",
    "sources": [
-    "LRO-L-DLRE-5-GCP-V1.0"
+    "LRO-L-DLRE-5-GCP-V1.0",
+    "lro-diviner-gcp"
    ],
-   "kinds": [],
+   "kinds": [
+    "derived_measurement"
+   ],
    "quantities": [
     "surface_temperature_diurnal_range_K"
    ],
-   "observations_persisted": 0,
-   "sites": 0,
+   "observations_persisted": 17,
+   "sites": 17,
    "real_data_status": "real_data",
    "validation": "checksum-verified raw assets, label-driven decode, QA verdict, provenance (release BLOCK pending independent review)",
    "database_persistence": true,
@@ -313,8 +329,8 @@
     "visualization"
    ],
    "quantities": [],
-   "observations_persisted": 5,
-   "sites": 2,
+   "observations_persisted": 10,
+   "sites": 7,
    "real_data_status": "visualization_only",
    "validation": "JPEG magic/content-type check; qualitative A02 reading",
    "database_persistence": true,
@@ -511,8 +527,8 @@
     "reference_constant"
    ],
    "quantities": [],
-   "observations_persisted": 6,
-   "sites": 3,
+   "observations_persisted": 44,
+   "sites": 41,
    "real_data_status": "real_data",
    "validation": "fill-value mask, unit check, offline parser test",
    "database_persistence": true,
@@ -564,18 +580,22 @@
   {
    "domain": "accessibility_environment",
    "body": "Earth",
-   "sources": [],
-   "kinds": [],
+   "sources": [
+    "osm-overpass"
+   ],
+   "kinds": [
+    "derived_measurement"
+   ],
    "quantities": [],
-   "observations_persisted": 0,
-   "sites": 0,
-   "real_data_status": "missing",
-   "validation": "none",
-   "database_persistence": false,
+   "observations_persisted": 26,
+   "sites": 13,
+   "real_data_status": "real_data",
+   "validation": "fill-value mask, unit check, offline parser test",
+   "database_persistence": true,
    "simple_analysis": false,
-   "ai_agents": false,
-   "data_explorer": false,
-   "limitations": "OSM Overpass and Protected Planet not implemented; access is user-provided or unknown"
+   "ai_agents": true,
+   "data_explorer": true,
+   "limitations": "OSM mapped roads/tracks counts only (completeness varies); protected areas (Protected Planet) not integrated; mission access stays user-provided or unknown"
   },
   {
    "domain": "accessibility_environment",
