@@ -175,6 +175,8 @@ class EvidenceIntegrity(unittest.TestCase):
         good = next(s for s in strict["result"]["sites"] if s["id"] == "GOOD")
         self.assertNotIn("Mars/roughness_m", good["contributions"])
         self.assertFalse(good["eligible"])
+        ann = next(a for a in strict["annotations"]["sites"] if a["site_id"] == "GOOD")
+        self.assertEqual(ann["gates"]["evidence_attestation"], "FAIL")
         explore = run(request, records, mode="exploratory")
         good = next(s for s in explore["result"]["sites"] if s["id"] == "GOOD")
         self.assertIn("Mars/roughness_m", good["contributions"])

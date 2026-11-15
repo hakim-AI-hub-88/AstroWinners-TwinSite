@@ -372,8 +372,10 @@ def _site_annotation(site, mission, exclusions, strict):
                 f"observed mismatch: {c['feature_id']} {c['value']} vs target {c['target_value']} {c['unit']}")))
     required_missing = [g for g in gaps if g["required"]]
     coverage_short = site["coverage"] + 1e-12 < mission["min_coverage"]
+    rejected = [e for e in exclusions if e["location_id"] == site["id"]]
     gates = {
         "scientific_evidence": "UNKNOWN" if (required_missing or coverage_short) else "PASS",
+        "evidence_attestation": ("FAIL" if strict else "WARN") if rejected else "PASS",
         "access": site["access"].upper(),
         "budget": "USER_PARAMETER:" + _gate_value(site["cost"], mission.get("budget")),
         "duration": "USER_PARAMETER:" + _gate_value(site["days"], mission.get("max_days")),

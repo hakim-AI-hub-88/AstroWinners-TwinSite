@@ -8,7 +8,7 @@ Checkpoint: 2026-11-15.
 - **Reproduces all four frozen synthetic fixtures exactly** (`contracts/examples/*.result.synthetic.json`) in exploratory mode, except two intentionally changed keys: `algorithm_version` (now `twinsite-science/0.1.0`, tracked) and `limitations` (adds mode + synthetic disclaimers). Scoring arithmetic is a byte-compatible port of ARES 0.4.0.
 - Feature registry (`registry.py`): body validity, canonical unit, physical range, cross-body comparability, spatial/temporal support, missingness policy. `slope_deg`, `roughness_m`, `local_relief_m` match C1's feature IDs. `elevation_m` is registered but rejected across bodies (geoid vs areoid datums).
 - Evidence intake typed against the frozen `evidence_observation` schema. A request `source_id` must resolve to an `evidence_id` with identical value/unit/feature/body/site; duplicate `evidence_id` = error; identical source bytes for two sites flagged non-independent; analysis-scale mismatch (>10 %) rejected in strict mode.
-- Strict vs exploratory modes; missing-evidence bounds `[L,U]` (not confidence intervals); hard gates PASS/FAIL/UNKNOWN (scientific evidence, access, user budget, user duration); evidence-linked strengths/weaknesses/gaps ("missing information, not physical dissimilarity"); physics limitations per body.
+- Strict vs exploratory modes; missing-evidence bounds `[L,U]` (not confidence intervals); hard gates PASS/FAIL/UNKNOWN (scientific evidence, evidence attestation, access, user budget, user duration); evidence-linked strengths/weaknesses/gaps ("missing information, not physical dissimilarity"); physics limitations per body.
 - Sensitivity: seeded (20261114) random ±20 % weights (legacy, in result); one-at-a-time ×0.8/×1.2 per feature with site rank ranges; leave-one-source-out by `source_product`. Temporal windows only when ≥2 accepted records over distinct periods exist, else `not_available`.
 - Portfolios: exact enumeration (≤298 combos for 12 sites, max 3); eligibility/site-count/budget/max_days hard constraints; complementarity reward; redundancy penalty; unobserved-vs-observed-low breakdown with upper bound; Pareto fronts (science; cost only where all member costs are known); `with_exclusions` for alternatives on the same snapshot.
 - `bridge.request_from_evidence` builds a mission_request verbatim from C1 evidence records.
@@ -62,10 +62,12 @@ python3 -m unittest discover -s backend/tests/science -v
 None scored yet. At this checkpoint C1 (`lane/data` @ 1cba3df) has adapters and raw MOLA MEGDR bytes locally, but the SRTMGL1 tile download is incomplete (`.part`) and `processing/published/g2_feature_pair.json` does not exist. **Real-science release is BLOCKED.** No real candidate comparison or real portfolio is claimed.
 
 ## BLOCKERS
+0. The shared-notes hand-over file was **not written** (blocked by a session permission check). C1's evidence conventions exist only in this file; C0, please forward them to C1.
 1. **C1 (high):** no published, QA-accepted Earth + Mars evidence pair yet, so the G2 deliverable (2 real comparisons + 1 portfolio) cannot run. Once C1 publishes ≥2 Earth sites + 1 Mars target at a common analysis scale: `request_from_evidence` → `analyze_mission(mode="strict")`. C1's G2 script currently defines one Earth site; a portfolio needs ≥2.
 2. **Environment (low):** system python3 lacks jsonschema; the schema test skips there.
 
 ## CONTRACT REQUESTS FOR C0
+(Checked: `scripts/integration/smoke.py` compares two fresh C2 runs to each other rather than to the ARES baseline, so the re-versioned `algorithm_version`/`limitations` keys need no contract change.)
 1. `annotations` (gates, strengths/weaknesses/gaps, portfolio dimension status + upper bound, Pareto fronts, OAT + leave-one-source-out, temporal windows) has no frozen home because `mission_result` and `release_evidence` are closed. Request a `science_annotations` v1 schema or sidecar route; until then C3 should store it as an opaque artifact and the UI must not treat it as contract.
 2. Analysis mode (`strict|exploratory`) is not a request field; C3 passes it as an argument. Request an explicit `analysis_mode` field in a future schema version.
 3. `release_evidence.qa_gate_id/qa_gate_version`: C2 fills `c2-science-<mode>` / engine version; confirm ownership.
