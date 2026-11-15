@@ -3,97 +3,274 @@
 #############################################################################
 # TWINSITE - HOME PAGE (route "/")
 #
-# Hero page: Earth on the right, the Moon and Mars linked to an analog site
-# on Earth, call to action that opens the dashboard (/app).
+# 1. Hero (the brand): Earth on the right, the Moon and Mars linked to an
+#    analog site on Earth, call to action into Mission Control (/app).
+# 2. Landing sections: problem, pipeline, four ways in, data credibility,
+#    the 13-agent system, audiences, open source, final call to action.
+# Shared nav/footer partials + static/css/site.css; hero styles in home.css.
 # Photos: NASA public-domain images in static/img/home (see credits.json).
 #############################################################################
 -->
+{%- set active = 'home' -%}
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>TWINSITE – Planetary Analogue Discovery</title>
-  <meta name="description" content="Match lunar and Martian regions to the most similar environments on Earth using NASA data.">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  {% include "partials/head.html" %}
+  <title>TwinSite · Planetary analog discovery</title>
+  <meta name="description" content="Match lunar and Martian regions to the most similar environments on Earth using public NASA data, transparent scoring and an evidence-bound 13-agent pipeline. Open source, built for NASA Space Apps 2026.">
+  <meta property="og:title" content="TwinSite · Planetary analog discovery">
+  <meta property="og:description" content="Every mission to the Moon or Mars rehearses on Earth first. TwinSite finds where.">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
 </head>
-<body>
+<body class="site home">
+  <a class="skip-link" href="#main">Skip to content</a>
   <canvas id="starfield" aria-hidden="true"></canvas>
+  {% include "partials/nav.html" %}
 
-  <header class="top">
-    <a class="brand" href="/" aria-label="TWINSITE home">
-      <svg class="brand__icon" width="40" height="40" viewBox="0 0 40 40" fill="none" aria-hidden="true">
-        <ellipse cx="20" cy="20" rx="17" ry="7.5" transform="rotate(-24 20 20)" stroke="#3b82f6" stroke-width="2.4" />
-        <circle cx="20" cy="20" r="8.5" fill="#1d4ed8" />
-        <circle cx="20" cy="20" r="8.5" fill="url(#g)" />
-        <circle cx="20" cy="20" r="3.4" fill="#f97316" />
-        <defs><radialGradient id="g" cx=".35" cy=".35" r=".8"><stop offset="0" stop-color="#60a5fa" /><stop offset="1" stop-color="#1e3a8a" /></radialGradient></defs>
-      </svg>
-      <span class="brand__text">
-        <span class="brand__name">TWINSITE</span>
-        <span class="brand__sub">Planetary analogue discovery</span>
-      </span>
-    </a>
-    <nav class="top__nav" aria-label="Main">
-      <a href="/app#mission">Mission Control</a>
-      <a href="/app#explorer">Site Explorer</a>
-      <a href="/app#science">Science</a>
-      <a href="/app#applications">Report</a>
-    </nav>
-  </header>
+  <main id="main">
+    <!-- ================= 1. HERO ================= -->
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero__text">
+        <p class="badge">Earth is the first mission</p>
+        <h1 class="title" id="hero-title">
+          <span>The next world</span>
+          <span>starts</span>
+          <span class="title__accent">here.</span>
+        </h1>
+        <p class="hero__lead">Match lunar and Martian regions to the most similar environments on Earth using
+          transparent terrain scoring on NASA data, with agents that explain the evidence for rover testing,
+          habitat planning and mission training.</p>
+        <div class="hero__actions">
+          <a class="cta" href="/app#mission">Find my analog terrain <span aria-hidden="true">→</span></a>
+          <a class="cta cta--ghost" href="/auto">Run Auto Mode</a>
+        </div>
+        <ul class="facts" aria-label="Key figures">
+          <li><strong>3</strong> worlds compared</li>
+          <li><strong>2</strong> Earth analog zones</li>
+          <li><strong>2.3 M</strong> bundled grid cells</li>
+        </ul>
+      </div>
 
-  <main class="hero">
-    <!-- Text column -->
-    <section class="hero__text">
-      <p class="badge">Earth is the first mission</p>
-      <h1 class="title">
-        <span>The next world</span>
-        <span>starts</span>
-        <span class="title__accent">here.</span>
-      </h1>
-      <p class="lead">Match lunar and Martian regions to the most similar environments on Earth using terrain
-        analysis and AI-powered ranking for rover testing, habitat planning, and mission training.</p>
-      <a class="cta" href="/app#mission">Find my analogue terrain <span aria-hidden="true">→</span></a>
-      <ul class="facts" aria-label="Key figures">
-        <li><strong>3</strong> worlds compared</li>
-        <li><strong>2</strong> Earth analogue zones</li>
-        <li><strong>100 %</strong> NASA data</li>
-      </ul>
+      <div class="hero__visual" aria-label="The Moon and Mars linked to an analog site on Earth" role="img">
+        <div class="earth"><img src="{{ url_for('static', filename='img/home/earth.jpg') }}" alt="" fetchpriority="high"></div>
+        <svg class="links" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M 30 42 C 38 45, 45 48, 49.2 51.5" />
+          <path d="M 76 45 C 67 47, 58 49, 51 51.5" />
+        </svg>
+        <figure class="body body--moon">
+          <img src="{{ url_for('static', filename='img/home/moon.jpg') }}" alt="">
+          <figcaption>Moon</figcaption>
+        </figure>
+        <figure class="body body--mars">
+          <img src="{{ url_for('static', filename='img/home/mars.jpg') }}" alt="">
+          <span class="body__dot" aria-hidden="true"></span>
+          <figcaption>Mars</figcaption>
+        </figure>
+        <span class="site-dot" aria-hidden="true"></span>
+        <aside class="terrain">
+          <p class="terrain__head"><span class="terrain__live" aria-hidden="true"></span>Analog terrain to explore</p>
+          <img src="{{ url_for('static', filename='img/home/terrain.jpg') }}" alt="Rocky terrain on Mount Sharp, Mars, imaged by the Curiosity rover">
+        </aside>
+      </div>
     </section>
 
-    <!-- Visual: Earth, Moon, Mars, links to an Earth analogue site -->
-    <section class="hero__visual" aria-label="The Moon and Mars linked to an analogue site on Earth">
-      <div class="earth"><img src="{{ url_for('static', filename='img/home/earth.jpg') }}" alt="Earth seen from space (NASA Blue Marble)"></div>
+    <!-- ================= 2. PROBLEM / WHAT IT DOES ================= -->
+    <section class="ld ld--problem" aria-labelledby="problem-title">
+      <div class="ld__wrap ld-split">
+        <div>
+          <p class="eyebrow">The problem</p>
+          <h2 class="ld__title" id="problem-title">Every mission rehearses on Earth first. Finding where is slow, manual work.</h2>
+          <p class="ld__lead">Rovers, instruments and crews are tested at Earth analog sites, places whose terrain and climate resemble a target on the Moon or Mars. Choosing those sites usually means reading scattered datasets by hand, with little record of why one site beat another.</p>
+          <p class="ld__lead">TwinSite turns that choice into a repeatable, inspectable analysis: pick a target, and it scores real Earth terrain against it, ranks the closest twins and shows every number behind the ranking.</p>
+        </div>
+        <ul class="ld-does" aria-label="What TwinSite does">
+          <li>
+            <span class="ld-does__k">Compare</span>
+            <p><strong>Feature-by-feature similarity.</strong> Slope, roughness, relief, day and night temperature and albedo on a shared normalized scale, with uncertainty-aware weights.</p>
+          </li>
+          <li>
+            <span class="ld-does__k">Explain</span>
+            <p><strong>Nothing hidden.</strong> Each score breaks down into the features that agree, the features that differ, missing data and an evidence-coverage confidence.</p>
+          </li>
+          <li>
+            <span class="ld-does__k">Prepare</span>
+            <p><strong>From ranking to field dossier.</strong> Refined test points, rover slope checks, validation against published analog sites and a printable mission report.</p>
+          </li>
+        </ul>
+      </div>
+    </section>
 
-      <svg class="links" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-        <path d="M 30 42 C 38 45, 45 48, 49.2 51.5" />
-        <path d="M 76 45 C 67 47, 58 49, 51 51.5" />
-      </svg>
+    <!-- ================= 3. HOW IT WORKS ================= -->
+    <section class="ld" aria-labelledby="how-title">
+      <div class="ld__wrap">
+        <header class="ld__head">
+          <p class="eyebrow">How it works</p>
+          <h2 class="ld__title" id="how-title">One traceable path from a target to a report</h2>
+          <p class="ld__lead">Deterministic code computes every number. AI agents only interpret and explain, and must cite evidence that exists.</p>
+        </header>
+        <ol class="ld-flow">
+          <li><span class="ld-flow__n">01</span><h3>Target</h3><p>Choose a preset such as Jezero Crater or Apollo 15, or click any Moon or Mars region on the globe.</p></li>
+          <li><span class="ld-flow__n">02</span><h3>Data</h3><p>Bundled harmonized NASA grids, plus optional live acquisition through the platform's NASA connectors.</p></li>
+          <li><span class="ld-flow__n">03</span><h3>Cleaning</h3><p>Pick a profile (raw, standard, strict or robust) that controls flagged, estimated and outlier cells.</p></li>
+          <li><span class="ld-flow__n">04</span><h3>Analysis</h3><p>Weighted similarity across Atacama and Merzouga, rover slope filter, refinement and PCA / K-means views.</p></li>
+          <li><span class="ld-flow__n">05</span><h3>Agents</h3><p>13 roles curate sources, review quality, audit the process and write evidence-cited findings.</p></li>
+          <li><span class="ld-flow__n">06</span><h3>Report</h3><p>A mission dossier with rankings, maps, validation and methodology, ready to print or save as PDF.</p></li>
+        </ol>
+      </div>
+    </section>
 
-      <figure class="body body--moon">
-        <img src="{{ url_for('static', filename='img/home/moon.jpg') }}" alt="The Moon">
-        <figcaption>Lune</figcaption>
-      </figure>
-      <figure class="body body--mars">
-        <img src="{{ url_for('static', filename='img/home/mars.jpg') }}" alt="Mars">
-        <span class="body__dot" aria-hidden="true"></span>
-        <figcaption>Mars</figcaption>
-      </figure>
-      <span class="site-dot" title="Earth analogue site" aria-hidden="true"></span>
+    <!-- ================= 4. FOUR WAYS TO USE IT ================= -->
+    <section class="ld" aria-labelledby="ways-title">
+      <div class="ld__wrap">
+        <header class="ld__head">
+          <p class="eyebrow">Four ways in</p>
+          <h2 class="ld__title" id="ways-title">Use TwinSite the way your work needs it</h2>
+        </header>
+        <div class="ld-ways">
+          <a class="ld-way" href="/app#mission">
+            <svg class="ld-way__icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.2 3 14.8 0 18M12 3c-3 3.2-3 14.8 0 18"/></svg>
+            <h3>Mission Control</h3>
+            <p>Interactive twin globes, ranked Earth regions, score breakdowns, the science atlas and the mission report.</p>
+            <span class="ld-way__path">/app</span>
+            <span class="card__more">Open Mission Control →</span>
+          </a>
+          <a class="ld-way" href="/auto">
+            <svg class="ld-way__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/><circle cx="12" cy="12" r="5"/><path d="M12 9.5v2.5l1.8 1.2"/></svg>
+            <h3>Agentic Auto Mode</h3>
+            <p>Give a target and an objective. TwinSite plans, acquires, cleans, analyzes, runs the agents and writes the report.</p>
+            <span class="ld-way__path">/auto</span>
+            <span class="card__more">Start a mission →</span>
+          </a>
+          <a class="ld-way" href="/data">
+            <svg class="ld-way__icon" viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="5.5" rx="7.5" ry="2.8"/><path d="M4.5 5.5v13c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8v-13M4.5 12c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8"/></svg>
+            <h3>Data Hub</h3>
+            <p>Browse every dataset, inspect columns and quality flags, apply a cleaning profile and download JSON or CSV.</p>
+            <span class="ld-way__path">/data</span>
+            <span class="card__more">Explore the data →</span>
+          </a>
+          <a class="ld-way" href="/console/">
+            <svg class="ld-way__icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4.5" width="18" height="13" rx="2"/><path d="M7 21h10M7.5 9.5l2.5 2-2.5 2M12.5 13.5h4"/></svg>
+            <h3>Mission Console</h3>
+            <p>The advanced console: live NASA characterization, analog matching, portfolios and the full evidence trail.</p>
+            <span class="ld-way__path">/console/</span>
+            <span class="card__more">Open the console →</span>
+          </a>
+        </div>
+      </div>
+    </section>
 
-      <aside class="terrain">
-        <p class="terrain__head"><span class="terrain__live"></span>Analogue terrain to explore</p>
-        <img src="{{ url_for('static', filename='img/home/terrain.jpg') }}" alt="Rocky terrain on Mount Sharp, Mars (Curiosity rover)">
-      </aside>
+    <!-- ================= 5. DATA & SCIENCE CREDIBILITY ================= -->
+    <section class="ld ld--data" aria-labelledby="data-title">
+      <div class="ld__wrap">
+        <header class="ld__head">
+          <p class="eyebrow">Data &amp; science</p>
+          <h2 class="ld__title" id="data-title">Built on public data you can check</h2>
+          <p class="ld__lead">Rows in the bundled harmonized grids, as recorded in the repository's validation report. Rows are grid cells, not all complete observations.</p>
+        </header>
+        <dl class="ld-stats">
+          <div><dt>Mars cells</dt><dd>1,843,200</dd></div>
+          <div><dt>Moon cells</dt><dd>460,800</dd></div>
+          <div><dt>Atacama cells</dt><dd>1,200</dd></div>
+          <div><dt>Merzouga cells</dt><dd>400</dd></div>
+        </dl>
+        <div class="ld-sources">
+          <p class="ld-sources__label">Sources and connectors</p>
+          <ul>
+            <li><strong>MGS MOLA</strong><span>Mars topography (PDS)</span></li>
+            <li><strong>LRO LOLA</strong><span>Moon topography (PDS)</span></li>
+            <li><strong>LRO Diviner</strong><span>Lunar surface temperature</span></li>
+            <li><strong>SRTM</strong><span>Earth elevation (LP DAAC)</span></li>
+            <li><strong>NASA POWER</strong><span>Earth climate reanalysis</span></li>
+            <li><strong>NASA GIBS</strong><span>Earth imagery (visual only)</span></li>
+            <li><strong>AWS Terrain Tiles</strong><span>Keyless Earth DEM</span></li>
+            <li><strong>OpenStreetMap</strong><span>Site access context</span></li>
+          </ul>
+        </div>
+        <p class="ld-note">Open JSON APIs for everything: the Flask <code>/api</code> routes and the platform's <code>/v1</code> API. <a href="/resources#sources">Sources, licenses and limits</a> · <a href="/resources#algorithms">How the score works</a></p>
+      </div>
+    </section>
+
+    <!-- ================= 6. THE 13-AGENT SYSTEM ================= -->
+    <section class="ld" aria-labelledby="agents-title">
+      <div class="ld__wrap ld-split ld-split--agents">
+        <div>
+          <p class="eyebrow">The agent system</p>
+          <h2 class="ld__title" id="agents-title">13 agents. Every number stays deterministic.</h2>
+          <p class="ld__lead">Six roles are deterministic code: they curate sources, gate quality, audit the trace and apply the release gate. Seven roles use free-tier AI providers through a multi-provider router to interpret, review and explain.</p>
+          <p class="ld__lead">AI claims must cite evidence IDs from the run's evidence packet; claims that cite unknown IDs are rejected. AI can never change a score or release a result. When no provider is configured, the AI roles report a fallback instead of pretending.</p>
+          <p class="ld-legend"><span class="tag tag--det">Deterministic</span> <span class="tag tag--ai">AI, evidence-bound</span></p>
+          <a class="ld-link" href="/resources#agents">Read every role →</a>
+        </div>
+        <ol class="ld-agents" aria-label="The 13 agent roles">
+          <li class="is-det"><b>A01</b>Source Curator<span class="visually-hidden"> (deterministic)</span></li>
+          <li class="is-ai"><b>A02</b>Visual Interpreter<span class="visually-hidden"> (AI)</span></li>
+          <li class="is-det"><b>A03</b>Cleaning Planner<span class="visually-hidden"> (deterministic)</span></li>
+          <li class="is-det"><b>A04</b>Quality Reviewer<span class="visually-hidden"> (deterministic)</span></li>
+          <li class="is-ai"><b>A05</b>Scenario Estimator<span class="visually-hidden"> (AI)</span></li>
+          <li class="is-ai"><b>A06</b>Domain Analyst<span class="visually-hidden"> (AI)</span></li>
+          <li class="is-ai"><b>A07</b>Synthesis Analyst<span class="visually-hidden"> (AI)</span></li>
+          <li class="is-det"><b>A08</b>Process Auditor<span class="visually-hidden"> (deterministic)</span></li>
+          <li class="is-ai"><b>A09</b>Evidence Reviewer<span class="visually-hidden"> (AI)</span></li>
+          <li class="is-det"><b>A10</b>Portfolio Reviewer<span class="visually-hidden"> (deterministic)</span></li>
+          <li class="is-det"><b>A11</b>Release Judge<span class="visually-hidden"> (deterministic)</span></li>
+          <li class="is-ai"><b>A12</b>Targeted Rechecker<span class="visually-hidden"> (AI)</span></li>
+          <li class="is-ai"><b>A13</b>Report Writer<span class="visually-hidden"> (AI)</span></li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ================= 7. WHO IT IS FOR ================= -->
+    <section class="ld" aria-labelledby="who-title">
+      <div class="ld__wrap">
+        <header class="ld__head">
+          <p class="eyebrow">Who it is for</p>
+          <h2 class="ld__title" id="who-title">From the lab to the classroom</h2>
+        </header>
+        <div class="ld-who">
+          <article><h3>Scientists</h3><p>Inspect feature distances, cleaning reports, provenance and validation against published analog sites, then pull the data through the API.</p><a href="/resources#guide-scientists">Scientist quick start</a></article>
+          <article><h3>Engineers</h3><p>Filter regions by rover slope limits, compare thermal swings and find refined test points for hardware and traverse trials.</p><a href="/resources#guide-engineers">Engineer quick start</a></article>
+          <article><h3>Educators</h3><p>Show why the Atacama stands in for Mars, with globes, charts and plain-language explanations students can follow.</p><a href="/resources#guide-educators">Educator quick start</a></article>
+          <article><h3>Mission planners</h3><p>Shortlist candidate sites with an evidence trail, run autonomous missions and export a dossier for review.</p><a href="/resources#guide-auto">Auto Mode guide</a></article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 8. OPEN SOURCE ================= -->
+    <section class="ld" aria-labelledby="open-title">
+      <div class="ld__wrap">
+        <div class="ld-open">
+          <div>
+            <p class="eyebrow">Open source · NASA Space Apps 2026</p>
+            <h2 class="ld__title" id="open-title">Built in the open by team AstroWinners</h2>
+            <p class="ld__lead">TwinSite was created for the NASA Space Apps Challenge 2026. The code is MIT licensed, the data sources are public and documented, and the limits are stated next to the results. It is a research prototype and is not endorsed by NASA.</p>
+          </div>
+          <ul class="ld-open__list">
+            <li><a href="{{ repo_url }}" rel="noopener"><strong>Source code</strong><span>GitHub repository</span></a></li>
+            <li><a href="/policy#license"><strong>MIT License</strong><span>Use, modify, share</span></a></li>
+            <li><a href="/resources#architecture"><strong>Architecture</strong><span>How the pieces fit</span></a></li>
+            <li><a href="https://www.spaceappschallenge.org/" rel="noopener"><strong>NASA Space Apps</strong><span>The challenge</span></a></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 9. FINAL CTA ================= -->
+    <section class="ld ld--cta" aria-labelledby="cta-title">
+      <div class="ld__wrap ld-final">
+        <h2 class="ld__title" id="cta-title">Find the Earth twin of your next landing site.</h2>
+        <p class="ld__lead">Start with Jezero Crater. TwinSite takes it from there.</p>
+        <div class="hero__actions">
+          <a class="cta" href="/app#mission">Open Mission Control <span aria-hidden="true">→</span></a>
+          <a class="cta cta--ghost" href="/resources#guides">Read the guides</a>
+        </div>
+        <p class="credit">Images: NASA/NOAA/GSFC/Suomi NPP/VIIRS · NASA GSFC Scientific Visualization Studio · NASA/JPL/USGS · NASA/JPL-Caltech/MSSS (public domain). <a href="/policy#attribution">Image credits</a></p>
+      </div>
     </section>
   </main>
 
-  <footer class="credit">Images: NASA/NOAA/GSFC/Suomi NPP · NASA GSFC SVS · NASA/JPL/USGS · NASA/JPL-Caltech/MSSS (public domain)</footer>
+  {% include "partials/footer.html" %}
 
   <script>
-    /* Starfield: twinkling stars (same effect as the dashboard) */
+    /* Starfield: twinkling stars (same effect as the dashboard); still frame when reduced motion is requested. */
     (function () {
       const c = document.getElementById("starfield"), ctx = c.getContext("2d");
       const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;

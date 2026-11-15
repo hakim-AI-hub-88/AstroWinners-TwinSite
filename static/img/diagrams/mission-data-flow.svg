@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 420" role="img" aria-labelledby="t d">
+  <title id="t">Mission data flow</title>
+  <desc id="d">A mission moves through six steps: plan the target, acquire bundled and optionally live data, clean with a profile, analyze similarity on every Earth zone, run the agents, and build the report. A step that cannot run is marked skipped or failed with a reason and the others continue.</desc>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#ff8a3d"/></marker>
+    <style>
+      text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;fill:#ece6df}
+      .n{font-size:12px;font-weight:700;fill:#ff8a3d;letter-spacing:.1em}.h{font-size:16px;font-weight:700}.s{font-size:12.5px;fill:#c9c0b7}
+      .m{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;fill:#ffb36b}
+      .box{fill:#16110e;stroke:rgba(255,140,60,.45);stroke-width:1.4}.out{fill:#0e1424;stroke:rgba(143,179,255,.4)}
+      .ln{stroke:#ff8a3d;stroke-width:1.8;fill:none}.dn{stroke:#8fb3ff;stroke-width:1.4;fill:none;stroke-dasharray:4 4}
+    </style>
+  </defs>
+  <rect width="1120" height="420" fill="#0b0a0c"/>
+  <g>
+    <rect class="box" x="24" y="30" width="160" height="210" rx="14"/>
+    <text class="n" x="42" y="58">01 · PLAN</text><text class="h" x="42" y="84">Target</text>
+    <text class="s" x="42" y="110">Moon or Mars preset</text><text class="s" x="42" y="130">or custom lat / lon</text>
+    <text class="s" x="42" y="150">objective, slope limit</text><text class="s" x="42" y="170">zones, options</text>
+    <text class="m" x="42" y="214">data_mode · cleaning</text>
+  </g>
+  <path class="ln" d="M184 135 H202" marker-end="url(#a)"/>
+  <g>
+    <rect class="box" x="206" y="30" width="160" height="210" rx="14"/>
+    <text class="n" x="224" y="58">02 · ACQUIRE</text><text class="h" x="224" y="84">Data</text>
+    <text class="s" x="224" y="110">bundled harmonized</text><text class="s" x="224" y="130">grids (data_ready)</text>
+    <text class="s" x="224" y="150">+ live NASA point</text><text class="s" x="224" y="170">characterization</text>
+    <text class="m" x="224" y="214">auto → /v1/science</text>
+  </g>
+  <path class="ln" d="M366 135 H384" marker-end="url(#a)"/>
+  <g>
+    <rect class="box" x="388" y="30" width="160" height="210" rx="14"/>
+    <text class="n" x="406" y="58">03 · CLEAN</text><text class="h" x="406" y="84">Cleaning</text>
+    <text class="s" x="406" y="110">raw · standard</text><text class="s" x="406" y="130">strict · robust</text>
+    <text class="s" x="406" y="150">quality flags, range</text><text class="s" x="406" y="170">checks, MAD outliers</text>
+    <text class="m" x="406" y="214">cleaning_report</text>
+  </g>
+  <path class="ln" d="M548 135 H566" marker-end="url(#a)"/>
+  <g>
+    <rect class="box" x="570" y="30" width="160" height="210" rx="14"/>
+    <text class="n" x="588" y="58">04 · ANALYZE</text><text class="h" x="588" y="84">Similarity</text>
+    <text class="s" x="588" y="110">weighted distance</text><text class="s" x="588" y="130">on every Earth zone</text>
+    <text class="s" x="588" y="150">rover filter, refined</text><text class="s" x="588" y="170">points, PCA, K-means</text>
+    <text class="m" x="588" y="214">ranked regions</text>
+  </g>
+  <path class="ln" d="M730 135 H748" marker-end="url(#a)"/>
+  <g>
+    <rect class="box" x="752" y="30" width="160" height="210" rx="14"/>
+    <text class="n" x="770" y="58">05 · AGENTS</text><text class="h" x="770" y="84">13 roles</text>
+    <text class="s" x="770" y="110">Moon/Mars custom</text><text class="s" x="770" y="130">target → platform</text>
+    <text class="s" x="770" y="150">match run, evidence-</text><text class="s" x="770" y="170">cited findings</text>
+    <text class="m" x="770" y="214">/v1/missions/match</text>
+  </g>
+  <path class="ln" d="M912 135 H930" marker-end="url(#a)"/>
+  <g>
+    <rect class="box" x="934" y="30" width="162" height="210" rx="14"/>
+    <text class="n" x="952" y="58">06 · REPORT</text><text class="h" x="952" y="84">Dossier</text>
+    <text class="s" x="952" y="110">computed facts,</text><text class="s" x="952" y="130">maps, validation,</text>
+    <text class="s" x="952" y="150">AI narrative or a</text><text class="s" x="952" y="170">deterministic summary</text>
+    <text class="m" x="952" y="214">/api/report</text>
+  </g>
+  <path class="dn" d="M104 240 V286"/><path class="dn" d="M286 240 V286"/><path class="dn" d="M468 240 V286"/>
+  <path class="dn" d="M650 240 V286"/><path class="dn" d="M832 240 V286"/><path class="dn" d="M1015 240 V286"/>
+  <rect class="out" x="24" y="286" width="1072" height="104" rx="14"/>
+  <text class="h" x="44" y="318">Mission state, persisted step by step</text>
+  <text class="s" x="44" y="344">Each step records state, start and finish times and detail. A step that cannot run is marked skipped or failed with a reason; the others continue.</text>
+  <text class="s" x="44" y="368">The response echoes options {data_mode, cleaning}, the cleaning report and live evidence (auto mode). Nothing is fabricated when a source is unavailable.</text>
+</svg>

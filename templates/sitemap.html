@@ -1,5 +1,68 @@
 {% extends "base.html" %}
+{#- SITEMAP (/sitemap): every page from PAGES (platform_routes.py) grouped by section in a fixed order,
+    plus key API endpoints and documentation links. Machine-readable version: /sitemap.xml. -#}
 {% block title %}Sitemap{% endblock %}
+{% block description %}Every page, key API endpoint and documentation link of the TwinSite platform.{% endblock %}
 {% block content %}
-<section class="page-hero"><p class="eyebrow">TwinSite</p><h1>Sitemap</h1><p class="lead">Under construction.</p></section>
+<header class="page-hero">
+  <p class="eyebrow">Sitemap</p>
+  <h1>Every page and endpoint</h1>
+  <p class="lead">The whole platform on one page. A machine-readable version is at <a href="/sitemap.xml">/sitemap.xml</a>.</p>
+</header>
+
+<div class="grid grid--2">
+  {% for section in ['Platform', 'Data & APIs', 'Guides & Docs', 'Project'] %}
+  {% set items = pages | selectattr(3, 'equalto', section) | list %}
+  {% if items %}
+  <section class="panel" aria-labelledby="sm-{{ loop.index }}">
+    <h2 class="section-title" id="sm-{{ loop.index }}">{{ section }}</h2>
+    <ul class="link-list">
+      {% for path, _tpl, title, _sec, desc in items %}
+      <li><a href="{{ path }}">{{ title }}<span>{{ desc }}</span></a></li>
+      {% endfor %}
+      {% if section == 'Platform' %}
+      <li><a href="/app#explorer">Site Explorer<span>Atacama and Merzouga maps, zone benchmark.</span></a></li>
+      <li><a href="/app#science">Science &amp; validation<span>PCA atlas, K-means classes, reference sites.</span></a></li>
+      <li><a href="/app#applications">Applications &amp; report<span>Application cards and the printable dossier.</span></a></li>
+      {% elif section == 'Guides & Docs' %}
+      <li><a href="/resources#guides">Guides<span>Quick starts, missions, Auto Mode, data API.</span></a></li>
+      <li><a href="/resources#architecture">Architecture<span>System, data flow, agents, deployment.</span></a></li>
+      <li><a href="/resources#api">API reference<span>Every /api and /v1 route.</span></a></li>
+      <li><a href="/resources#faq">FAQ<span>Common questions.</span></a></li>
+      {% endif %}
+    </ul>
+  </section>
+  {% endif %}
+  {% endfor %}
+</div>
+
+<div class="grid grid--2" style="margin-top:20px">
+  <section class="panel" aria-labelledby="sm-api">
+    <h2 class="section-title" id="sm-api">Key API endpoints</h2>
+    <ul class="link-list">
+      <li><a href="/api/status"><code>GET /api/status</code><span>Readiness of the analysis service</span></a></li>
+      <li><a href="/api/targets"><code>GET /api/targets</code><span>Preset Moon and Mars targets</span></a></li>
+      <li><a href="/api/zones"><code>GET /api/zones</code><span>Earth analog zones</span></a></li>
+      <li><a href="/api/data/datasets"><code>GET /api/data/datasets</code><span>Every bundled dataset</span></a></li>
+      <li><a href="/api/data/cleaning"><code>GET /api/data/cleaning</code><span>Cleaning profiles</span></a></li>
+      <li><a href="/api/auto/missions"><code>GET /api/auto/missions</code><span>Recent Auto Mode missions</span></a></li>
+      <li><a href="/api/ai/status"><code>GET /api/ai/status</code><span>Configured AI providers (names only)</span></a></li>
+      <li><a href="/v1/health"><code>GET /v1/health</code><span>Platform API readiness</span></a></li>
+      <li><a href="/v1/openapi.json"><code>GET /v1/openapi.json</code><span>OpenAPI description</span></a></li>
+      <li><a href="/v1/science/sources"><code>GET /v1/science/sources</code><span>Live NASA connectors</span></a></li>
+    </ul>
+  </section>
+  <section class="panel" aria-labelledby="sm-docs">
+    <h2 class="section-title" id="sm-docs">Documentation</h2>
+    <ul class="link-list">
+      <li><a href="{{ repo_url }}#readme" rel="noopener">README<span>Project overview</span></a></li>
+      <li><a href="{{ repo_url }}/blob/master/docs/catalog.md" rel="noopener">Resource catalog<span>APIs, data, AI, reports</span></a></li>
+      <li><a href="{{ repo_url }}/blob/master/docs/implementation.md" rel="noopener">Implementation audit<span>Components and limits</span></a></li>
+      <li><a href="{{ repo_url }}/tree/master/docs/release" rel="noopener">Release documents<span>QA, review, deployment</span></a></li>
+      <li><a href="{{ repo_url }}/blob/master/LICENSE" rel="noopener">MIT License<span>License text</span></a></li>
+      <li><a href="{{ repo_url }}" rel="noopener">GitHub<span>Source and issues</span></a></li>
+      <li><a href="/robots.txt">robots.txt<span>Crawler rules</span></a></li>
+    </ul>
+  </section>
+</div>
 {% endblock %}

@@ -1,20 +1,25 @@
 <!doctype html>
-{#- Shared layout for every multi-page view (auto, data, resources, sitemap, policy).
-    Pages: {% extends "base.html" %} and fill blocks title / description / head / content / scripts. -#}
+{#- Shared layout for every multi-page view (auto, data, resources, sitemap, policy, console_missing).
+    Pages: {% extends "base.html" %} and fill blocks title / description / head / content / scripts.
+    The route passes `active` (nav highlight); `pages`, `repo_url` and `year` come from the context processor. -#}
 <html lang="en">
 <head>
   {% include "partials/head.html" %}
   <title>{% block title %}TwinSite{% endblock %} · TwinSite</title>
   <meta name="description" content="{% block description %}Planetary analog discovery: match Moon and Mars terrain to Earth using NASA data, autonomous agents and open APIs.{% endblock %}">
+  <meta property="og:title" content="{{ self.title() }} · TwinSite">
+  <meta property="og:description" content="{{ self.description() }}">
+  <meta property="og:type" content="website">
   {% block head %}{% endblock %}
 </head>
-<body class="site">
+<body class="site {% block body_class %}{% endblock %}">
   <a class="skip-link" href="#main">Skip to content</a>
   {% include "partials/nav.html" %}
   <main id="main" class="site-main">
     {% block content %}{% endblock %}
   </main>
   {% include "partials/footer.html" %}
+  <script src="{{ url_for('static', filename='js/site.js') }}" defer></script>
   {% block scripts %}{% endblock %}
 </body>
 </html>
