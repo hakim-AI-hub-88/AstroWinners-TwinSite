@@ -1,0 +1,47 @@
+[Unit]
+Description=TwinSite web (Flask site, /api/* and /console via gunicorn)
+After=network.target twinsite-api.service
+Wants=twinsite-api.service
+StartLimitIntervalSec=60
+StartLimitBurst=10
+[Service]
+Type=simple
+User=twinsite
+Group=twinsite
+WorkingDirectory=/srv/twinsite/app
+Environment=PYTHONPATH=/srv/twinsite/app/backend:/srv/twinsite/app
+Environment=PYTHONUNBUFFERED=1
+Environment=APP_HOST=127.0.0.1
+Environment=APP_PORT=5050
+# Flask reaches the platform API on loopback (nginx also routes public /v1 there directly).
+Environment=TWINSITE_API_URL=http://127.0.0.1:8080
+# Bundled harmonized datasets (committed data_ready/) and runtime state (Auto Mode JSON under auto/).
+Environment=DATA_READY_DIR=/srv/twinsite/app/data_ready
+Environment=TWINSITE_DATA_DIR=/var/lib/twinsite
+Environment=TWINSITE_CONSOLE_DIST=/srv/twinsite/app/frontend/dist
+Environment=TWINSITE_AI_ENABLED=true
+# Free-only AI provider credentials: root-provisioned, owned by twinsite, mode 0600, outside the source tree.
+# Missing file => AI features report "not configured"; every deterministic feature still works.
+Environment=TWINSITE_AI_SECRET_ENV_FILE=/etc/twinsite/ai-providers.env
+Environment=TWINSITE_UPLOADS_ENABLED=false
+# Site-wide settings (template: ops/vm/env.example; root-owned 0600). Values here override the lines above.
+EnvironmentFile=-/etc/twinsite/env
+ExecStart=/srv/twinsite/venv/bin/gunicorn --chdir /srv/twinsite/app/backend "app:create_app()" \
+    --bind 127.0.0.1:5050 -w 2 --threads 4 --timeout 180 --graceful-timeout 30 \
+    --forwarded-allow-ips 127.0.0.1 --access-logfile - --error-logfile -
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=always
+RestartSec=3
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+ReadWritePaths=/var/lib/twinsite
+[Install]
+WantedBy=multi-user.target
