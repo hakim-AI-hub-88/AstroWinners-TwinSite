@@ -4,10 +4,7 @@
   <style>
     .bg{fill:#07060a}
     .orbit{fill:none;stroke:#f0c27a;stroke-opacity:.18;stroke-width:1.2;stroke-dasharray:4 6}
-    .spin1{transform-origin:600px 180px;animation:spin 26s linear infinite}
-    .spin2{transform-origin:600px 180px;animation:spin 40s linear infinite reverse}
-    .spin3{transform-origin:600px 180px;animation:spin 60s linear infinite}
-    .twinkle{animation:tw 3.2s ease-in-out infinite}
+        .twinkle{animation:tw 3.2s ease-in-out infinite}
     .twinkle.b{animation-delay:1.1s}.twinkle.c{animation-delay:2.2s}
     .title{font:700 64px 'Segoe UI',Helvetica,Arial,sans-serif;letter-spacing:10px;fill:url(#gold)}
     .sub{font:600 18px 'Segoe UI',Helvetica,Arial,sans-serif;letter-spacing:4px;fill:#e7d6b8}
@@ -37,13 +34,12 @@
     <circle class="twinkle b" cx="1120" cy="280" r="1.3"/><circle class="twinkle c" cx="900" cy="320" r="1.1"/>
     <circle class="twinkle b" cx="140" cy="190" r="1"/><circle class="twinkle" cx="1080" cy="170" r="1"/>
   </g>
-  <ellipse class="orbit" cx="600" cy="180" rx="250" ry="250" transform="matrix(1 0 0 .36 0 115.2)"/>
-  <g transform="matrix(1 0 0 .36 0 115.2)">
-    <circle class="orbit" cx="600" cy="180" r="250"/><circle class="orbit" cx="600" cy="180" r="380"/><circle class="orbit" cx="600" cy="180" r="520"/>
-    <g class="spin1"><circle cx="850" cy="180" r="22" fill="url(#moon)" transform="matrix(1 0 0 2.78 0 -320)"/></g>
-    <g class="spin2"><circle cx="220" cy="180" r="30" fill="url(#earth)" transform="matrix(1 0 0 2.78 0 -320)"/></g>
-    <g class="spin3"><circle cx="1120" cy="180" r="26" fill="url(#mars)" transform="matrix(1 0 0 2.78 0 -320)"/></g>
-  </g>
+  <ellipse class="orbit" cx="600" cy="180" rx="250" ry="70"/>
+  <circle r="11" fill="url(#moon)"><animateMotion dur="26s" repeatCount="indefinite" path="M 350 180 A 250 70 0 1 1 850 180 A 250 70 0 1 1 350 180 Z"/></circle>
+  <ellipse class="orbit" cx="600" cy="180" rx="390" ry="110"/>
+  <circle r="15" fill="url(#earth)"><animateMotion dur="40s" repeatCount="indefinite" path="M 210 180 A 390 110 0 1 0 990 180 A 390 110 0 1 0 210 180 Z"/></circle>
+  <ellipse class="orbit" cx="600" cy="180" rx="530" ry="150"/>
+  <circle r="13" fill="url(#mars)"><animateMotion dur="60s" repeatCount="indefinite" path="M 70 180 A 530 150 0 1 1 1130 180 A 530 150 0 1 1 70 180 Z"/></circle>
   <rect class="scan" x="0" y="0" width="260" height="360" fill="url(#beam)"/>
   <text class="tag reveal" x="600" y="104" text-anchor="middle">NASA SPACE APPS 2026 · TEAM ASTROWINNERS · VISIONARY BRANCH</text>
   <text class="title reveal r2" x="600" y="186" text-anchor="middle">TWINSITE</text>
