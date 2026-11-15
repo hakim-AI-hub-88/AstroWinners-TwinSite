@@ -16,7 +16,11 @@ It is a **separate deployment**. The `master` service on Render
    creates the separate `twinsite-visionary` service. Paste the AI keys in the dashboard. Watch the first build
    log (it is the first build of this image). If the free 512 MB instance restarts with out-of-memory, switch the
    service to a larger instance type or use option 2.
-2. **Hugging Face Spaces (16 GB RAM, free).** Best free fit for the full Mars data, but six files in `data_ready/`
+2. **Hugging Face Spaces (16 GB RAM, free) — no data upload.** Create a Docker Space and add only
+   `ops/container/hf/Dockerfile` and `ops/container/hf/README.md`. The build clones this branch from GitHub on
+   Hugging Face's network, so `data_ready/` is never uploaded and no LFS is needed. Add AI keys as Space secrets.
+   New commits: Settings → Factory rebuild. (Pushing the whole repo instead needs LFS, see below.)
+3. **Hugging Face Spaces, full-repo push.** Best free fit for the full Mars data, but six files in `data_ready/`
    are 20–48 MB, so they must be pushed with Git LFS/Xet from a **full** clone on a fast connection (see below).
    A blob-less or slow clone would download ~260 MB before it can push.
 
