@@ -10,7 +10,7 @@ from urllib.request import Request
 
 from twinsite.api.server import App, Handler, ApiError
 from twinsite.api import data
-from twinsite.jobs.measured import resolve_request, evidence_for, load_pair, DATASET
+from twinsite.jobs.measured import resolve_request, evidence_for, load_pair, DATASET, source_root
 from twinsite.jobs.worker import Worker
 from twinsite.jobs.contract import digest, validate
 from twinsite.science import ENGINE_VERSION
@@ -21,7 +21,13 @@ from twinsite.storage import load_settings
 ROOT = Path(__file__).resolve().parents[3]
 SELECTION = {'schema_version': '1.0', 'dataset_id': DATASET}
 
+NEEDS_SOURCE_CACHE = unittest.skipUnless(
+    (source_root() / "raw").is_dir() and (source_root() / "cleaned").is_dir(),
+    "NASA source cache not provisioned (python ops/provision_source_cache.py, or set TWINSITE_SOURCE_DATA_DIR)")
+
+
 class IntegrationTests(unittest.TestCase):
+    @NEEDS_SOURCE_CACHE
     def test_measured_handler_worker_persistence_and_release_block(self):
         with tempfile.TemporaryDirectory() as directory:
             settings = load_settings(directory)
@@ -148,6 +154,7 @@ class IntegrationTests(unittest.TestCase):
         del matched['sites'][1]['provenance']['feature_details']['local_relief_m']
         self.assertEqual(extent_mismatches(matched), ['AOI_EXTENT_UNVERIFIED'])
 
+    @NEEDS_SOURCE_CACHE
     def test_grid_view_is_checksum_verified_and_labelled_display_only(self):
         mars = data.grid('mars-gale-aeolis')
         self.assertEqual((mars['display']['factor'], mars['display']['nrows'], mars['display']['ncols']), (1, 38, 38))

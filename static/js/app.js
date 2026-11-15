@@ -1019,7 +1019,7 @@ function dashboardContext() {
   return { zone: activeZone, planet: result.target.planet, location: result.target.location,
            rover_mode: !!(result.method.rover && result.method.rover.enabled),
            max_slope: result.method.rover ? result.method.rover.max_slope_deg : Number(els.maxSlope.value),
-           selected_rank: selected + 1 };
+           selected_rank: selected + 1, cleaning: missionOptions().cleaning };
 }
 
 async function askAssistant(question) {

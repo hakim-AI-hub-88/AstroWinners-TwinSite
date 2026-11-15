@@ -57,6 +57,16 @@ def fake_analysis(planet, location, rover_mode, max_slope, zone, cleaning="stand
                          "refined": {"lat": -23.11, "lon": -68.21}, "explanation": {"matches": ["slope"], "differs": ["albedo"]}}]}
 
 
+def _frame(n):
+    """Small harmonized-shaped frame (coordinates, every feature, quality flags) for mocked loaders."""
+    import pandas as pd
+    from utils import config
+    cols = {"latitude": [10.0 + i * 0.1 for i in range(n)], "longitude": [20.0 + i * 0.1 for i in range(n)]}
+    cols.update({f: [0.2 + 0.05 * (i % 5) for i in range(n)] for f in config.FEATURES})
+    cols[config.QUALITY_COLUMN] = [0] * n
+    return pd.DataFrame(cols)
+
+
 def wait_done(mid, timeout=30):
     end = time.time() + timeout
     while time.time() < end:
@@ -112,8 +122,8 @@ class AutoModeApiTest(unittest.TestCase):
     # ------------------------------------------------------------ lifecycle, platform API down
     def test_lifecycle_platform_down(self):
         with mock.patch.object(auto_mode, "run_analysis", side_effect=fake_analysis), \
-                mock.patch("services.data_loader.LOADERS", {"mars": lambda: [0] * 10, "moon": lambda: [0] * 10}), \
-                mock.patch("services.data_loader.load_zone", lambda z, role: [0] * 5), \
+                mock.patch("services.data_loader.LOADERS", {"mars": lambda: _frame(10), "moon": lambda: _frame(10)}), \
+                mock.patch("services.data_loader.load_zone", lambda z, role: _frame(5)), \
                 mock.patch.object(auto_mode, "build_report", return_value={
                     "facts": {"recommended_zone": "Zone atacama"}, "maps": {},
                     "narrative": {"executive_summary": "x", "generated_by": "fallback"}}):

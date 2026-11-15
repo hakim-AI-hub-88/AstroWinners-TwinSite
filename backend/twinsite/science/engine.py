@@ -1,7 +1,7 @@
 """Simple Analysis entry point: analyze_mission(request, evidence, mode).
 
 Deterministic, stdlib-only, no network and no AI. See package docstring for the
-output layout and SCIENCE_STATUS.md for the integration contract with C3.
+output layout and docs/status/SCIENCE_STATUS.md for the integration contract with C3.
 """
 from __future__ import annotations
 

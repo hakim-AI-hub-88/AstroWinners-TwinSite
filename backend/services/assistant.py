@@ -150,7 +150,11 @@ def _analysis(args: dict, ctx: dict) -> dict:
     slope = args.get("max_slope", ctx.get("max_slope"))
     planet, location, rover, slope = analysis.validate(args.get("planet"), args.get("location"), rover, slope)
     zone = analysis.validate_zone(args.get("zone", ctx.get("zone")))
-    return analysis.run(planet, location, rover, slope, zone)
+    try:   # analyse with the same cleaning profile the dashboard used, so numbers match what the user sees
+        cleaning, _ = analysis.validate_options(ctx.get("cleaning"), None)
+    except Exception:  # noqa: BLE001 - unknown profile from the client: fall back to the default
+        cleaning = "standard"
+    return analysis.run(planet, location, rover, slope, zone, cleaning)
 
 
 def _region(res: dict, rank: int) -> dict:
@@ -400,7 +404,7 @@ def _context_note(ctx: dict) -> str:
     zone = config.EARTH_ZONES.get(ctx.get("zone") or config.DEFAULT_ZONE, {}).get("full_name", "Atacama Desert (Chile)")
     return (f"[Dashboard state: Earth zone = {zone}, target = {ctx.get('location')} ({ctx.get('planet')}), "
             f"rover filter = {'on' if ctx.get('rover_mode') else 'off'}, max slope = {ctx.get('max_slope')} deg, "
-            f"selected region = #{ctx.get('selected_rank', 1)}.]")
+            f"selected region = #{ctx.get('selected_rank', 1)}, cleaning = {ctx.get('cleaning') or 'standard'}.]")
 
 
 def _clean_history(history) -> list[dict]:

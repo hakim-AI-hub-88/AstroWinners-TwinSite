@@ -5,6 +5,7 @@
 *.pem
 *.key
 *credentials*
+!backend/twinsite/sources/credentials.py
 # Python
 .venv/
 __pycache__/

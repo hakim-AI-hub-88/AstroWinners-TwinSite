@@ -40,6 +40,11 @@ PAGES = [
 ]
 
 
+def public_base() -> str:
+    """Canonical public origin for sitemap/robots: PUBLIC_BASE_URL when set (production), else the request origin."""
+    return (os.environ.get("PUBLIC_BASE_URL") or request.url_root).rstrip("/")
+
+
 def site_context() -> dict:
     """Variables every page template can use (nav, footer, sitemap)."""
     return {"pages": PAGES, "repo_url": REPO_URL, "year": date.today().year}
@@ -81,7 +86,7 @@ def policy_page():
 
 @bp.get("/sitemap.xml")
 def sitemap_xml():
-    base = request.url_root.rstrip("/")
+    base = public_base()
     urls = "".join(f"<url><loc>{base}{p}</loc></url>" for p, *_ in PAGES)
     xml = f'<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{urls}</urlset>'
     return Response(xml, mimetype="application/xml")
@@ -89,7 +94,7 @@ def sitemap_xml():
 
 @bp.get("/robots.txt")
 def robots():
-    base = request.url_root.rstrip("/")
+    base = public_base()
     return Response(f"User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /v1/\nSitemap: {base}/sitemap.xml\n",
                     mimetype="text/plain")
 

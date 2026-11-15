@@ -40,7 +40,7 @@ class FrozenFixtureCompatibility(unittest.TestCase):
             self.assertEqual(set(result), set(expected), name)
             for key in expected:
                 if key in ("algorithm_version", "limitations"):
-                    continue  # intentionally re-versioned; see SCIENCE_STATUS.md
+                    continue  # intentionally re-versioned; see docs/status/SCIENCE_STATUS.md
                 self.assertEqual(result[key], expected[key], f"{name}:{key}")
 
     def test_synthetic_fixture_strict_mode_blocks(self):

@@ -17,6 +17,7 @@
 from __future__ import annotations
 
 import logging
+import os
 import sys
 from pathlib import Path
 
@@ -50,6 +51,10 @@ from utils import config
 def create_app(preload: bool = True) -> Flask:
     app = Flask(__name__, template_folder=str(config.TEMPLATE_DIR), static_folder=str(config.STATIC_DIR))
     app.json.sort_keys = False
+    if os.environ.get("TWINSITE_BEHIND_PROXY", "1") == "1":
+        # nginx / Vercel forward the original scheme and host (X-Forwarded-*); trust exactly one hop.
+        from werkzeug.middleware.proxy_fix import ProxyFix
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
     app.register_blueprint(similarity_bp)
     app.register_blueprint(assistant_bp)      # AI Mission Assistant (Groq)
     app.register_blueprint(ml_bp)             # machine-learning models (PCA, K-means)

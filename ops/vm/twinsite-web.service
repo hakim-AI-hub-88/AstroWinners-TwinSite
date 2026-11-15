@@ -27,7 +27,7 @@ Environment=TWINSITE_UPLOADS_ENABLED=false
 # Site-wide settings (template: ops/vm/env.example; root-owned 0600). Values here override the lines above.
 EnvironmentFile=-/etc/twinsite/env
 ExecStart=/srv/twinsite/venv/bin/gunicorn --chdir /srv/twinsite/app/backend "app:create_app()" \
-    --bind 127.0.0.1:5050 -w 2 --threads 4 --timeout 180 --graceful-timeout 30 \
+    --bind 127.0.0.1:5050 -w 1 --threads 8 --timeout 180 --graceful-timeout 30 \
     --forwarded-allow-ips 127.0.0.1 --access-logfile - --error-logfile -
 ExecReload=/bin/kill -HUP $MAINPID
 Restart=always
