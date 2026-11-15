@@ -16,6 +16,10 @@ if OUT.exists():
     shutil.copytree(OUT, archive)
 OUT.mkdir(parents=True, exist_ok=True)
 ENV = dict(os.environ, PYTHONPATH=str(ROOT / 'backend') + os.pathsep + str(ROOT))
+# Verification never needs Earthdata credentials: disable the repo .env secret file unless the
+# caller explicitly points at one, and drop any token inherited from the shell.
+ENV.setdefault('TWINSITE_SECRET_ENV_FILE', str(ROOT / '.runtime/no-secrets.env'))
+ENV.pop('EARTHDATA_TOKEN', None)
 results = []
 
 def run(name, command, cwd=ROOT):

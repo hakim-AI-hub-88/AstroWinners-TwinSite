@@ -1,19 +1,23 @@
 # Scientific release review — Zagora (SRTMGL1) vs Gale (MOLA MEGDR), 2026-11-15
 
-**Decision: release stays BLOCK.** The six terrain measurements are verified. Mission suitability is not
+**Decision: release stays BLOCK.** The six terrain measurements are reproduced from verified source bytes. Mission suitability is not
 established, and the engine's outcome ("no feasible portfolio") is the scientifically correct result for
 the evidence and parameters available. Nothing in this review relaxes a test, a tolerance or a gate.
 
-## 1. What is verified: terrain measurements
+## 1. What is verified: terrain measurements (with stated limits)
 
 | Check | Earth: SRTMGL1 v003, N30W006 | Mars: MOLA MEGDR meg128 (megt/megc 00n090hb) |
 | --- | --- | --- |
 | Source identity | LP DAAC Earthdata Cloud. CMR granule `G2821052091-LPCLOUD`, collection `C2763266360-LPCLOUD`, DOI 10.5067/MEaSUREs/SRTM/SRTMGL1.003 | NASA PDS Geosciences Node (`pds-geosciences.wustl.edu`) |
 | Origin bytes | Authenticated official download (ZIP SHA-256 `2493d4ce…`). Its decoded raster is identical to the earlier mirror (0 differing samples) | **Independently re-downloaded today** with `scripts/integration/verify_mola_origin.py`: both labels in full, and both image subsets through HTTP Range reads of the recorded rows. 4/4 SHA-256 match. No credentials used |
-| Independent recomputation | C5 decoder recomputes slope, roughness and relief from raw HGT at the same 1852.3 m scale. Agrees | C5 decodes the label-defined MOLA subset with Mars geodesy. Agrees |
+| Reference recomputation | Stdlib-only reference (`tests/acceptance/terrain_reference.py`, no production imports) re-implements the declared method from raw HGT at 1852.3 m. Agrees | Same reference decodes the label-defined MOLA subset with Mars geodesy. Agrees |
 | Values (slope °, roughness m, relief m) | 0.5838 / 17.9224 / 313.811 | 1.5093 / 42.837 / 925.562 |
 | Coverage | 1.0 (no voids) | 0.741: blocks with at least one direct MOLA shot. Interpolated cells are retained and flagged |
 | Provenance checker | 19 PASS, 0 FAIL, 0 BLOCKED on current evidence | Same |
+
+**Limits of the recomputation:** the reference was written during the C0 recovery, not by an
+independent C5 reviewer. It re-implements the *same* declared method: block means, Horn slope, 3×3 SD.
+It confirms decoding and arithmetic but not the choice of method. It still needs C5 sign-off.
 
 **Limitation:** an independent re-download of the SRTM tile is **BLOCKED**. It needs Earthdata
 authentication, and the only token available was exposed earlier, so it must not be reused. Earth origin
@@ -61,9 +65,9 @@ The 6 m roughness tolerance alone gives roughness a similarity of 0 for a 24.9 m
 ## 5. Gate status
 
 - **G1 (live system): ACCEPTED.** See LIVE_ACCEPTANCE.md.
-- **G2 (real science): measurements VERIFIED; release BLOCK.**
-  - Mars measurements are verified at origin and recomputed independently.
-  - Earth measurements are verified from an official authenticated download and recomputed independently. An Earth re-download is pending a new token.
+- **G2 (real science): measurements REPRODUCED from verified bytes; release BLOCK.**
+  - Mars source bytes are independently re-downloaded from NASA PDS; values are reproduced by the stdlib reference (C5 sign-off pending).
+  - Earth source bytes come from one official authenticated download; values are reproduced by the same reference. An independent Earth re-download is pending a new token.
   - Comparability, mission parameters, access, `dry_fraction` and reviewer attestation are open.
 - **G3 (explorer/portfolio/reports): PARTIAL.** The read-only explorer, comparison, reports and evidence downloads are live. Alternative portfolios (`501`), arbitrary areas of interest and additional sites are not implemented.
 
