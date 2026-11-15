@@ -1,11 +1,14 @@
-{#- Top navigation shared by every page. Set `active` in the route (auto, data, resources, ...). -#}
+{#- Top navigation shared by every page. Set `active` before including (home, app, auto, data, console, resources ...). -#}
 <header class="site-nav" data-nav>
   <a class="site-nav__brand" href="/" aria-label="TwinSite home">
     <img src="{{ url_for('static', filename='img/favicon.svg') }}" width="30" height="30" alt="">
     <span>TWINSITE</span>
   </a>
-  <button class="site-nav__toggle" type="button" aria-expanded="false" aria-controls="site-nav-links" data-nav-toggle>Menu</button>
+  <button class="site-nav__toggle" type="button" aria-expanded="false" aria-controls="site-nav-links" data-nav-toggle>
+    <span class="site-nav__toggle-bars" aria-hidden="true"></span>Menu
+  </button>
   <nav id="site-nav-links" class="site-nav__links" aria-label="Main">
+    <a href="/" {% if active == 'home' %}aria-current="page"{% endif %}>Home</a>
     <a href="/app#mission" {% if active == 'app' %}aria-current="page"{% endif %}>Mission Control</a>
     <a href="/auto" {% if active == 'auto' %}aria-current="page"{% endif %}>Auto Mode</a>
     <a href="/data" {% if active == 'data' %}aria-current="page"{% endif %}>Data Hub</a>
@@ -15,5 +18,12 @@
   </nav>
 </header>
 <script>
-  (function(){var b=document.querySelector('[data-nav-toggle]');if(!b)return;b.addEventListener('click',function(){var o=b.getAttribute('aria-expanded')==='true';b.setAttribute('aria-expanded',String(!o));document.querySelector('[data-nav]').classList.toggle('is-open',!o);});})();
+  (function () {
+    var nav = document.querySelector('[data-nav]'), b = nav && nav.querySelector('[data-nav-toggle]');
+    if (!b) return;
+    function set(open) { b.setAttribute('aria-expanded', String(open)); nav.classList.toggle('is-open', open); }
+    b.addEventListener('click', function () { set(b.getAttribute('aria-expanded') !== 'true'); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && nav.classList.contains('is-open')) { set(false); b.focus(); } });
+    nav.querySelectorAll('.site-nav__links a').forEach(function (a) { a.addEventListener('click', function () { set(false); }); });
+  })();
 </script>
