@@ -1,0 +1,47 @@
+# Render Blueprint for a SEPARATE TwinSite service built from the platform-integration branch.
+# It does not touch the existing master service (https://astrowinners-twinsite-1.onrender.com/).
+# Free plan = 512 MB RAM and sleeps when idle: may be too small for the full Mars dataset
+# (see docs/deployment/FREE_HOSTING.md; Hugging Face Spaces is the recommended free host).
+services:
+  - type: web
+    name: twinsite-visionary
+    runtime: docker
+    repo: https://github.com/hakim-AI-hub-88/AstroWinners-TwinSite
+    branch: platform-integration
+    plan: free
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /v1/health
+    autoDeploy: true
+    envVars:
+      - key: TWINSITE_DATA_DIR
+        value: /data/twinsite
+      - key: TWINSITE_AI_ENABLED
+        value: "true"
+      - key: TWINSITE_UPLOADS_ENABLED
+        value: "false"
+      - key: TWINSITE_SEED_ON_START
+        value: "1"
+      - key: TWINSITE_SEED_WORKERS
+        value: "1"
+      - key: WEB_THREADS
+        value: "4"
+      - key: PUBLIC_BASE_URL
+        sync: false
+      # Free-tier AI provider keys (all optional; set in the dashboard, never committed)
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GROQ_MODEL
+        sync: false
+      - key: CLOUDFLARE_API_TOKEN
+        sync: false
+      - key: CLOUDFLARE_ACCOUNT_ID
+        sync: false
+      - key: GOOGLE_API_KEY
+        sync: false
+      - key: MISTRAL_API_KEY
+        sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: NVIDIA_NIM_API_KEY
+        sync: false
