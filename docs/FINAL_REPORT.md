@@ -319,9 +319,9 @@ From `backend/twinsite/ai/agents.py` (method version `twinsite-agents/1.0.0`):
 | Provider | Protocol | Key env var |
 |---|---|---|
 | Groq | OpenAI chat | `GROQ_API_KEY` |
-| Cloudflare Workers AI | OpenAI chat | (Cloudflare account + token) |
-| Google Gemini API | Google generate | (Gemini key) |
-| OpenRouter (free models only) | OpenAI chat | (OpenRouter key) |
+| Cloudflare Workers AI | OpenAI chat | `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID` |
+| Google Gemini API | Google generate | `GOOGLE_API_KEY` |
+| OpenRouter (free models only) | OpenAI chat | `OPENROUTER_API_KEY` |
 | Mistral | OpenAI chat | `MISTRAL_API_KEY` |
 | NVIDIA NIM | OpenAI chat | `NVIDIA_NIM_API_KEY` |
 | Ollama Cloud | OpenAI chat | `OLLAMA_API_KEY` |
@@ -380,7 +380,10 @@ twinsite-platform/
 ## 15. Deployment options
 
 1. **Render (master, live):** gunicorn serving the Flask app — <https://astrowinners-twinsite-1.onrender.com/>.
-2. **Single container / free hosts:** one process (Flask + optional API + worker) serves every page and the built console (`frontend/dist`); suitable for any free Python container host.
+2. **Single container (visionary branch):** `Dockerfile` (Node 20 stage builds the console; `python:3.12-slim` runtime, non-root uid 1000, `$PORT` default 7860) and `ops/container/start.sh` (platform API + worker in the background, gunicorn in the foreground; the container exits if any process dies; sites seed in the background, `TWINSITE_SEED_ON_START=0` disables it).
+   - **Render Blueprint:** `render.yaml` creates a separate free service `twinsite-visionary` from branch `platform-integration` (health check `/v1/health`, AI keys as dashboard secrets). The master service is untouched.
+   - **Hugging Face Spaces:** prepend `ops/container/hf_space_header.md` (`sdk: docker`, `app_port: 7860`); push the six 20–48 MB data files with Git LFS/Xet.
+   - Full comparison (HF Spaces, Render, Oracle Cloud Always Free, GCP e2-micro) and NASA cloud note: `docs/deployment/FREE_HOSTING.md`.
 3. **VM (`ops/vm`):** `install.sh`, `env.example`, nginx (`nginx.conf`, headers, HTTPS example), systemd units `twinsite-web`, `twinsite-api`, `twinsite-worker`, then `smoke.py`.
 4. **Vercel (optional):** `vercel.json` and `docs/deployment/VERCEL.md`. **Not required** — Flask already serves all pages and the console.
 

@@ -9,6 +9,17 @@ The bundled datasets in `data_ready/` are copied into the image.
 It is a **separate deployment**. The `master` service on Render
 (https://astrowinners-twinsite-1.onrender.com/) is not affected: different branch, different service.
 
+## Fastest path today
+
+1. **Render Blueprint (no upload from your machine).** Render builds straight from GitHub: New → Blueprint →
+   repo `hakim-AI-hub-88/AstroWinners-TwinSite`, branch `platform-integration` → it reads `render.yaml` and
+   creates the separate `twinsite-visionary` service. Paste the AI keys in the dashboard. Watch the first build
+   log (it is the first build of this image). If the free 512 MB instance restarts with out-of-memory, switch the
+   service to a larger instance type or use option 2.
+2. **Hugging Face Spaces (16 GB RAM, free).** Best free fit for the full Mars data, but six files in `data_ready/`
+   are 20–48 MB, so they must be pushed with Git LFS/Xet from a **full** clone on a fast connection (see below).
+   A blob-less or slow clone would download ~260 MB before it can push.
+
 ## Options compared
 
 | Host | Free resources | Fit for TwinSite |

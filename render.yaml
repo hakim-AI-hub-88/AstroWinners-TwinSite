@@ -45,3 +45,5 @@ services:
         sync: false
       - key: NVIDIA_NIM_API_KEY
         sync: false
+      - key: OLLAMA_API_KEY
+        sync: false
