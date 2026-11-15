@@ -1,5 +1,5 @@
 # TwinSite: Flask web app (5050) + platform API (8080) + worker. Run from the repo root.
-PYTHON ?= python3.13
+PYTHON ?= $(shell command -v python3.13 || command -v python3.12 || command -v python3.11 || echo python3)
 VENV_PYTHON := $(if $(wildcard .venv/bin/python),.venv/bin/python,$(PYTHON))
 WEB_PORT ?=
 API_PORT ?=
