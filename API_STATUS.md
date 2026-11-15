@@ -58,7 +58,7 @@ SQLite+WAL replaces PostgreSQL/PostGIS. The contract explicitly accepts this dem
 | `backend/twinsite/jobs/{worker,science_adapter,evidence,report,contract}.py`, `__main__.py` | Worker, engine adapter, sidecar, HTML template, contract validation adapter |
 | `backend/twinsite/api/{server,openapi}.py`, `__main__.py`, `openapi.json`, `.env.example` | HTTP API, OpenAPI document, env variable names (no values) |
 | `backend/twinsite/ai/registry.py` | Deterministic 13-role registry stub |
-| `backend/tests/api/test_backend.py` | 15 tests: store, worker, HTTP, C0 smoke, OpenAPI drift |
+| `backend/tests/api/test_backend.py` | 16 tests: store, worker, HTTP, C0 smoke, OpenAPI drift |
 
 ## TESTS
 
@@ -73,8 +73,8 @@ The test file finds the engine automatically when the env var is unset: it check
 
 | Check | Result |
 | --- | --- |
-| Unit and HTTP suite (C0 `.venv`, jsonschema present) | **15/15 pass** |
-| Same suite under bare `python3.13` (no jsonschema) | 14 pass, 1 skipped (smoke needs jsonschema). The server falls back to a minimal structural check. |
+| Unit and HTTP suite (C0 `.venv`, jsonschema present) | **16/16 pass**. Includes HTTP POST of each fixture: `input_sha256 == contracts.validation.digest(original)` and the result equals the frozen fixture. |
+| Same suite under bare `python3.13` (no jsonschema) | Passes with the smoke test skipped (it needs jsonschema). The server falls back to a minimal structural check. |
 | C0 `scripts/integration/smoke.py --base-url` against real `python -m twinsite.api` and `python -m twinsite.jobs` processes | **PASS** |
 | Four frozen synthetic request/result pairs through the worker | Byte-identical to `contracts/examples/*.result.synthetic.json` |
 | Covered failure paths | 413 (>1,000,000 B), 400 (missing key / bad cursor), 415, 422 (NaN / schema), 404, 405 and 501 |
@@ -93,7 +93,11 @@ The test file finds the engine automatically when the env var is unset: it check
    - Until these schemas are approved and C1 publishes an approved public dataset index, these routes return 501. No simulated data is served.
 3. **Root `.env.example`.** Please append the names in `backend/twinsite/api/.env.example`: `TWINSITE_QUEUE_LIMIT`, `TWINSITE_LEASE_SECONDS`, `TWINSITE_CORS_ORIGINS`, `TWINSITE_REFERENCE_ENGINE_DIR`.
 4. **Package layout.** No `backend/twinsite/__init__.py` is needed: `twinsite` is an implicit namespace package. Please don't add one unless all lanes agree.
-5. **`make dev`** already matches the entry points. After `make bootstrap`, the reference engine resolves from `references/extracted/` in the main checkout.
+5. **Lane ownership.** `review_lane.py lane/backend` flags `API_STATUS.md`, `backend/tests/__init__.py` and `backend/tests/api/*` as cross-owner.
+   - The lane brief assigns them to C3.
+   - Please add `backend/tests/api/` and `API_STATUS.md` to C3 in `lanes.json`, or confirm them at review.
+   - Nothing else outside `backend/twinsite/{api,jobs,storage,ai}/` changed. `git diff --name-status main..lane/backend` confirms it.
+6. **`make dev`** already matches the entry points. After `make bootstrap`, the reference engine resolves from `references/extracted/` in the main checkout.
 
 ## Interfaces for other lanes
 
@@ -109,9 +113,22 @@ The test file finds the engine automatically when the env var is unset: it check
   - Treat `completed_with_limits` plus `release_action: BLOCK` as "synthetic / not released".
   - Allowed dev origins are `http://127.0.0.1:5173` and `http://localhost:5173`, configurable with `TWINSITE_CORS_ORIGINS`.
 
+## Run without the frontend
+
+`make dev` refuses to start until `frontend/package.json` exists. To run the backend on its own, start the API and worker in two terminals from the worktree, or from main after the merge:
+
+```sh
+export PYTHONPATH=backend:. TWINSITE_API_PORT=8080
+.venv/bin/python -m twinsite.api        # terminal 1
+.venv/bin/python -m twinsite.jobs       # terminal 2
+.venv/bin/python scripts/integration/smoke.py --base-url http://127.0.0.1:8080
+```
+
+In a worktree with no `references/extracted/`, also set `TWINSITE_REFERENCE_ENGINE_DIR=/Users/macbook/Projects/TwinSite/references/extracted/ARES_NASA_Feasibility_Architecture/ARES/implementation`.
+
 ## BLOCKERS
 
-- None for G1 backend.
+- **Backend: none.** This does NOT mean G1 is unblocked. Full G1 acceptance (the UI) is still blocked on C4, and C2 has no `twinsite.science` engine yet, so the ARES synthetic reference fallback is in use.
 - G2 depends on C1 (approved assets and evidence resolver) and C2 (`twinsite.science`). Neither exists on its branch at this checkpoint.
 
 ## NEXT GATE

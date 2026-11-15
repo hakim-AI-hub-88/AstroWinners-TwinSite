@@ -4,7 +4,7 @@ Implements the frozen G1 routes from contracts/SHARED_CONTRACT.md. Reserved G3
 routes return explicit 501 until C0 approves their response schemas. No login,
 no settings, no SQL surface, no AI requirement.
 """
-from http import HTTPStatus
+import copy
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 import logging
@@ -233,7 +233,7 @@ class Handler(BaseHTTPRequestHandler):
         except ContractError as error:
             raise ApiError(422, 'SCHEMA_VALIDATION_FAILED', str(error), error.field) from None
         try:
-            science_adapter.validate(payload)
+            science_adapter.validate(copy.deepcopy(payload))  # never let validation mutate the hashed original
         except science_adapter.ScienceUnavailable:
             pass  # worker records SCIENCE_ENGINE_UNAVAILABLE; schema validation already ran
         except (ValueError, KeyError, TypeError) as error:

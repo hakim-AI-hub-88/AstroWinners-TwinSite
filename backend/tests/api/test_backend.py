@@ -231,6 +231,27 @@ class HttpTests(TempDirCase):
         import smoke
         smoke.run(self.base)
 
+    def test_http_submission_hashes_original_and_reproduces_fixture(self):
+        from contracts.validation import digest
+        for name in FIXTURES:
+            raw = (EXAMPLES / f'{name}.synthetic.json').read_bytes()
+            status, _, body = self.call('POST', '/v1/missions', raw,
+                                        {'Content-Type': 'application/json', 'Idempotency-Key': 'orig-' + name})
+            self.assertEqual(status, 202)
+            run_id = json.loads(body)['run_id']
+            deadline = time.monotonic() + 20
+            while True:
+                code, _, result = self.call('GET', f'/v1/missions/{run_id}/result')
+                if code == 200:
+                    break
+                self.assertEqual(code, 409)
+                self.assertLess(time.monotonic(), deadline)
+                time.sleep(0.05)
+            _, _, status_body = self.call('GET', f'/v1/missions/{run_id}')
+            self.assertEqual(json.loads(status_body)['input_sha256'], digest(json.loads(raw)))
+            expected = json.loads((EXAMPLES / f'{name}.result.synthetic.json').read_text())
+            self.assertEqual(json.loads(result), expected, name)
+
     def test_health_and_reserved_routes(self):
         status, _, body = self.call('GET', '/v1/health')
         self.assertEqual(status, 200)
