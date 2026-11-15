@@ -50,16 +50,25 @@ def _region_facts(reg: dict) -> dict:
     }
 
 
-def build_facts(planet: str, location: str, rover_mode: bool, max_slope: float) -> tuple[dict, dict]:
-    """Return (facts for the LLM, raw results per zone)."""
-    results = {}
+def build_facts(planet: str, location: str, rover_mode: bool, max_slope: float,
+                cleaning: str = "standard") -> tuple[dict, dict]:
+    """Return (facts for the LLM, raw results per zone). Zones whose analysis fails are skipped with a reason."""
+    from services import cleaning as cleaning_mod
+    results, skipped = {}, {}
     for zone in config.EARTH_ZONES:
         try:
-            results[zone] = analysis.run(planet, location, rover_mode, max_slope, zone)
+            res = analysis.run(planet, location, rover_mode, max_slope, zone, cleaning)
         except Exception as exc:  # noqa: BLE001 - a missing zone must not break the report
             log.warning("report: zone %s unavailable: %s", zone, exc)
+            skipped[zone] = str(exc)
+            continue
+        if res.get("status") == "error":
+            skipped[zone] = res.get("message") or "analysis failed"
+            continue
+        results[zone] = res
     if not results:
-        raise analysis.AnalysisInputError("No Earth zone could be analysed.")
+        raise analysis.AnalysisInputError("No Earth zone could be analysed: "
+                                          + "; ".join(f"{z}: {m}" for z, m in skipped.items()))
     any_res = next(iter(results.values()))
     t = any_res["target"]
     facts = {
@@ -91,6 +100,11 @@ def build_facts(planet: str, location: str, rover_mode: bool, max_slope: float) 
         "Atmosphere, pressure, radiation and gravity are not compared (surface parameters only).",
         "Some target temperatures or albedo values are estimated and down-weighted.",
     ]
+    if cleaning != "standard":                     # only when the user chose a non-default profile
+        prof = cleaning_mod.PROFILES[cleaning]
+        facts["data_cleaning"] = {"profile": prof["name"], "summary": prof["summary"],
+                                  "earth_cells_kept": {z: r["cleaning_report"]["earth"]["rows_out"] for z, r in results.items()},
+                                  "zones_skipped": skipped}
     return facts, results
 
 
@@ -251,13 +265,32 @@ def zone_map_png(res: dict, width: int = 640) -> str:
 #############################################
 # ENTRY POINT
 #############################################
-def build(planet: str, location: str, rover_mode: bool, max_slope: float, use_ai: bool = True) -> dict:
+def build(planet: str, location: str, rover_mode: bool, max_slope: float, use_ai: bool = True,
+          cleaning: str = "standard", data_mode: str = "bundled") -> dict:
+    from services import cleaning as cleaning_mod
     planet, location, rover_mode, max_slope = analysis.validate(planet, location, rover_mode, max_slope)
-    facts, results = build_facts(planet, location, rover_mode, max_slope)
+    cleaning, data_mode = analysis.validate_options(cleaning, data_mode)
+    facts, results = build_facts(planet, location, rover_mode, max_slope, cleaning)
+    live = None
+    if data_mode == "auto":
+        from services import live_data
+        live = live_data.for_target(planet, location)
+        facts["live_evidence"] = ({"status": "ok", "source_products": live["source_products"],
+                                   "analysis_scale_m": live.get("analysis_scale_m"),
+                                   "measured": [{"feature": o.get("feature_id"), "value": o.get("value"), "unit": o.get("unit")}
+                                                for o in live["observations"] if o.get("value") is not None][:12]}
+                                  if live["status"] == "ok" else {"status": "unavailable", "reason": live["reason"]})
     maps = {}
     for zone, res in results.items():
         try:
             maps[zone] = zone_map_png(res)
         except Exception as exc:  # noqa: BLE001
             log.warning("report map %s failed: %s", zone, exc)
-    return {"facts": facts, "narrative": narrative(facts, use_ai), "maps": maps}
+    out = {"facts": facts, "narrative": narrative(facts, use_ai), "maps": maps,
+           "options": {"data_mode": data_mode, "cleaning": cleaning},
+           "cleaning_report": {zone: {"target": cleaning_mod.summary(res["cleaning_report"]["target"]),
+                                      "earth": cleaning_mod.summary(res["cleaning_report"]["earth"])}
+                               for zone, res in results.items()}}
+    if live is not None:
+        out["live_evidence"] = live
+    return out

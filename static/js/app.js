@@ -55,6 +55,7 @@ const els = {
   radarCanvas: $("radar-canvas"), radarHint: $("radar-hint"),
   method: $("method"), methodText: $("method-text"),
   zone: $("zone-select"),
+  dataMode: $("data-mode"), cleaning: $("cleaning-profile"),
   roverMode: $("rover-mode"), maxSlope: $("max-slope"), maxSlopeValue: $("max-slope-value"),
   scenarios: document.querySelectorAll(".scenario"),
   brief: $("brief"), briefQuestion: $("brief-question"), briefAnswer: $("brief-answer"),
@@ -734,6 +735,68 @@ function renderZoneTexts() {
 }
 
 /* ------------------------------------------------------------------
+   MISSION OPTIONS (data source + cleaning profile), sent with every
+   /api/similarity and /api/report request. See /data#cleaning.
+------------------------------------------------------------------ */
+const DATA_MODE_HINTS = {
+  bundled: "Bundled NASA datasets (data_ready, ~11 km grid). Fast and reproducible.",
+  auto: "Bundled datasets + live NASA acquisition of the target point by the platform (slower; shown as evidence, not scored).",
+};
+const CLEANING_HINTS = {
+  standard: "Default: flagged values count 30 % less, incomplete cells are not scored.",
+  strict: "Measured values only: estimated / proxy values masked, water and gap-filled cells removed.",
+  robust: "Strict + statistical outlier rejection (median / MAD, |z| > 3.5).",
+  raw: "Values exactly as published; quality flags ignored.",
+};
+function missionOptions() {
+  return { data_mode: els.dataMode ? els.dataMode.value : "bundled", cleaning: els.cleaning ? els.cleaning.value : "standard" };
+}
+function syncOptionHints() {
+  if (!els.dataMode) return;
+  $("data-mode-hint").textContent = DATA_MODE_HINTS[els.dataMode.value] || "";
+  $("cleaning-hint").textContent = CLEANING_HINTS[els.cleaning.value] || "";
+}
+if (els.dataMode) {
+  els.dataMode.addEventListener("change", syncOptionHints);
+  els.cleaning.addEventListener("change", syncOptionHints);
+  syncOptionHints();
+}
+
+function renderMissionData() {
+  try { renderMissionDataUnsafe(); } catch (err) { console.warn("mission data panel:", err); }  // never block the dashboard
+}
+function renderMissionDataUnsafe() {
+  const box = $("mission-data");
+  if (!box || !result) return;
+  const opts = result.options || {};
+  const cr = result.cleaning_report;
+  box.hidden = !cr;
+  if (!cr) return;
+  const e = cr.earth || {}, t = cr.target || {};
+  $("md-profile").textContent = cr.name || cr.profile;
+  const n = (v) => (isNum(v) ? v.toLocaleString("en-US") : "—");
+  $("md-cleaning").textContent = `${cr.summary} ${zn()}: ${n(e.rows_out)} of ${n(e.rows_in)} cells kept` +
+    (e.values_masked ? `, ${n(e.values_masked)} values masked` : "") + `. Target window: ${n(t.rows_out)} of ${n(t.rows_in)} cells` +
+    (t.values_masked ? `, ${n(t.values_masked)} values masked` : "") +
+    `. Flagged values weigh ${Math.round((1 - (cr.uncertainty_penalty ?? 0.3)) * 100)} % in the score.`;
+  const live = result.live_evidence;
+  $("md-live-box").hidden = opts.data_mode !== "auto" || !live;
+  if (opts.data_mode !== "auto" || !live) return;
+  const ok = live.status === "ok";
+  $("md-live-status").textContent = ok ? "acquired" : "unavailable";
+  $("md-live-status").className = ok ? "" : "is-unavailable";
+  $("md-live").textContent = ok
+    ? `${live.source_products.join(", ") || "NASA products"} around ${coord(live.latitude, live.longitude, 2)} ` +
+      `(analysis scale ${isNum(live.analysis_scale_m) ? Math.round(live.analysis_scale_m) + " m" : "—"}). Evidence only, not mixed into the score.`
+    : live.reason;
+  $("md-live-obs").innerHTML = ok
+    ? live.observations.filter((o) => o.value !== null && o.value !== undefined).slice(0, 8)
+      .map((o) => `<li>${escapeHtml(label(o.feature_id || ""))}: <strong>${escapeHtml(physical(o.value, o.unit || ""))}</strong>` +
+        `${o.qa_status ? ` · QA ${escapeHtml(o.qa_status)}` : ""}</li>`).join("")
+    : "";
+}
+
+/* ------------------------------------------------------------------
    SEARCH (form submit -> POST /api/similarity for EVERY Earth zone)
 ------------------------------------------------------------------ */
 async function runSearch(event) {
@@ -743,7 +806,8 @@ async function runSearch(event) {
   showMessage("");
   try {
     const payload = { planet: els.planet.value, location: els.location.value,
-      rover_mode: els.roverMode.checked, max_slope: Number(els.maxSlope.value) };
+      rover_mode: els.roverMode.checked, max_slope: Number(els.maxSlope.value), ...missionOptions() };
+    if (payload.data_mode === "auto") els.button.textContent = "Analyzing + live NASA data…";
     const zones = Object.keys(ZONE_MAPS);
     const answers = await Promise.allSettled(zones.map((zone) => api("/api/similarity", {
       method: "POST", body: JSON.stringify({ ...payload, zone }) })));
@@ -756,6 +820,7 @@ async function runSearch(event) {
     els.zone.value = activeZone;
     result = results[activeZone];
     renderZoneTexts();
+    renderMissionData();
     selected = 0;
     if (!result.ranking.length) { els.brief.hidden = true; renderUseCases(null); }
     ml.mapType = null;            // new search: map back to similarity colours
@@ -785,6 +850,7 @@ function setActiveZone(zone) {
   selected = 0;
   ml.mapType = null;
   renderZoneTexts();
+  renderMissionData();
   if (!result.ranking.length) { els.brief.hidden = true; renderUseCases(null); }
   drawEarthMap(false);
   renderValidation();
@@ -1611,7 +1677,10 @@ async function generateReport(fromAssistant = false) {
     const rep = await api("/api/report", { method: "POST", body: JSON.stringify({
       planet: result.target.planet, location: result.target.location,
       rover_mode: !!rover.enabled, max_slope: rover.max_slope_deg || Number(els.maxSlope.value),
-      use_ai: $("report-ai").checked }) });
+      use_ai: $("report-ai").checked,
+      // same options as the analysis on screen (what the user saw is what the report describes)
+      cleaning: (result.options && result.options.cleaning) || "standard",
+      data_mode: (result.options && result.options.data_mode) || "bundled" }) });
     rep.views = window.TwinMap ? TwinMap.snapshots() : null;     // globe views as displayed
     const html = reportHtml(rep);
     if (win && !win.closed) {

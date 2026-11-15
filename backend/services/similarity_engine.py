@@ -64,6 +64,7 @@ class SimilarityRequest:
     earth_processed: pd.DataFrame | None = None          # role 3
     rover_mode: bool = False        # mission planner: only propose rover-accessible regions
     max_slope: float | None = None  # slope limit (deg) for accessibility + exact point
+    uncertainty_penalty: float | None = None  # None = config value; 0 = flags ignored (cleaning "raw")
 
 
 #############################################
@@ -133,9 +134,10 @@ def usable_features(profile: dict, earth: pd.DataFrame) -> tuple[list[str], dict
 # Output: DataFrame aligned with `earth` -> score, confidence, n_features,
 #         contrib_<feature> (share of the distance, 0-1)
 #############################################
-def score_cells(earth: pd.DataFrame, profile: dict, target_unc: dict, used: list[str]) -> pd.DataFrame:
+def score_cells(earth: pd.DataFrame, profile: dict, target_unc: dict, used: list[str],
+                penalty: float | None = None) -> pd.DataFrame:
     s = config.SIMILARITY
-    p = s["uncertainty_penalty"]
+    p = s["uncertainty_penalty"] if penalty is None else penalty
     nominal_total = sum(w for f, w in s["weights"].items() if f not in s["excluded"])
     n = len(earth)
     num, den, count = np.zeros(n), np.zeros(n), np.zeros(n, int)
@@ -230,7 +232,8 @@ def compute(req: SimilarityRequest) -> dict:
                 f"{config.SIMILARITY['min_shared_features']}).", "score": None, "ranking": [], "comparison": [],
                 "map": []}
 
-    scores = score_cells(req.earth, profile, target_unc, used)
+    penalty = config.SIMILARITY["uncertainty_penalty"] if req.uncertainty_penalty is None else req.uncertainty_penalty
+    scores = score_cells(req.earth, profile, target_unc, used, penalty)
     cell_deg = float(np.median(np.diff(np.sort(req.earth["latitude"].unique()))))
 
     # ------------------------------------------------------------------
@@ -313,7 +316,7 @@ def compute(req: SimilarityRequest) -> dict:
             "features_used": used, "features_skipped": skipped,
             "weights": {f: config.SIMILARITY["weights"][f] for f in used},
             "target_uncertainty": {f: round(target_unc[f], 2) for f in used},
-            "uncertainty_penalty": config.SIMILARITY["uncertainty_penalty"],
+            "uncertainty_penalty": penalty,
             "cells_scored": int(valid.sum()),
             "rover": {"enabled": bool(req.rover_mode), "max_slope_deg": max_slope,
                       "min_accessible_fraction": rover["min_accessible_fraction"],
