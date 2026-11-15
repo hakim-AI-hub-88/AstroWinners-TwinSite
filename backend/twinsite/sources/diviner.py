@@ -103,7 +103,8 @@ def acquire(aoi: AOI, root=None, offline=False):
 def decode(asset, b, lat_lo) -> Dict[Tuple[int, int], List[Tuple[float, float]]]:
     """{(ilon, ilat): [(ltim, tbol_K), ...]} with every row's coordinates verified."""
     fetch.verify_raw(asset)
-    raw = open(asset.path, "rb").read()
+    from pathlib import Path as _P
+    raw = _P(asset.path).read_bytes()
     ilon0, ilon1, ilat0, ilat1 = b
     expected_rows = (ilon1 - ilon0 + 1) * (ilat1 - ilat0 + 1) * NT
     if len(raw) != expected_rows * REC:

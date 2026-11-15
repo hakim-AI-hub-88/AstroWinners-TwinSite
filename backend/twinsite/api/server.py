@@ -26,6 +26,7 @@ ROUTES = [
     ('GET', re.compile(r'^/v1/openapi\.json$'), 'openapi'),
     ('POST', re.compile(r'^/v1/missions$'), 'submit'),
     ('POST', re.compile(r'^/v1/missions/measured$'), 'submit_measured'),
+    ('POST', re.compile(r'^/v1/missions/match$'), 'submit_match'),
     ('GET', re.compile(rf'^/v1/missions/{RUN}$'), 'status'),
     ('GET', re.compile(rf'^/v1/missions/{RUN}/events$'), 'events'),
     ('GET', re.compile(rf'^/v1/missions/{RUN}/result$'), 'result'),
@@ -40,6 +41,7 @@ ROUTES = [
     ('GET', re.compile(r'^/v1/science/observations$'), 'sci_observations'),
     ('GET', re.compile(r'^/v1/science/coverage$'), 'sci_coverage'),
     ('GET', re.compile(r'^/v1/science/places$'), 'sci_places'),
+    ('POST', re.compile(r'^/v1/science/characterize$'), 'sci_characterize'),
     ('GET', re.compile(r'^/v1/science/assets/(?P<asset_id>gibs-[0-9a-f]{16})$'), 'sci_asset'),
     # Reserved G3 routes: explicit 501 (contract: response schemas need C0 review first).
     ('POST', re.compile(rf'^/v1/missions/{RUN}/portfolios/alternatives$'), 'not_implemented'),
@@ -343,6 +345,74 @@ class Handler(BaseHTTPRequestHandler):
             raise ApiError(422, 'INVALID_QUERY', 'limit 1-200, offset 0-100000', 'limit')
         total, rows = self._sci().observations(sites, one('domain'), one('body'), one('kind'), limit, offset)
         self.send_json(200, {'total': total, 'limit': limit, 'offset': offset, 'observations': rows})
+
+    def _point(self, raw, bodies=('Earth', 'Moon', 'Mars')):
+        try:
+            body = json.loads(raw.decode('utf-8'), parse_constant=_reject_constant)
+            target = body.get('target', body)
+            planet, lon, lat = target['body'], float(target['longitude']), float(target['latitude'])
+        except (ValueError, KeyError, TypeError, AttributeError, UnicodeDecodeError):
+            raise ApiError(422, 'INVALID_SITE', 'Provide body, numeric longitude and latitude') from None
+        if planet not in bodies or not (-180 <= lon <= 180 and -88 <= lat <= 88):
+            raise ApiError(422, 'INVALID_SITE', f'body in {bodies}; longitude -180..180; latitude -88..88')
+        name = str(target.get('name') or '')[:80] or None
+        return body, planet, lon, lat, name
+
+    def _characterize(self, planet, lon, lat, name):
+        from twinsite.sources import sites
+        existing = sites.load_sites(self.app.settings.data_dir)
+        if len(existing) >= 400 and sites.site_id(planet, lon, lat) not in {d['site_id'] for d in existing}:
+            raise ApiError(429, 'SITE_LIMIT', 'Site characterization limit reached on this server')
+        try:
+            return sites.characterize(self.app.settings.data_dir, planet, lon, lat, name)
+        except Exception as error:  # noqa: BLE001
+            log.warning('characterize failed', exc_info=True)
+            raise ApiError(502, 'SOURCE_UNAVAILABLE', f'Real-data retrieval failed for this point: {error.__class__.__name__}: '
+                           + str(error)[:200]) from None
+
+    def route_sci_characterize(self, query):
+        _, planet, lon, lat, name = self._point(self._read_json_body())
+        doc = self._characterize(planet, lon, lat, name)
+        self.send_json(201, {k: doc[k] for k in ('site_id', 'name', 'body', 'longitude', 'latitude', 'aoi', 'analysis_scale_m',
+                                                   'observations', 'acquisition_errors')})
+
+    def route_submit_match(self, query):
+        """Real-data analog search: characterize a picked Moon/Mars target, pre-rank all stored Earth sites,
+        and run a full mission (AI-powered by default) on the top candidates."""
+        key = self.headers.get('Idempotency-Key')
+        if key is None or not 1 <= len(key) <= 128 or not key.isprintable():
+            raise ApiError(400, 'IDEMPOTENCY_KEY_REQUIRED', 'Idempotency-Key header of 1-128 printable characters is required')
+        mode = (query.get('analysis_mode') or ['ai'])[0]
+        if mode not in ('ai', 'simple'):
+            raise ApiError(422, 'INVALID_ANALYSIS_MODE', 'analysis_mode must be ai or simple', 'analysis_mode')
+        body, planet, lon, lat, name = self._point(self._read_json_body(), ('Moon', 'Mars'))
+        try:
+            n = max(1, min(12, int(body.get('max_candidates', 12))))
+        except (TypeError, ValueError):
+            raise ApiError(422, 'INVALID_QUERY', 'max_candidates must be an integer') from None
+        from twinsite.sources import sites
+        from twinsite.jobs.measured import build_match
+        target = self._characterize(planet, lon, lat, name)
+        if not any(o['value'] is not None and o['feature_id'] == 'slope_deg' for o in target['observations']):
+            raise ApiError(422, 'TARGET_INSUFFICIENT', 'The target has no valid measured slope; pick another point')
+        earth = [d for d in sites.load_sites(self.app.settings.data_dir, 'Earth')
+                 if any(o['feature_id'] == 'slope_deg' and o['value'] is not None for o in d['observations'])]
+        if not earth:
+            raise ApiError(409, 'NO_EARTH_SITES', 'No characterized Earth sites yet; run ops/seed_sites.py or add Earth sites')
+        ranked = sites.prerank(target, earth)[:n]
+        try:
+            dataset, payload = build_match(target, [c for _, c in ranked])
+            validate('mission_request', payload)
+            run_id, _ = self.app.store.submit(payload, key, mode)
+        except ContractError as error:
+            raise ApiError(422, 'SCHEMA_VALIDATION_FAILED', str(error), error.field) from None
+        except Conflict as error:
+            raise ApiError(409, 'IDEMPOTENCY_CONFLICT', str(error), 'Idempotency-Key') from None
+        except CapacityError as error:
+            raise ApiError(429, 'QUEUE_FULL', str(error), headers={'Retry-After': '30'}) from None
+        self.send_json(202, dict(self.app.accepted_body(run_id), dataset_id=dataset,
+                                 prerank=[{'site_id': c['site_id'], 'name': c['name'], 'score': sc} for sc, c in ranked]),
+                       {'Location': f'/v1/missions/{run_id}'})
 
     def route_sci_places(self, query):
         """Place search for any Earth location (Open-Meteo Geocoding API, GeoNames data, CC-BY 4.0). Server-side proxy:

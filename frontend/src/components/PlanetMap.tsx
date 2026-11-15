@@ -1,8 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Body } from '@/lib/types'
 import { bodyAccent } from '@/lib/regions'
+import { ClickTracker, round4 } from '@/lib/picking'
 
-export interface Pin { id: string; label: string; lon: number; lat: number; rank?: number | null; eligible?: boolean }
+export interface Pin { id: string; label: string; lon: number; lat: number; rank?: number | null; eligible?: boolean; kind?: 'candidate' | 'stored' }
+/** A transient selection marker (the user's picked point); drawn on top and never used to fit the view. */
+export interface Marker { lon: number; lat: number; label: string }
 export interface Footprint { id: string; label: string; bbox: number[]; kind?: string }
 
 const W = 720, H = 360
@@ -27,6 +30,11 @@ export function clampView(v: View): View {
   const span = Math.min(360, Math.max(MIN_SPAN, v.span))
   const hx = span / 2, hy = span / 4
   return { span, cx: Math.min(180 - hx, Math.max(-180 + hx, v.cx)), cy: Math.min(90 - hy, Math.max(-90 + hy, v.cy)) }
+}
+/** Map a viewBox coordinate back to planetocentric lon/lat (inverse of the render transform). */
+export function viewBoxToLonLat(v: View, px: number, py: number) {
+  const b = bounds(v)
+  return { lon: b.x0 + (px / W) * v.span, lat: b.y1 - (py / H) * (v.span / 2) }
 }
 const bounds = (v: View) => ({ x0: v.cx - v.span / 2, x1: v.cx + v.span / 2, y0: v.cy - v.span / 4, y1: v.cy + v.span / 4 })
 
@@ -77,13 +85,14 @@ export function MapButton({ label, onClick, children }: { label: string; onClick
 
 /** Equirectangular map for Moon/Mars: planetocentric east longitude, −180…180, with an optional NASA mosaic of the same body.
  *  Wheel / pinch / double-click / +− keys zoom, drag / arrow keys pan. No Earth imagery is ever shown on another body. */
-export default function PlanetMap({ body, pins, footprints, layers }: { body: Body; pins: Pin[]; footprints: Footprint[]; layers: { pins: boolean; footprints: boolean; graticule: boolean; basemap?: boolean } }) {
+export default function PlanetMap({ body, pins, footprints, layers, onPick, extraPins = [], extraFootprints = [], marker }: { body: Body; pins: Pin[]; footprints: Footprint[]; layers: { pins: boolean; footprints: boolean; graticule: boolean; basemap?: boolean }; onPick?: (lon: number, lat: number) => void; extraPins?: Pin[]; extraFootprints?: Footprint[]; marker?: Marker | null }) {
   const fitted = useMemo(() => fitView(pins, footprints), [pins, footprints])
   const [view, setView] = useState<View>(fitted)
   useEffect(() => setView(fitted), [fitted, body])
   const svgRef = useRef<SVGSVGElement>(null)
   const pointers = useRef(new Map<number, { x: number; y: number }>())
   const pinch = useRef<number | null>(null)
+  const click = useRef(new ClickTracker())
 
   const toViewBox = useCallback((clientX: number, clientY: number) => {
     const r = svgRef.current!.getBoundingClientRect()
@@ -106,12 +115,14 @@ export default function PlanetMap({ body, pins, footprints, layers }: { body: Bo
   const onPointerDown = (e: React.PointerEvent<SVGSVGElement>) => {
     e.currentTarget.setPointerCapture(e.pointerId)
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
+    click.current.down(e.clientX, e.clientY, pointers.current.size)
     pinch.current = null
   }
   const onPointerMove = (e: React.PointerEvent<SVGSVGElement>) => {
     const prev = pointers.current.get(e.pointerId)
     if (!prev) return
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
+    click.current.move(e.clientX, e.clientY)
     const pts = [...pointers.current.values()]
     if (pts.length >= 2) {
       const [a, b] = pts
@@ -128,7 +139,15 @@ export default function PlanetMap({ body, pins, footprints, layers }: { body: Bo
     const dx = (e.clientX - prev.x) * scale, dy = (e.clientY - prev.y) * scale
     if (dx || dy) setView((v) => panBy(v, dx, dy))
   }
-  const onPointerUp = (e: React.PointerEvent<SVGSVGElement>) => { pointers.current.delete(e.pointerId); pinch.current = null }
+  const onPointerUp = (e: React.PointerEvent<SVGSVGElement>) => {
+    const wasClick = e.type === 'pointerup' && pointers.current.size === 1 && click.current.up(e.clientX, e.clientY)
+    pointers.current.delete(e.pointerId); pinch.current = null
+    if (wasClick && onPick) {
+      const p = toViewBox(e.clientX, e.clientY)
+      const ll = viewBoxToLonLat(view, p.x, p.y)
+      if (ll.lon >= -180 && ll.lon <= 180 && ll.lat >= -90 && ll.lat <= 90) onPick(round4(ll.lon), round4(ll.lat))
+    }
+  }
   const onDoubleClick = (e: React.MouseEvent<SVGSVGElement>) => { const p = toViewBox(e.clientX, e.clientY); setView((v) => zoomAt(v, e.shiftKey ? 0.5 : 2, p.x, p.y)) }
   const onKeyDown = (e: React.KeyboardEvent) => {
     const act: Record<string, (v: View) => View> = {
@@ -156,14 +175,16 @@ export default function PlanetMap({ body, pins, footprints, layers }: { body: Bo
     <div>
       <div className="relative" tabIndex={0} onKeyDown={onKeyDown} aria-label={`${body} map. Drag or use arrow keys to pan; scroll, pinch, double-click or plus and minus keys to zoom; 0 fits to features.`}>
         <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`${body} equirectangular map, planetocentric east longitude`}
-          className="w-full cursor-grab touch-none select-none rounded-md border border-line active:cursor-grabbing"
+          className={`w-full ${onPick ? 'cursor-crosshair' : 'cursor-grab'} touch-none select-none rounded-md border border-line active:cursor-grabbing`}
           style={{ background: `radial-gradient(ellipse at 40% 30%, ${accent}22, #0b0a09 70%)` }}
           onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={onPointerUp} onDoubleClick={onDoubleClick}>
           {tiles.length > 0 && <g opacity="0.85">{tiles.map((t) => <image key={t.key} href={t.href} x={X(t.lon)} y={Y(t.lat)} width={X(t.lon + t.deg) - X(t.lon) + 0.5} height={Y(t.lat - t.deg) - Y(t.lat) + 0.5} preserveAspectRatio="none" />)}</g>}
           {layers.graticule && <g stroke="#2c2824" strokeWidth="0.7">{lons.map((v) => <g key={'x' + v}><line x1={X(v)} x2={X(v)} y1="0" y2={H} /><text x={X(v) + 3} y={H - 4} fill="#8a8274" fontSize="9" stroke="none">{fmtDeg(v, step)}</text></g>)}{lats.map((v) => <g key={'y' + v}><line y1={Y(v)} y2={Y(v)} x1="0" x2={W} /><text x="4" y={Y(v) - 3} fill="#8a8274" fontSize="9" stroke="none">{fmtDeg(v, step)}</text></g>)}</g>}
-          {layers.footprints && footprints.map((f) => { const x = X(f.bbox[0]), y = Y(f.bbox[3]), w = Math.max(12, X(f.bbox[2]) - x), h = Math.max(12, Y(f.bbox[1]) - y)
+          {layers.footprints && [...footprints, ...extraFootprints].map((f) => { const x = X(f.bbox[0]), y = Y(f.bbox[3]), w = Math.max(12, X(f.bbox[2]) - x), h = Math.max(12, Y(f.bbox[1]) - y)
             return <g key={f.id}><rect x={x} y={y} width={w} height={h} fill={accent} fillOpacity="0.18" stroke={accent} strokeWidth="1.5" strokeDasharray="4 3" /><text x={x + w + 5} y={y + 10} fill="#efe7d6" fontSize="11">{f.label}</text></g> })}
-          {layers.pins && pins.map((p) => <g key={p.id} transform={`translate(${X(p.lon)} ${Y(p.lat)})`}><circle r="8" fill={p.eligible === false ? '#1b1815' : accent} stroke="#efe7d6" strokeWidth="1.3" /><text y="3.5" textAnchor="middle" fontSize="10" fontWeight="600" fill={p.eligible === false ? '#efe7d6' : '#0b0a09'}>{p.rank ?? '×'}</text><text x="12" y="4" fill="#efe7d6" fontSize="11">{p.label}</text></g>)}
+          {layers.pins && extraPins.map((p) => <g key={p.id} transform={`translate(${X(p.lon)} ${Y(p.lat)})`}><title>{p.label}</title><rect x="-4" y="-4" width="8" height="8" transform="rotate(45)" fill="#0b0a09" fillOpacity="0.6" stroke="#efe7d6" strokeWidth="1.2" /></g>)}
+          {layers.pins && pins.map((p) => <g key={p.id} transform={`translate(${X(p.lon)} ${Y(p.lat)})`}><circle r="8" fill={p.eligible === false ? '#1b1815' : accent} stroke="#efe7d6" strokeWidth="1.3" /><text y="3.5" textAnchor="middle" fontSize="10" fontWeight="600" fill={p.eligible === false ? '#efe7d6' : '#0b0a09'}>{p.rank ?? (p.eligible === false ? '×' : '•')}</text><text x="12" y="4" fill="#efe7d6" fontSize="11">{p.label}</text></g>)}
+          {marker && <g transform={`translate(${X(marker.lon)} ${Y(marker.lat)})`} pointerEvents="none"><circle r="11" fill="none" stroke="#efe7d6" strokeWidth="1.5" /><circle r="3" fill="#c8642b" stroke="#efe7d6" strokeWidth="1" /><line x1="-16" x2="-12" stroke="#efe7d6" strokeWidth="1.5" /><line x1="12" x2="16" stroke="#efe7d6" strokeWidth="1.5" /><line y1="-16" y2="-12" stroke="#efe7d6" strokeWidth="1.5" /><line y1="12" y2="16" stroke="#efe7d6" strokeWidth="1.5" /><text x="18" y="-8" fill="#efe7d6" fontSize="11" fontWeight="600">{marker.label}</text></g>}
         </svg>
         <div className="absolute right-2 top-2 flex flex-col gap-1">
           <MapButton label="Zoom in" onClick={() => setView((v) => zoomAt(v, 2, W / 2, H / 2))}>+</MapButton>
@@ -176,7 +197,7 @@ export default function PlanetMap({ body, pins, footprints, layers }: { body: Bo
         <span>{body} · planetocentric east longitude (−180…180) · equirectangular · {showBasemap ? `basemap: ${BASEMAPS[body]!.credit} (display only, not used in analysis)` : 'no imagery basemap'}</span>
         <span className="mono">centre {view.cx.toFixed(2)}°, {view.cy.toFixed(2)}° · {view.span < 1 ? view.span.toFixed(2) : view.span.toFixed(0)}° across{widthKm != null ? ` ≈ ${widthKm < 10 ? widthKm.toFixed(1) : Math.round(widthKm).toLocaleString()} km` : ''}</span>
       </div>
-      <p className="mt-1 text-xs text-mute">Drag to pan · scroll, pinch or double-click to zoom (shift+double-click zooms out) · keys: arrows, + / −, 0 to fit.</p>
+      <p className="mt-1 text-xs text-mute">{onPick ? 'Click to select a site · ' : ''}Drag to pan · scroll, pinch or double-click to zoom (shift+double-click zooms out) · keys: arrows, + / −, 0 to fit.</p>
     </div>
   )
 }

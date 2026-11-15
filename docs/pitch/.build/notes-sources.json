@@ -1,0 +1,201 @@
+[
+  {
+    "n": 1,
+    "title": "TwinSite",
+    "words": "Before a mission reaches the Moon or Mars, teams need places on Earth where they can test an idea. TwinSite helps investigate those analog environments using scientific evidence, AI interpretation, and calculations that remain reproducible. This is our working prototype for the NASA Space Apps Challenge.",
+    "sources": [
+      "Implementation and live UI snapshot: 15 November 2026. Screenshots captured from the local application on port 5180.",
+      "https://science.nasa.gov/earth/earth-observatory/anti-atlas-mountains-morocco-2178/ — NASA/JSC astronaut photograph, Anti-Atlas context, not the Zagora AOI.",
+      "https://science.nasa.gov/photojournal/curiosity-looks-downslope-from-the-sulfate-unit/ — NASA/JPL-Caltech/MSSS. Color adjusted by the source to Earth-like lighting. Context image, not a terrain measurement."
+    ]
+  },
+  {
+    "n": 2,
+    "title": "The analog selection problem",
+    "words": "The difficult part is deciding what resemblance means for a mission. A terrain map, a climate product and an image do not measure the same thing. Even two elevation models can use different scales and study areas. Teams also need practical constraints, such as field access and available time, before a scientific comparison can support a decision.",
+    "sources": [
+      "Implementation and live UI snapshot: 15 November 2026. Screenshots captured from the local application on port 5180.",
+      "docs/release/SCIENTIFIC_REVIEW.md",
+      "https://science.nasa.gov/moon/image-galleries/moonscapes/"
+    ]
+  },
+  {
+    "n": 3,
+    "title": "Earth as a planetary laboratory",
+    "words": "Earth provides accessible environments for investigating selected planetary processes. The comparison must follow the task: terrain morphology for mobility, environmental context for field operations, and constraints supplied by the mission team. No Earth site recreates lunar vacuum or Martian gravity. TwinSite makes those boundaries part of the investigation.",
+    "sources": [
+      "https://science.nasa.gov/earth/earth-observatory/anti-atlas-mountains-morocco-2178/",
+      "https://science.nasa.gov/moon/image-galleries/moonscapes/",
+      "https://science.nasa.gov/photojournal/curiosity-looks-downslope-from-the-sulfate-unit/",
+      "backend/twinsite/science/registry.py",
+      "backend/twinsite/science/engine.py"
+    ]
+  },
+  {
+    "n": 4,
+    "title": "Introducing TwinSite",
+    "words": "TwinSite brings the investigation into one workspace. Users define a target and their mission priorities, inspect source evidence, and run an analysis. AI helps interpret that evidence. Deterministic software owns the numerical result. The interface connects the resulting assessment with its data, execution history, portfolio outcome and scientific report.",
+    "sources": [
+      "Implementation and live UI snapshot: 15 November 2026. Screenshots captured from the local application on port 5180.",
+      "frontend/src/pages/Workspace.tsx",
+      "backend/twinsite/jobs/worker.py"
+    ]
+  },
+  {
+    "n": 5,
+    "title": "How TwinSite works",
+    "words": "The pipeline starts with mission objectives and pinned scientific sources. Preparation and quality checks establish whether values are usable. The deterministic engine then calculates features, scores and portfolio eligibility. AI interprets the evidence and proposes explicit scenarios that the engine can re-score. Review checks the claims and the release gate. If AI is unavailable, Simple Analysis preserves the computed result.",
+    "sources": [
+      "backend/twinsite/ai/agents.py",
+      "backend/twinsite/jobs/worker.py",
+      "backend/twinsite/science/engine.py",
+      "backend/twinsite/jobs/measured.py"
+    ]
+  },
+  {
+    "n": 6,
+    "title": "Scientific data",
+    "words": "The current build uses SRTM and MOLA for its Earth–Mars terrain comparison. Newer code and the live catalog also expose LOLA terrain and Diviner lunar temperatures. POWER supplies Earth climatology as model products. GIBS and Trek provide visual context. MODIS land-surface temperature is still discovery-only. These sources have different roles, and the deck does not imply complete coverage of every scientific domain.",
+    "sources": [
+      "Implementation and live UI snapshot: 15 November 2026. Screenshots captured from the local application on port 5180.",
+      "source/data_catalog.json",
+      "source/moon_feature_pair.json",
+      "backend/twinsite/sources/",
+      "docs/release/COVERAGE_MATRIX.json"
+    ]
+  },
+  {
+    "n": 7,
+    "title": "Thirteen roles",
+    "words": "The original thirteen roles are implemented as a division of responsibility. Seven use AI to interpret imagery, develop scenarios, analyze domains, synthesize, review, recheck and write. Six perform deterministic curation, preparation, quality checks, auditing and release control. In the recorded measured mission, all seven AI roles executed, including one cached response from an earlier real call. That is execution evidence, not scientific certification.",
+    "sources": [
+      "source/missions_run-d7b84f7f350ac24de32b069e_agents.json",
+      "backend/twinsite/ai/agents.py",
+      "Recorded run: run-d7b84f7f350ac24de32b069e"
+    ]
+  },
+  {
+    "n": 8,
+    "title": "Scientific integrity",
+    "words": "A real run shows why this separation matters. The AI reviewer accepted claims that a deterministic numeric cross-check flagged. Three claims remained unsupported, including a confusion between analysis-block counts and square kilometers. The report still needs human scrutiny, but the numerical result and blocked release remain protected. Every source asset carries a hash, and missing data remains visible.",
+    "sources": [
+      "source/missions_run-d7b84f7f350ac24de32b069e_agents.json",
+      "source/missions_run-d7b84f7f350ac24de32b069e_evidence.json",
+      "backend/twinsite/ai/agents.py",
+      "docs/release/SCIENTIFIC_REVIEW.md"
+    ]
+  },
+  {
+    "n": 9,
+    "title": "Measured terrain",
+    "words": "Here are the actual Zagora and Gale terrain summaries, reproduced from cached source bytes at a common 1,852.3-metre analysis scale. The values differ in slope, roughness and relief. But equal analysis scale is not enough: the Earth study area is about 3.33 times larger by analysis-block count. Relief depends on extent, and distributions use different sample sizes. TwinSite therefore blocks a claim of direct equivalence or mission suitability.",
+    "sources": [
+      "source/missions_run-d7b84f7f350ac24de32b069e_evidence.json",
+      "source/g2_feature_pair.json",
+      "docs/release/SCIENTIFIC_REVIEW.md",
+      ".build/provenance-check.json",
+      "SRTMGL1 DOI: https://doi.org/10.5067/MEaSUREs/SRTM/SRTMGL1.003",
+      "MOLA: https://pds-geosciences.wustl.edu/mgs/mgs-m-mola-5-megdr-l3-v1/"
+    ]
+  },
+  {
+    "n": 10,
+    "title": "Explore and compare",
+    "words": "Researchers can open the catalog and compare actual records side by side. The interface exposes units, source products, quality flags and distributions. It also explains when study-area differences limit interpretation. The current application includes Earth, Moon and Mars map views, while the data comparison remains grounded in the available observations.",
+    "sources": [
+      "Implementation and live UI snapshot: 15 November 2026. Screenshots captured from the local application on port 5180.",
+      "frontend/src/pages/DataCatalog.tsx",
+      "frontend/src/pages/DatasetDetail.tsx",
+      "Screenshots: data-catalog.jpg, comparison.jpg"
+    ]
+  },
+  {
+    "n": 11,
+    "title": "Mission planning and portfolios",
+    "words": "The optimizer can enumerate combinations, reward complementary evidence and penalize redundancy while applying hard constraints. Its engineering behavior is covered by tests. In this measured preset, unknown access makes the only Earth candidate ineligible, and no feasible portfolio remains. A useful scientific tool must be able to return that outcome. Demonstrating complementary real-world portfolios needs additional measured sites and operational inputs.",
+    "sources": [
+      "backend/twinsite/portfolios/selection.py",
+      "backend/tests/science/test_engine.py",
+      "source/missions_run-d7b84f7f350ac24de32b069e_evidence.json",
+      "Implementation and live UI snapshot: 15 November 2026. Screenshots captured from the local application on port 5180."
+    ]
+  },
+  {
+    "n": 12,
+    "title": "AI-Powered and Simple Analysis",
+    "words": "AI-Powered Analysis adds interpretation and evidence-cited narrative. Simple Analysis provides the same deterministic scientific calculations without AI access. If a provider is unavailable, the system records the reason and falls back. This makes the core workflow usable under quota or connectivity constraints, while keeping the scientific result separate from the reliability of a language-model response.",
+    "sources": [
+      "backend/twinsite/ai/agents.py",
+      "backend/twinsite/ai/router.py",
+      "backend/twinsite/jobs/worker.py"
+    ]
+  },
+  {
+    "n": 13,
+    "title": "Impact and future potential",
+    "words": "The potential value is a more inspectable starting point for planetary scientists, analog field teams and mission or robotics engineers. Educators can also use it to show how source evidence becomes an assessment. The next milestones are concrete: matched study areas, more measured Earth sites, operational data, named independent review and field validation. Those steps would strengthen the prototype into a more useful research platform.",
+    "sources": [
+      "docs/release/SCIENTIFIC_REVIEW.md",
+      "backend/twinsite/processing/moon_pair.py",
+      "https://science.nasa.gov/photojournal/curiosity-looks-downslope-from-the-sulfate-unit/"
+    ]
+  },
+  {
+    "n": 14,
+    "title": "Closing and live demo",
+    "words": "TwinSite connects planetary analog discovery with evidence that people can inspect. The prototype already links sources, deterministic computation, AI investigation and transparent limitations. We can now show the local application: define a mission, inspect the measured comparison, and follow the evidence into its report. Better analog choices begin with traceable evidence.",
+    "sources": [
+      "Implementation and live UI snapshot: 15 November 2026. Screenshots captured from the local application on port 5180.",
+      "No public deployment is claimed. Local demonstration runs on port 5180."
+    ]
+  },
+  {
+    "n": 15,
+    "title": "Status snapshot",
+    "words": "Optional technical discussion. The automated verification summary records seventeen passing automated suites and a separate blocked browser-smoke item, not a blanket all-green result. This presentation adds focused visual inspection and offline provenance recomputation. The lunar connectors pass seven current unit tests, but this does not independently validate their science. Recorded AI claims retain known limitations.",
+    "sources": [
+      "Implementation and live UI snapshot: 15 November 2026. Screenshots captured from the local application on port 5180.",
+      "source/verification_summary.json",
+      ".build/provenance-check.json",
+      ".build/planetary-tests.log",
+      "docs/release/SCIENTIFIC_REVIEW.md"
+    ]
+  },
+  {
+    "n": 16,
+    "title": "Terrain methods",
+    "words": "The terrain screenshot is the real cleaned SRTM display grid, not the analysis grid used for scoring. Slope uses Horn gradients on block means. Roughness is the mean local three-by-three population standard deviation. Relief is the range over the study area. Cross-body absolute elevation is excluded because the vertical datums differ. MOLA retains interpolated cells. About 25.7 percent of native cells have shots, while 74.1 percent of analysis blocks contain at least one shot.",
+    "sources": [
+      "backend/twinsite/processing/terrain.py",
+      "tests/acceptance/terrain_reference.py",
+      "source/g2_feature_pair.json",
+      "source/missions_run-d7b84f7f350ac24de32b069e_evidence.json",
+      "docs/release/SCIENTIFIC_REVIEW.md"
+    ]
+  },
+  {
+    "n": 17,
+    "title": "Current lunar work",
+    "words": "The live catalog and published artifact include a newer lunar pair. These are the published terrain values, at a different analysis scale from the Mars pair, so the Earth values also differ. The implementation describes approximately matched metric areas, within its extent tolerance. Diviner temperatures are lunar context at a coarser scale. Independent numeric and scientific review remains pending. The Tycho photograph is context and does not depict the analyzed site.",
+    "sources": [
+      "source/moon_feature_pair.json",
+      "backend/twinsite/processing/moon_pair.py",
+      "backend/twinsite/sources/lola.py",
+      "backend/twinsite/sources/diviner.py",
+      "https://science.nasa.gov/moon/image-galleries/moonscapes/"
+    ]
+  },
+  {
+    "n": 18,
+    "title": "References",
+    "words": "Full source URLs and attribution details are in SOURCES.md and in individual slide notes. Product screenshots are authentic captures of the local TwinSite application. Scientific photos are context images and are never used as evidence for the numeric comparisons. NASA Space Apps is event context and does not imply NASA endorsement.",
+    "sources": [
+      "https://science.nasa.gov/earth/earth-observatory/anti-atlas-mountains-morocco-2178/",
+      "https://science.nasa.gov/moon/image-galleries/moonscapes/",
+      "https://science.nasa.gov/photojournal/curiosity-looks-downslope-from-the-sulfate-unit/",
+      "https://doi.org/10.5067/MEaSUREs/SRTM/SRTMGL1.003",
+      "https://pds-geosciences.wustl.edu/mgs/mgs-m-mola-5-megdr-l3-v1/",
+      "https://pds-geosciences.wustl.edu/missions/lro/"
+    ]
+  }
+]

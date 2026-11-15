@@ -8,6 +8,8 @@ import { TERMINAL, type ReleaseEvidence, type MissionResult } from '@/lib/types'
 import { isReleased, prosCons, qaCounts, rankSites, stability, timeBasis, unresolvedGaps } from '@/lib/analysis'
 import { idx, money, days, ts } from '@/lib/format'
 import { isDemoRun } from '@/lib/demo'
+import { DataProvenance, MissionLogs, MissionMaps, PortfoliosInline, ReportSection, SectionNav } from '@/components/MissionDashboard'
+import type { ProgressEvent } from '@/lib/types'
 
 type Tab = 'ranking' | 'features' | 'confidence' | 'temporal' | 'gaps'
 
@@ -49,15 +51,10 @@ export default function Analysis() {
   }
   if (result.isLoading || evidence.isLoading) return <Spinner label="Loading result and evidence" />
   if (result.isError) return <div className="mx-auto max-w-3xl px-4 py-10"><Notice tone="bad" title="Result unavailable">{(result.error as Error).message}</Notice></div>
-  return (
-    <>
-      <Results runId={runId} r={result.data!} ev={evidence.data ?? null} evErr={evidence.isError ? (evidence.error as Error).message : null} demo={demo} />
-      <div className="mx-auto max-w-7xl px-4 pb-10"><AgentActivity runId={runId} live={false} /></div>
-    </>
-  )
+  return <Results runId={runId} r={result.data!} ev={evidence.data ?? null} evErr={evidence.isError ? (evidence.error as Error).message : null} demo={demo} events={events} eventsErr={evErr} />
 }
 
-function Results({ runId, r, ev, evErr, demo }: { runId: string; r: MissionResult; ev: ReleaseEvidence | null; evErr: string | null; demo: boolean }) {
+function Results({ runId, r, ev, evErr, demo, events, eventsErr }: { runId: string; r: MissionResult; ev: ReleaseEvidence | null; evErr: string | null; demo: boolean; events: ProgressEvent[]; eventsErr: string | null }) {
   const [tab, setTab] = useState<Tab>('ranking')
   const [reveal, setReveal] = useState(false)
   const ranked = useMemo(() => rankSites(r.sites), [r])
@@ -70,9 +67,10 @@ function Results({ runId, r, ev, evErr, demo }: { runId: string; r: MissionResul
     <>
       {(demo || synthetic) && <DemoBanner>{synthetic ? 'All values and costs in this result are synthetic; scientific release is BLOCKED by design.' : 'Demo run.'}</DemoBanner>}
       <div className="mx-auto max-w-7xl px-4 py-8">
-        <PageHeader eyebrow="Analysis results" title={<>Mission <span className="text-ember">{r.mission_id}</span></>}
+        <PageHeader eyebrow="Mission dashboard" title={<>Mission <span className="text-ember">{r.mission_id}</span></>}
           sub={synthetic ? "Earth analogue candidates ranked by feature similarity to the selected target regions. Values are synthetic." : "Earth analogue candidates ranked by measured feature similarity to the selected target regions."}
-          right={<div className="flex gap-2"><Link to={`/portfolios/${runId}`}><Btn>Portfolios</Btn></Link><Link to={`/explorer?run=${runId}`}><Btn>Open on map</Btn></Link><Link to={`/reports/${runId}`}><Btn variant="primary">Report</Btn></Link></div>} />
+          right={<div className="flex gap-2"><Link to={`/explorer?run=${runId}`}><Btn>Open in Explorer</Btn></Link><a href="#report"><Btn variant="primary">Report &amp; downloads</Btn></a></div>} />
+        <SectionNav />
 
         <div className="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-5" data-testid="context-strip">
           <Ctx k="Run ID" v={<span className="mono">{runId}</span>} />
@@ -84,6 +82,9 @@ function Results({ runId, r, ev, evErr, demo }: { runId: string; r: MissionResul
 
         <StrictBanner r={r} ev={ev} evErr={evErr} released={released} />
 
+        <section id="maps" className="mt-5 scroll-mt-14" aria-label="Mission maps"><MissionMaps r={r} showRanks={!hide} /></section>
+
+        <section id="results" className="scroll-mt-14" aria-label="Results">
         {hide ? (
           <div className="mt-5"><Notice tone="bad" title="Scores withheld">This measured run has not passed the release gate, so no ranking is presented as a finding. <button className="underline" onClick={() => setReveal(true)}>Show unreleased diagnostic values</button></Notice></div>
         ) : (
@@ -99,6 +100,14 @@ function Results({ runId, r, ev, evErr, demo }: { runId: string; r: MissionResul
             {tab === 'gaps' && <Gaps gaps={gaps} limitations={r.limitations} />}
           </div>
         )}
+        </section>
+
+        <section id="portfolios" className="mt-8 scroll-mt-14" aria-label="Portfolios">
+          {hide ? <Notice tone="bad" title="Portfolios withheld">Portfolio objectives are findings and stay hidden until the release gate passes (or you reveal the diagnostic values above).</Notice> : <PortfoliosInline runId={runId} r={r} />}
+        </section>
+        <section id="data" className="mt-8 scroll-mt-14" aria-label="Data and sources"><DataProvenance r={r} ev={ev} synthetic={synthetic} /></section>
+        <section id="report" className="mt-8 scroll-mt-14" aria-label="Report and downloads"><ReportSection runId={runId} r={r} ev={ev} demo={demo} /></section>
+        <section id="logs" className="mt-8 scroll-mt-14" aria-label="Mission logs"><MissionLogs runId={runId} events={events} evErr={eventsErr} /></section>
       </div>
     </>
   )

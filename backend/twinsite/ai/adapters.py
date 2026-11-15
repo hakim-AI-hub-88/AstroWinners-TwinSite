@@ -1,6 +1,7 @@
 """Wire adapters: real HTTP calls, stdlib only. Credentials travel in headers only
 (never URLs), and nothing raised from here contains a header, URL query or body."""
 import base64
+import http.client
 import json
 import socket
 import time
@@ -73,6 +74,8 @@ def post_json(url, headers, body, timeout):
         raise ProviderError('network', type(error.reason).__name__) from None
     except (json.JSONDecodeError, UnicodeDecodeError):
         raise ProviderError('server', 'non-JSON response') from None
+    except (ConnectionError, http.client.HTTPException, OSError) as error:
+        raise ProviderError('network', type(error).__name__) from None
 
 
 def get_json(url, headers, timeout=20):
@@ -86,6 +89,8 @@ def get_json(url, headers, timeout=20):
         raise ProviderError('timeout', 'no response') from None
     except urllib.error.URLError as error:
         raise ProviderError('network', type(error.reason).__name__) from None
+    except (ConnectionError, http.client.HTTPException, OSError, ValueError) as error:
+        raise ProviderError('network', type(error).__name__) from None
 
 
 def _rate(hdrs):

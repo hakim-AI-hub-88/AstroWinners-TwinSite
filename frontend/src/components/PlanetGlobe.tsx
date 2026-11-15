@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Body } from '@/lib/types'
 import { bodyAccent } from '@/lib/regions'
-import { BASEMAPS, MapButton, RADIUS_KM, tileUrl, type Footprint, type Pin } from './PlanetMap'
+import { BASEMAPS, MapButton, RADIUS_KM, tileUrl, type Footprint, type Marker, type Pin } from './PlanetMap'
+import { ClickTracker, round4 } from '@/lib/picking'
 
 /** Orthographic 3D globe for the Moon and Mars. The NASA Trek equirectangular mosaic of the same body is assembled
  *  into one texture and inverse-projected per pixel in a fragment shader (exact orthographic projection, no mesh).
@@ -45,6 +46,12 @@ export function unproject(o: Orient, x: number, y: number) {
   return { lon: ((((lon / D2R) + 540) % 360) - 180), lat: lat / D2R }
 }
 
+/** Lon/lat under a pointer at (dx, dy) CSS px from the globe centre (y down) for a disc of radius R px; null off the disc. */
+export function globePick(o: Orient, dx: number, dy: number, R: number) {
+  const hit = unproject(o, dx / R, -dy / R)
+  return hit ? { lon: round4(hit.lon), lat: round4(hit.lat) } : null
+}
+
 function fitOrient(pins: Pin[], footprints: Footprint[]): Orient {
   const pts: number[][] = []
   for (const p of pins) pts.push([p.lon, p.lat])
@@ -77,7 +84,7 @@ function loadMosaic(body: Body, z: number, base: HTMLCanvasElement | null, onUpd
   return () => { cancelled = true; if (timer != null) clearTimeout(timer) }
 }
 
-export default function PlanetGlobe({ body, pins, footprints, layers }: { body: Body; pins: Pin[]; footprints: Footprint[]; layers: { pins: boolean; footprints: boolean; graticule: boolean; basemap?: boolean } }) {
+export default function PlanetGlobe({ body, pins, footprints, layers, onPick, extraPins = [], extraFootprints = [], marker }: { body: Body; pins: Pin[]; footprints: Footprint[]; layers: { pins: boolean; footprints: boolean; graticule: boolean; basemap?: boolean }; onPick?: (lon: number, lat: number) => void; extraPins?: Pin[]; extraFootprints?: Footprint[]; marker?: Marker | null }) {
   const wrap = useRef<HTMLDivElement>(null)
   const glCanvas = useRef<HTMLCanvasElement>(null)
   const overlay = useRef<HTMLCanvasElement>(null)
@@ -132,7 +139,7 @@ export default function PlanetGlobe({ body, pins, footprints, layers }: { body: 
       for (let lat = -90 + step; lat < 90; lat += step) { const pts = []; for (let lon = -180; lon <= 180; lon += res) pts.push(S(lon, lat)); polyline(pts) }
     }
     o2.font = '11px Inter, ui-sans-serif, system-ui'
-    if (layers.footprints) for (const f of footprints) {
+    if (layers.footprints) for (const f of [...footprints, ...extraFootprints]) {
       const [w0, s0, e0, n0] = f.bbox, n = 24, ring: Array<{ x: number; y: number; v: boolean }> = []
       for (let i = 0; i <= n; i++) ring.push(S(w0 + ((e0 - w0) * i) / n, s0))
       for (let i = 0; i <= n; i++) ring.push(S(e0, s0 + ((n0 - s0) * i) / n))
@@ -146,17 +153,37 @@ export default function PlanetGlobe({ body, pins, footprints, layers }: { body: 
       } else { o2.fillStyle = accent + '2e'; o2.beginPath(); ring.filter((p) => p.v).forEach((p, i) => (i ? o2.lineTo(p.x, p.y) : o2.moveTo(p.x, p.y))); o2.closePath(); o2.fill(); o2.stroke() }
       o2.setLineDash([]); o2.fillStyle = '#efe7d6'; o2.fillText(f.label, Math.max(...xs) + 8, Math.min(...ys) + 10)
     }
+    if (layers.pins) for (const p of extraPins) {
+      const s = S(p.lon, p.lat)
+      if (!s.v) continue
+      o2.save(); o2.translate(s.x, s.y); o2.rotate(Math.PI / 4)
+      o2.fillStyle = 'rgba(11,10,9,0.6)'; o2.fillRect(-4, -4, 8, 8); o2.lineWidth = 1.2; o2.strokeStyle = '#efe7d6'; o2.strokeRect(-4, -4, 8, 8)
+      o2.restore()
+    }
     if (layers.pins) for (const p of pins) {
       const s = S(p.lon, p.lat)
       if (!s.v) continue
       o2.beginPath(); o2.arc(s.x, s.y, 8, 0, 2 * Math.PI); o2.fillStyle = p.eligible === false ? '#1b1815' : accent; o2.fill()
       o2.lineWidth = 1.3; o2.strokeStyle = '#efe7d6'; o2.stroke()
-      o2.fillStyle = p.eligible === false ? '#efe7d6' : '#0b0a09'; o2.textAlign = 'center'; o2.fillText(String(p.rank ?? '×'), s.x, s.y + 4)
+      o2.fillStyle = p.eligible === false ? '#efe7d6' : '#0b0a09'; o2.textAlign = 'center'; o2.fillText(String(p.rank ?? (p.eligible === false ? '×' : '•')), s.x, s.y + 4)
       o2.textAlign = 'left'; o2.fillStyle = '#efe7d6'; o2.fillText(p.label, s.x + 12, s.y + 4)
     }
-  }, [accent, footprints, layers.footprints, layers.graticule, layers.pins, pins, showBasemap])
+    if (marker) {
+      const s = S(marker.lon, marker.lat)
+      if (s.v) {
+        o2.lineWidth = 1.5; o2.strokeStyle = '#efe7d6'
+        o2.beginPath(); o2.arc(s.x, s.y, 11, 0, 2 * Math.PI); o2.stroke()
+        o2.beginPath(); o2.arc(s.x, s.y, 3, 0, 2 * Math.PI); o2.fillStyle = '#c8642b'; o2.fill(); o2.stroke()
+        o2.beginPath(); for (const [a, b, c, d] of [[-16, 0, -12, 0], [12, 0, 16, 0], [0, -16, 0, -12], [0, 12, 0, 16]]) { o2.moveTo(s.x + a, s.y + b); o2.lineTo(s.x + c, s.y + d) } o2.stroke()
+        o2.fillStyle = '#efe7d6'; o2.textAlign = 'left'; o2.fillText(marker.label, s.x + 18, s.y - 8)
+      }
+    }
+  }, [accent, footprints, layers.footprints, layers.graticule, layers.pins, pins, extraPins, extraFootprints, marker, showBasemap])
 
-  const request = useCallback(() => { if (frame.current == null) frame.current = requestAnimationFrame(draw) }, [draw])
+  // Stable scheduler: overlay changes (pins, picked marker) redraw without re-running the fit or WebGL setup effects.
+  const drawRef = useRef(draw)
+  drawRef.current = draw
+  const request = useCallback(() => { if (frame.current == null) frame.current = requestAnimationFrame(() => drawRef.current()) }, [])
   const update = useCallback((fn: (o: Orient) => Orient) => {
     const n = fn(orient.current)
     orient.current = { lon0: ((n.lon0 + 540) % 360) - 180, lat0: Math.max(-89.9, Math.min(89.9, n.lat0)), zoom: Math.max(0.8, Math.min(MAX_ZOOM, n.zoom)) }
@@ -219,6 +246,7 @@ export default function PlanetGlobe({ body, pins, footprints, layers }: { body: 
   // Interaction: drag rotates, wheel / pinch / double-click zoom.
   const pointers = useRef(new Map<number, { x: number; y: number }>())
   const pinch = useRef<number | null>(null)
+  const click = useRef(new ClickTracker())
   useEffect(() => {
     const el = overlay.current
     if (!el) return
@@ -227,11 +255,12 @@ export default function PlanetGlobe({ body, pins, footprints, layers }: { body: 
     return () => el.removeEventListener('wheel', onWheel)
   }, [update])
   const radiusPx = () => orient.current.zoom * (wrap.current?.clientWidth ?? 720) / 2 * 0.46
-  const onPointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => { e.currentTarget.setPointerCapture(e.pointerId); pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY }); pinch.current = null }
+  const onPointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => { e.currentTarget.setPointerCapture(e.pointerId); pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY }); click.current.down(e.clientX, e.clientY, pointers.current.size); pinch.current = null }
   const onPointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
     const prev = pointers.current.get(e.pointerId)
     if (!prev) return
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
+    click.current.move(e.clientX, e.clientY)
     const pts = [...pointers.current.values()]
     if (pts.length >= 2) {
       const d = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y)
@@ -242,7 +271,15 @@ export default function PlanetGlobe({ body, pins, footprints, layers }: { body: 
     const R = radiusPx()
     update((o) => ({ ...o, lon0: o.lon0 - ((e.clientX - prev.x) / R) / D2R / Math.max(0.25, Math.cos(o.lat0 * D2R)), lat0: o.lat0 + ((e.clientY - prev.y) / R) / D2R }))
   }
-  const onPointerUp = (e: React.PointerEvent<HTMLCanvasElement>) => { pointers.current.delete(e.pointerId); pinch.current = null }
+  const onPointerUp = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    const wasClick = e.type === 'pointerup' && pointers.current.size === 1 && click.current.up(e.clientX, e.clientY)
+    pointers.current.delete(e.pointerId); pinch.current = null
+    if (wasClick && onPick) {
+      const r = e.currentTarget.getBoundingClientRect()
+      const hit = globePick(orient.current, e.clientX - r.left - r.width / 2, e.clientY - r.top - r.height / 2, radiusPx())
+      if (hit) onPick(hit.lon, hit.lat)   // clicks outside the disc are ignored
+    }
+  }
   const onDoubleClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const r = e.currentTarget.getBoundingClientRect(), R = radiusPx()
     const hit = unproject(orient.current, (e.clientX - r.left - r.width / 2) / R, -(e.clientY - r.top - r.height / 2) / R)
@@ -265,7 +302,7 @@ export default function PlanetGlobe({ body, pins, footprints, layers }: { body: 
       <div ref={wrap} className="relative overflow-hidden rounded-md border border-line" style={{ background: 'radial-gradient(ellipse at 50% 50%, #141210, #0b0a09 70%)' }}
         tabIndex={0} onKeyDown={onKeyDown} aria-label={`${body} 3D globe. Drag or arrow keys rotate; scroll, pinch, double-click or plus and minus zoom; 0 fits to features.`}>
         <canvas ref={glCanvas} className="block w-full" role="img" aria-label={`${body} orthographic globe${showBasemap ? ` with ${BASEMAPS[body]!.name}` : ''}`} />
-        <canvas ref={overlay} className="absolute inset-0 block w-full cursor-grab touch-none select-none active:cursor-grabbing"
+        <canvas ref={overlay} className={`absolute inset-0 block w-full ${onPick ? 'cursor-crosshair' : 'cursor-grab'} touch-none select-none active:cursor-grabbing`}
           onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={onPointerUp} onDoubleClick={onDoubleClick} />
         <div className="absolute right-2 top-2 flex flex-col gap-1">
           <MapButton label="Zoom in" onClick={() => update((o) => ({ ...o, zoom: o.zoom * 2 }))}>+</MapButton>
@@ -278,7 +315,7 @@ export default function PlanetGlobe({ body, pins, footprints, layers }: { body: 
         <span>{body} · orthographic globe · planetocentric east longitude · {showBasemap ? `${BASEMAPS[body]!.credit}, ${texLevel >= 3 ? '4096' : '2048'}-px mosaic (display only)` : 'no imagery basemap'}</span>
         <span className="mono">centre {readout.lon0.toFixed(2)}°, {readout.lat0.toFixed(2)}° · zoom {readout.zoom.toFixed(1)}×{radius ? ` · R ${radius.toLocaleString()} km` : ''}</span>
       </div>
-      <p className="mt-1 text-xs text-mute">Drag to rotate · scroll, pinch or double-click to zoom (shift+double-click zooms out) · keys: arrows, + / −, 0 to fit. For detail beyond the mosaic resolution, use the 2D map.</p>
+      <p className="mt-1 text-xs text-mute">{onPick ? 'Click the disc to select a site · ' : ''}Drag to rotate · scroll, pinch or double-click to zoom (shift+double-click zooms out) · keys: arrows, + / −, 0 to fit. For detail beyond the mosaic resolution, use the 2D map.</p>
     </div>
   )
 }

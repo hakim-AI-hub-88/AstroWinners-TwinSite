@@ -87,7 +87,9 @@ class IntegrationTests(unittest.TestCase):
 
     def test_explorer_real_data_and_comparison(self):
         ids = [d['dataset_id'] for d in data.catalog()['items']]
-        self.assertEqual(len(ids), 2)
+        self.assertIn('moon-taurus-littrow', ids)   # Moon pair (LOLA + Diviner) is published too
+        ids = ['earth-zagora-draa', 'mars-gale-aeolis']
+        self.assertTrue(set(ids) <= set(d['dataset_id'] for d in data.catalog()['items']))
         left, right = [data.records(i, 'cleaned') for i in ids]
         request = {'schema_version':'1.0', 'left_dataset_id':ids[0], 'right_dataset_id':ids[1],
                    'left_record_ids':[r['record_id'] for r in left['rows']], 'right_record_ids':[r['record_id'] for r in right['rows']],

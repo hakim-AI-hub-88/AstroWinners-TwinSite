@@ -277,7 +277,11 @@ class Orchestrator:
         if self.ai_calls >= self.max_ai_calls:
             return None
         self.ai_calls += 1
-        return self.router.complete(task)
+        try:
+            return self.router.complete(task)
+        except Exception as error:  # noqa: BLE001 - one role's failure never stops the others
+            from .router import Outcome
+            return Outcome(False, error=f'{type(error).__name__} during provider call')
 
     def run(self, run_id, payload, result, sidecar, observations=None, context=(), image=None, priority='mission'):
         before = hashlib.sha256(json.dumps(result, sort_keys=True).encode()).hexdigest()

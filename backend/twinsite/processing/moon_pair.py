@@ -33,8 +33,8 @@ PUBLISHED = Path(__file__).resolve().parent / "published" / "moon_feature_pair.j
 FEATURES = ("slope_deg", "roughness_m", "local_relief_m")
 
 
-def _diviner_observations(aoi: AOI, site_id: str, provenance_id: str, offline: bool):
-    asset, b, lat_lo = diviner.acquire(aoi, offline=offline)
+def _diviner_observations(aoi: AOI, site_id: str, provenance_id: str, offline: bool, root=None):
+    asset, b, lat_lo = diviner.acquire(aoi, root=root, offline=offline)
     cells = diviner.decode(asset, b, lat_lo)
     feats = diviner.features(cells)
     meta = feats.pop("_meta")

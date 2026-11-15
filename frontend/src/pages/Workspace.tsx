@@ -1,7 +1,10 @@
-import { useMemo, useState } from 'react'
+import { lazy, Suspense, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation } from '@tanstack/react-query'
-import { Btn, DemoBanner, Notice, PageHeader, Panel } from '@/components/ui'
+import { Btn, DemoBanner, Notice, PageHeader, Panel, Spinner, Tabs } from '@/components/ui'
+import PlanetMap, { type Footprint, type Pin } from '@/components/PlanetMap'
+import { matchError, useElapsed, useMatch } from '@/components/SelectedSite'
+import { boxAround, pointName, type PickedSite } from '@/lib/picking'
 import { postMission, postPublishedMission, ApiError } from '@/lib/api'
 import { useHealth } from '@/lib/hooks'
 import { FIXTURES, pickFixture, demoRunIdFor, demoStart, demoRequest } from '@/lib/demo'
@@ -18,6 +21,7 @@ const FEATURES: Feat[] = [
   { name: 'elevation_m', unit: 'm', weight: 0.1, tolerance: 500, required: false, on: false },
   { name: 'surface_temperature_k', unit: 'K', weight: 0.1, tolerance: 25, required: false, on: false },
 ]
+const PlanetGlobe = lazy(() => import('@/components/PlanetGlobe'))
 type Box = [number, number, number, number]
 const num = (v: string, d: number) => (v.trim() === '' || Number.isNaN(Number(v)) ? d : Number(v))
 
@@ -40,6 +44,19 @@ export default function Workspace() {
   const [pm, setPm] = useState<'standalone' | 'combined' | 'both'>('both')
   const [err, setErr] = useState<string | null>(null)
   const [unreachable, setUnreachable] = useState(false)
+  const [mapBody, setMapBody] = useState<'Moon' | 'Mars'>('Moon')
+  const [mapMode, setMapMode] = useState<'2d' | 'globe'>('2d')
+  const [picked, setPicked] = useState<PickedSite | null>(null)
+  const match = useMatch()
+  const matchSecs = useElapsed(match.isPending)
+  /** Clicking the target map selects that body and sets a ~1° custom bounding box around the point. */
+  const pickTarget = (lon: number, lat: number) => {
+    const b = mapBody
+    setPicked({ body: b, lon, lat, name: pointName(b, lon, lat) })
+    setTargets((t) => ({ ...t, [b]: true }))
+    setRegion((r) => ({ ...r, [b]: 'custom' }))
+    setCustom((c) => ({ ...c, [b]: boxAround(lon, lat) }))
+  }
 
   const selected = (['Moon', 'Mars'] as const).filter((b) => targets[b])
   const boxFor = (b: 'Moon' | 'Mars'): Box => custom[b] ?? (PRESETS[b].find((p) => p.id === region[b])?.bbox as Box)
@@ -142,6 +159,17 @@ export default function Workspace() {
                   </fieldset>
                 ))}
               </div>
+              <TargetMapPicker body={mapBody} setBody={setMapBody} mode={mapMode} setMode={setMapMode}
+                box={targets[mapBody] ? boxFor(mapBody) : null} regionId={region[mapBody]} picked={picked?.body === mapBody ? picked : null} onPick={pickTarget} />
+              {picked && (
+                <div className="mt-3 rounded-md border border-ember/40 p-3 text-sm">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span>Picked {picked.body} target <span className="mono">{picked.lat.toFixed(4)}°, {picked.lon.toFixed(4)}°</span> · custom box set to ~1°</span>
+                    <Btn variant="primary" disabled={!live || match.isPending} onClick={() => match.mutate(picked)}>{match.isPending ? `Submitting… ${matchSecs}s` : 'Find Earth analogs for this target →'}</Btn>
+                  </div>
+                  <p className="mt-1 text-xs text-mute">Shortcut: the server characterises this point from real {picked.body === 'Moon' ? 'LRO LOLA and Diviner' : 'MGS MOLA'} data, pre-ranks all stored Earth sites and runs a full {analysis === 'ai' ? 'AI-Powered' : 'Simple'} mission on the top candidates.{!live && ' Needs the live API.'}</p>
+                  {match.isError && <div className="mt-2"><Notice tone="bad" title="Matching could not start">{matchError(match.error)}</Notice></div>}
+                </div>)}
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 <div>
                   <span className="fld">Analysis mode</span>
@@ -226,6 +254,34 @@ export default function Workspace() {
         </div>
       </div>
     </>
+  )
+}
+
+const NO_PINS: Pin[] = []
+const NO_FPS: Footprint[] = []
+const MAP_LAYERS = { pins: true, footprints: true, graticule: true, basemap: true }
+function TargetMapPicker({ body, setBody, mode, setMode, box, regionId, picked, onPick }: {
+  body: 'Moon' | 'Mars'; setBody: (b: 'Moon' | 'Mars') => void; mode: '2d' | 'globe'; setMode: (m: '2d' | 'globe') => void
+  box: Box | null; regionId: string; picked: PickedSite | null; onPick: (lon: number, lat: number) => void
+}) {
+  // The current box is drawn but never used to fit the view, so a click does not re-zoom the map.
+  const boxKey = box?.join(',')
+  const current = useMemo<Footprint[]>(() => (box ? [{ id: regionId, label: regionId === 'custom' ? 'custom box' : PRESETS[body].find((p) => p.id === regionId)?.label ?? regionId, bbox: box }] : []), [boxKey, regionId, body]) // eslint-disable-line react-hooks/exhaustive-deps
+  const marker = useMemo(() => (picked ? { lon: picked.lon, lat: picked.lat, label: 'Target (~1° box)' } : null), [picked])
+  return (
+    <div className="mt-4 rounded-md border border-line p-3">
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+        <span className="text-xs uppercase tracking-wide text-ember">Pick the target region on the map</span>
+        <div className="flex flex-wrap gap-2">
+          <Tabs<'Moon' | 'Mars'> label="Target map body" value={body} onChange={setBody} tabs={[{ id: 'Moon', label: 'Moon' }, { id: 'Mars', label: 'Mars' }]} />
+          <Tabs<'2d' | 'globe'> label="Target map view" value={mode} onChange={setMode} tabs={[{ id: '2d', label: '2D' }, { id: 'globe', label: '3D' }]} />
+        </div>
+      </div>
+      {mode === 'globe'
+        ? <Suspense fallback={<Spinner label={`Loading ${body} globe`} />}><PlanetGlobe body={body} pins={NO_PINS} footprints={NO_FPS} extraFootprints={current} layers={MAP_LAYERS} onPick={onPick} marker={marker} /></Suspense>
+        : <PlanetMap body={body} pins={NO_PINS} footprints={NO_FPS} extraFootprints={current} layers={MAP_LAYERS} onPick={onPick} marker={marker} />}
+      <p className="mt-1 text-xs text-mute">Click sets the {body} region to a custom ~1° bounding box centred on the point (editable above).</p>
+    </div>
   )
 }
 

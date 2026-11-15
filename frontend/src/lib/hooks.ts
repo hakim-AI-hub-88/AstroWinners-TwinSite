@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import * as api from './api'
 import { TERMINAL, type ProgressEvent } from './types'
 
@@ -41,3 +41,9 @@ export const useResult = (runId: string, enabled: boolean) =>
   useQuery({ queryKey: ['result', runId], queryFn: () => api.getResult(runId), enabled, retry: false })
 export const useEvidence = (runId: string, enabled: boolean) =>
   useQuery({ queryKey: ['evidence', runId], queryFn: () => api.getEvidence(runId), enabled, retry: false })
+
+/** Dataset ids the Data Explorer can open: the live (non-demo) catalog only. Science-site ids are not datasets there. */
+export function useExplorableIds() {
+  const cat = useQuery({ queryKey: ['catalog'], queryFn: api.getCatalog, retry: false })
+  return useMemo(() => new Set(cat.data && !cat.data.demo ? cat.data.data.map((d) => d.dataset_id) : []), [cat.data])
+}

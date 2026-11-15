@@ -16,10 +16,27 @@ def source_root():
     return Path(os.environ.get("TWINSITE_SOURCE_DATA_DIR", PAIR.parents[4] / ".runtime/data")).resolve()
 
 
+MATCH_PREFIX = "match-"
+
+
+def _match_path(dataset):
+    import re as _re
+    if not _re.fullmatch(r"match-[0-9a-f]{16}", dataset or ""):
+        raise ValueError("Unknown dataset")
+    from twinsite.storage import load_settings
+    return load_settings().data_dir / "pairs" / f"{dataset}.json"
+
+
 def load_pair(dataset=DATASET):
-    if dataset not in PAIRS:
+    if dataset and dataset.startswith(MATCH_PREFIX):
+        path = _match_path(dataset)
+        if not path.is_file():
+            raise ValueError("Unknown match dataset")
+        pair = json.loads(path.read_text())
+    elif dataset not in PAIRS:
         raise ValueError("Unknown published dataset")
-    pair = json.loads(PAIRS[dataset].read_text())
+    else:
+        pair = json.loads((PAIR if dataset == DATASET else PAIRS[dataset]).read_text())
     if pair["data_status"] != "measured":
         raise ValueError("Dataset is not measured")
     for asset in pair["assets"]:
@@ -105,14 +122,69 @@ def _resolve_moon():
     return payload
 
 
+def _resolve_match(dataset):
+    pair = load_pair(dataset)
+    spec = pair["mission_spec"]
+    mission = dict(spec["mission"], id=dataset + "-" + digest(pair)[:16])
+    payload = request_from_evidence(mission, spec["earth_sites"], spec["target"], pair["observations"])
+    validate("mission_request", payload)
+    return payload
+
+
+def build_match(target_doc, candidate_docs, max_sites=1):
+    """Content-addressed real-data pair for a picked target and pre-ranked Earth candidates."""
+    from twinsite.storage import load_settings
+    features = {"slope_deg": {"unit": "degree", "weight": 0.4, "tolerance": 10, "required": True},
+                "roughness_m": {"unit": "m", "weight": 0.35, "tolerance": 150, "required": False},
+                "local_relief_m": {"unit": "m", "weight": 0.25, "tolerance": 1500, "required": False}}
+    crs = {"Moon": "Moon_planetocentric_east_180", "Mars": "Mars_planetocentric_east_180", "Earth": "WGS84_lonlat"}
+    target = {"id": target_doc["site_id"], "body": target_doc["body"], "coordinate_system": crs[target_doc["body"]],
+              "bbox": target_doc["aoi"]}
+    earth_sites = [{"id": c["site_id"], "name": c["name"], "longitude": c["longitude"], "latitude": c["latitude"],
+                    "access": "unknown", "cost": None, "days": None} for c in candidate_docs]
+    mission = {"features": features, "min_coverage": 0.65, "max_sites": max_sites, "budget": None, "max_days": None,
+               # Discovery mission: access is unknown for every candidate and is ALLOWED (labelled assumption) so the
+               # ranking reflects measured terrain similarity; operational access must be verified separately.
+               "allow_unknown_access": True, "mode": "custom", "start_trigger": "user_request", "portfolio_mode": "standalone",
+               "scope": {"locations": [target], "compare_with": ["Earth"]}}
+    obs, assets, seen, sites = [], [], set(), []
+    for d in [target_doc] + list(candidate_docs):
+        obs += d["observations"]
+        for a in d["assets"]:
+            if a["asset_id"] not in seen:
+                seen.add(a["asset_id"])
+                assets.append(a)
+        sites.append({"site_id": d["site_id"], "body": d["body"], "provenance_id": d["provenance_id"],
+                      "provenance": d["provenance"]})
+    pinned = sorted(({"asset_id": a["asset_id"], "sha256": a["sha256"]} for a in assets), key=lambda a: a["asset_id"])
+    snap = digest(pinned)
+    pair = {"data_status": "measured", "observations": obs, "assets": assets, "sites": sites,
+            "source_snapshot_sha256": snap, "source_snapshot_id": f"c1-match-{snap[:16]}",
+            "mission_spec": {"mission": mission, "earth_sites": earth_sites, "target": target}}
+    dataset = MATCH_PREFIX + digest({"spec": pair["mission_spec"], "snap": snap})[:16]
+    pair["dataset_id"] = dataset
+    path = load_settings().data_dir / "pairs" / f"{dataset}.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if not path.exists():
+        path.write_text(json.dumps(pair, sort_keys=True))
+    return dataset, _resolve_match(dataset)
+
+
 def dataset_of(payload):
     mid = str(payload.get("mission", {}).get("id", ""))
+    if mid.startswith(MATCH_PREFIX):
+        return mid[:len(MATCH_PREFIX) + 16]
     return next((ds for ds in PAIRS if mid.startswith(ds + "-")), None)
 
 
 def evidence_for(payload):
     dataset = dataset_of(payload)
-    if dataset is None or payload != resolve_request({"schema_version": "1.0", "dataset_id": dataset}):
+    expected = None
+    if dataset and dataset.startswith(MATCH_PREFIX):
+        expected = _resolve_match(dataset)
+    elif dataset:
+        expected = resolve_request({"schema_version": "1.0", "dataset_id": dataset})
+    if dataset is None or payload != expected:
         raise ValueError("Measured request does not match server-resolved published snapshot")
     pair = load_pair(dataset)
     root = source_root()

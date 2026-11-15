@@ -1,6 +1,6 @@
 import type {
   Health, MissionRequest, MissionResult, MissionAccepted, MissionStatus, ProgressEvent, ReleaseEvidence,
-  DatasetSummary, DatasetRecords, DatasetMetadata, DatasetGrid, CompareResult, Stage, AlternativesRequest,
+  DatasetSummary, DatasetRecords, DatasetMetadata, DatasetGrid, CompareResult, Stage, AlternativesRequest, Body,
 } from './types'
 import * as demo from './demo'
 
@@ -110,3 +110,20 @@ export const postSciSite = (name: string, longitude: number, latitude: number): 
 export const sciAssetUrl = (assetId: string) => `${BASE}/science/assets/${assetId}`
 export interface Place { name: string; admin1?: string | null; country?: string | null; feature_code?: string | null; latitude: number; longitude: number; elevation_m?: number | null }
 export const searchPlaces = (q: string): Promise<{ places: Place[]; attribution: string }> => http(`/science/places?q=${encodeURIComponent(q)}`)
+
+// ---------------------------------------------------------------- Point characterisation and Earth-analog matching
+export interface CharacterizeObs { evidence_id: string; feature_id: string; value: number | null; unit: string | null; qa_status: string; [k: string]: unknown }
+export interface CharacterizeResult {
+  site_id: string; name: string; body: Body; longitude: number; latitude: number; aoi: [number, number, number, number]
+  observations: CharacterizeObs[]; acquisition_errors: Array<string | Record<string, unknown>>
+}
+/** Retrieves real data for one point (Earth: DEM + NASA POWER; Moon: LOLA + Diviner; Mars: MOLA). Can take up to a minute. */
+export const postCharacterize = (body: Body, longitude: number, latitude: number, name: string): Promise<CharacterizeResult> =>
+  http('/science/characterize', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ body, longitude, latitude, name }) })
+export interface MatchRequest { schema_version: '1.0'; target: { body: 'Moon' | 'Mars'; longitude: number; latitude: number; name: string }; max_candidates: number }
+/** Characterises a Moon/Mars target, pre-ranks stored Earth sites and runs a full mission on the top candidates. */
+export const postMatch = (target: MatchRequest['target'], maxCandidates = 12, key: string = crypto.randomUUID()): Promise<MissionAccepted> =>
+  http(`/missions/match?analysis_mode=${getAnalysisMode()}`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json', 'Idempotency-Key': key },
+    body: JSON.stringify({ schema_version: '1.0', target, max_candidates: maxCandidates } satisfies MatchRequest),
+  })
