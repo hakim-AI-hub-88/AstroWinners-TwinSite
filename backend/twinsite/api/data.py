@@ -1,5 +1,16 @@
 """Read-only bounded views over published C1 observations; no SQL or expressions."""
-from twinsite.jobs.measured import load_pair
+import hashlib
+import json
+import math
+
+from twinsite.jobs.measured import load_pair, source_root
+
+RADIUS_M = {"Earth": 6371008.8, "Mars": 3396000.0}  # spherical approximation, display of extent only
+DISPLAY_MAX_CELLS = 72
+
+
+class SourceIntegrityError(RuntimeError):
+    """A pinned object exists but does not match its recorded checksum."""
 
 COLUMNS = ["record_id", "feature_id", "value", "unit", "analysis_scale_m", "spatial_resolution_m", "valid_coverage_fraction", "quality_flags", "source_product", "source_url"]
 
@@ -42,6 +53,66 @@ def records(dataset, stage, limit=100):
     return {"stage": stage, "columns": columns, "rows": rows[:limit], "sampled": len(rows)>limit, "total": len(rows), "next_cursor": None,
             "note": "Raw view lists asset metadata. Cleaned/derived views contain published terrain summaries, not raster cells. Scientific release is blocked."}
 
+def _site(dataset):
+    observations(dataset)
+    return next(s for s in load_pair()["sites"] if s["site_id"] == dataset)
+
+
+def extent_km(obs, body):
+    """Approximate metric size of the AOI bounding box (spherical mean radius)."""
+    west, south, east, north = obs[0]["geometry"]["coordinates"]
+    radius = RADIUS_M[body]
+    mid = math.radians((south + north) / 2)
+    return {"east_west_km": round(math.radians(east - west) * radius * math.cos(mid) / 1000, 1),
+            "north_south_km": round(math.radians(north - south) * radius / 1000, 1),
+            "bbox_deg": [west, south, east, north],
+            "method": "spherical mean radius approximation (display only)"}
+
+
+def distributions(dataset):
+    details = _site(dataset)["provenance"].get("feature_details", {})
+    keep = ("n", "min", "p10", "median", "mean", "p90", "max", "sd")
+    return {feature: {k: d["stats"][k] for k in keep if k in d.get("stats", {})} for feature, d in sorted(details.items())}
+
+
+def grid(dataset):
+    """Cleaned native grid, verified against its pinned SHA-256, block-averaged for display only."""
+    site = _site(dataset)
+    prov = site["provenance"]
+    root = source_root()
+    path = (root / prov["cleaned_object_key"]).resolve()
+    if not path.is_relative_to(root) or not path.is_file():
+        raise KeyError("cleaned grid not provisioned")
+    raw = path.read_bytes()
+    if hashlib.sha256(raw).hexdigest() != prov["cleaned_sha256"]:
+        raise SourceIntegrityError("cleaned grid checksum mismatch")
+    doc = json.loads(raw)
+    g = doc["grid"]
+    rows, cols, values = g["nrows"], g["ncols"], g["values"]
+    k = max(1, math.ceil(max(rows, cols) / DISPLAY_MAX_CELLS))
+    out_rows, out_cols = rows // k, cols // k
+    cells = []
+    for r in range(out_rows):
+        for c in range(out_cols):
+            block = [values[(r * k + y) * cols + c * k + x] for y in range(k) for x in range(k)]
+            cells.append(None if any(v is None for v in block) else round(math.fsum(block) / len(block), 1))
+    valid = [v for v in cells if v is not None]
+    half = (k - 1) / 2
+    return {"dataset_id": dataset, "body": site["body"], "stage": "cleaned", "unit": doc["unit"],
+            "vertical_datum": doc.get("vertical_datum"), "cleaned_sha256": prov["cleaned_sha256"],
+            "native": {key: g[key] for key in ("nrows", "ncols", "dlat", "dlon", "lat0", "lon0", "registration")},
+            "display": {"factor": k, "nrows": out_rows, "ncols": out_cols, "values": cells,
+                        "first_center": [g["lon0"] + half * g["dlon"], g["lat0"] - half * g["dlat"]],
+                        "step_deg": [k * g["dlon"], k * g["dlat"]], "min": min(valid, default=None), "max": max(valid, default=None),
+                        "trimmed_native_rows": rows - out_rows * k, "trimmed_native_cols": cols - out_cols * k},
+            "method": (f"Display-only mean of {k}x{k} native samples (null if any sample is null); "
+                       "not the 1852.3 m analysis grid and not used by any score.") if k > 1 else
+                      "Native cleaned cells, no display aggregation; not the 1852.3 m analysis grid.",
+            "transformations": [str(t) for t in doc.get("transformations", [])],
+            "caveats": ["Absolute elevations use body-specific vertical datums and are never compared across bodies.",
+                        *sorted({f for o in observations(dataset) for f in o["quality_flags"]})]}
+
+
 def metadata(dataset):
     obs = observations(dataset)
     site = next(s for s in load_pair()["sites"] if s["site_id"] == dataset)
@@ -55,7 +126,10 @@ def metadata(dataset):
             "data_status": "measured", "crs": obs[0]["geometry"]["crs"], "unit_notes": "degree and metre; spatial variability is not measurement uncertainty",
             "time_basis": _period(obs) + " (source acquisition period)", "qa": "Scientific release BLOCKED pending independent C5 review; " + "; ".join(sorted({f for o in obs for f in o["quality_flags"]})),
             "lineage": [o["evidence_id"] + " | " + o["source_url"] for o in obs],
-            "transforms": [str(x) for x in p["transformations"]]}
+            "transforms": [str(x) for x in p["transformations"]],
+            "extent": extent_km(obs, site["body"]),
+            "distributions": distributions(dataset),
+            "native_resolution_m": p.get("native_resolution_m"), "analysis_scale_m": p.get("analysis_scale_m")}
 
 def compare(body):
     from twinsite.jobs.contract import validate

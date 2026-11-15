@@ -37,6 +37,7 @@ ROUTES = [
     ('GET', re.compile(r'^/v1/data/catalog$'), 'data_catalog'),
     ('GET', re.compile(r'^/v1/data/(?P<dataset_id>[A-Za-z0-9_.\-]{1,128})/records$'), 'data_records'),
     ('GET', re.compile(r'^/v1/data/(?P<dataset_id>[A-Za-z0-9_.\-]{1,128})/metadata$'), 'data_metadata'),
+    ('GET', re.compile(r'^/v1/data/(?P<dataset_id>[A-Za-z0-9_.\-]{1,128})/grid$'), 'data_grid'),
     ('POST', re.compile(r'^/v1/data/compare$'), 'data_compare'),
     ('POST', re.compile(r'^/v1/uploads$'), 'uploads_disabled'),
 ]
@@ -313,6 +314,13 @@ class Handler(BaseHTTPRequestHandler):
     def route_data_metadata(self, query, dataset_id):
         from .data import metadata
         self._data_response(lambda: metadata(dataset_id))
+
+    def route_data_grid(self, query, dataset_id):
+        from .data import grid, SourceIntegrityError
+        try:
+            self._data_response(lambda: grid(dataset_id))
+        except SourceIntegrityError:
+            raise ApiError(409, 'SOURCE_INTEGRITY_FAILED', 'Cleaned grid does not match its pinned checksum') from None
 
     def route_data_compare(self, query):
         from .data import compare

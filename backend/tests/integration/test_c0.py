@@ -146,4 +146,30 @@ class IntegrationTests(unittest.TestCase):
         del matched['sites'][1]['provenance']['feature_details']['local_relief_m']
         self.assertEqual(extent_mismatches(matched), ['AOI_EXTENT_UNVERIFIED'])
 
+    def test_grid_view_is_checksum_verified_and_labelled_display_only(self):
+        mars = data.grid('mars-gale-aeolis')
+        self.assertEqual((mars['display']['factor'], mars['display']['nrows'], mars['display']['ncols']), (1, 38, 38))
+        self.assertIn('not the 1852.3 m analysis grid', mars['method'])
+        self.assertTrue(any('datum' in c for c in mars['caveats']))
+        site = next(s for s in load_pair()['sites'] if s['site_id'] == 'mars-gale-aeolis')
+        key = site['provenance']['cleaned_object_key']
+        with tempfile.TemporaryDirectory() as tmp:
+            with patch.dict(os.environ, {'TWINSITE_SOURCE_DATA_DIR': tmp}):
+                with self.assertRaises(KeyError):
+                    data.grid('mars-gale-aeolis')
+                target = Path(tmp) / key
+                target.parent.mkdir(parents=True)
+                target.write_bytes(b'{"tampered": true}')
+                with self.assertRaises(data.SourceIntegrityError):
+                    data.grid('mars-gale-aeolis')
+        with self.assertRaises(KeyError):
+            data.grid('unknown-site')
+
+    def test_metadata_reports_metric_extent_and_distributions(self):
+        earth, mars = data.metadata('earth-zagora-draa'), data.metadata('mars-gale-aeolis')
+        self.assertAlmostEqual(earth['extent']['east_west_km'], 28.8, delta=0.2)
+        self.assertAlmostEqual(mars['extent']['north_south_km'], 17.8, delta=0.2)
+        self.assertEqual(mars['distributions']['slope_deg']['n'], 49)
+        self.assertEqual(earth['distributions']['roughness_m']['mean'], 17.9224)
+
 if __name__ == '__main__': unittest.main()

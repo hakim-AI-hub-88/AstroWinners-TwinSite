@@ -1,6 +1,6 @@
 import type {
   Health, MissionRequest, MissionResult, MissionAccepted, MissionStatus, ProgressEvent, ReleaseEvidence,
-  DatasetSummary, DatasetRecords, DatasetMetadata, CompareResult, Stage, AlternativesRequest,
+  DatasetSummary, DatasetRecords, DatasetMetadata, DatasetGrid, CompareResult, Stage, AlternativesRequest,
 } from './types'
 import * as demo from './demo'
 
@@ -79,3 +79,6 @@ export const postPublishedMission = () => http<MissionAccepted>('/missions/measu
   method: 'POST', headers: { 'Content-Type': 'application/json', 'Idempotency-Key': crypto.randomUUID() },
   body: JSON.stringify({ schema_version: '1.0', dataset_id: 'zagora-gale-v1' }),
 })
+
+// Cleaned grid: real data only. There is no demo fallback for raster views.
+export const getGrid = (id: string) => http<DatasetGrid>(`/data/${encodeURIComponent(id)}/grid`)

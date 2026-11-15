@@ -9,6 +9,10 @@ from twinsite.science.bridge import request_from_evidence
 PAIR = Path(__file__).resolve().parents[1] / "processing/published/g2_feature_pair.json"
 DATASET = "zagora-gale-v1"
 
+def source_root():
+    return Path(os.environ.get("TWINSITE_SOURCE_DATA_DIR", PAIR.parents[4] / ".runtime/data")).resolve()
+
+
 def load_pair():
     pair = json.loads(PAIR.read_text())
     if pair["data_status"] != "measured":
@@ -61,7 +65,7 @@ def evidence_for(payload):
     if payload != expected:
         raise ValueError("Measured request does not match server-resolved published snapshot")
     pair = load_pair()
-    root = Path(os.environ.get("TWINSITE_SOURCE_DATA_DIR", PAIR.parents[4] / ".runtime/data")).resolve()
+    root = source_root()
     for a in pair["assets"]:
         path = (root / a["object_key"]).resolve()
         if not path.is_relative_to(root) or not path.is_file() or path.stat().st_size != a["byte_size"]:

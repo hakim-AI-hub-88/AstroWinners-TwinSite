@@ -105,7 +105,9 @@ def build_openapi():
             'type': 'object', 'additionalProperties': False, 'required': ['schema_version', 'dataset_id'],
             'properties': {'schema_version': {'const': '1.0'}, 'dataset_id': {'const': 'zagora-gale-v1'}}}}}},
         'responses': copy.deepcopy(paths['/v1/missions']['post']['responses'])}}
-    for path, method in [('/v1/data/catalog', 'get'), ('/v1/data/{dataset_id}/records', 'get'),
+    paths['/v1/data/{dataset_id}/grid'] = {'get': {
+        'operationId': 'getDatasetGrid', 'parameters': copy.deepcopy(paths['/v1/data/{dataset_id}/metadata']['get'].get('parameters', []))}}
+    for path, method in [('/v1/data/catalog', 'get'), ('/v1/data/{dataset_id}/records', 'get'), ('/v1/data/{dataset_id}/grid', 'get'),
                          ('/v1/data/{dataset_id}/metadata', 'get'), ('/v1/data/compare', 'post')]:
         operation = paths[path][method]
         operation.update(summary='Read-only published terrain evidence preview; review pending',

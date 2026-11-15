@@ -55,6 +55,24 @@ export interface DatasetMetadata {
   lineage: string[]
   transforms: string[]
   data_status: 'synthetic' | 'measured'
+  extent?: { east_west_km: number; north_south_km: number; bbox_deg: number[]; method: string }
+  distributions?: Record<string, FeatureDistribution>
+  native_resolution_m?: number | null
+  analysis_scale_m?: number | null
+}
+export interface FeatureDistribution { n?: number; min?: number; p10?: number; median?: number; mean?: number; p90?: number; max?: number; sd?: number }
+export interface DatasetGrid {
+  dataset_id: string
+  body: string
+  stage: 'cleaned'
+  unit: string
+  vertical_datum?: string | null
+  cleaned_sha256: string
+  native: { nrows: number; ncols: number; dlat: number; dlon: number; lat0: number; lon0: number; registration: string }
+  display: { factor: number; nrows: number; ncols: number; values: Array<number | null>; first_center: [number, number]; step_deg: [number, number]; min: number | null; max: number | null; trimmed_native_rows: number; trimmed_native_cols: number }
+  method: string
+  transformations: string[]
+  caveats: string[]
 }
 export interface CompareResult {
   columns: string[]

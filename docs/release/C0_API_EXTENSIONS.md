@@ -27,7 +27,16 @@ Explorer response shapes match frontend/src/lib/types.ts:
 - records: {stage, columns, rows, total, sampled, next_cursor, note}; max 100 rows.
   Raw rows are asset metadata, not raster pixels. Cleaned and derived views expose
   the same published terrain feature summaries, with their quality flags.
-- metadata: DatasetMetadata with source URLs, evidence ids and transformations.
+- metadata: DatasetMetadata with source URLs, evidence ids, transformations, product
+  version, provider data-policy link, `extent` (approximate metric AOI size, spherical
+  mean radius, display only), `distributions` (per-feature n/min/p10/median/mean/p90/max/sd
+  across analysis blocks) and native/analysis resolution.
+- grid (`GET /v1/data/{dataset_id}/grid`): the cleaned native elevation grid, read from
+  `TWINSITE_SOURCE_DATA_DIR` by its pinned `cleaned_object_key` and verified against
+  `cleaned_sha256` on every request (missing → 404, checksum mismatch → 409
+  SOURCE_INTEGRITY_FAILED). Grids over 72 cells per side are block-averaged *for display
+  only* (k×k mean, null if any sample is null); the response states the factor, trimmed edge
+  rows and that this is not the 1852.3 m analysis grid. No demo fallback exists for grids.
 - compare: frozen data_compare_request input; {columns, rows:[{key,left,right}]}.
   Feature IDs align the two sites. Units/scales are displayed; UI graphs require
   equal units and analysis scale. No arbitrary SQL, expressions or filesystem paths.

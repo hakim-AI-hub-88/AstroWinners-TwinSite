@@ -738,6 +738,48 @@
           }
         }
       }
+    },
+    "/v1/data/{dataset_id}/grid": {
+      "get": {
+        "operationId": "getDatasetGrid",
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "summary": "Read-only published terrain evidence preview; review pending",
+        "x-twinsite-status": "provisional",
+        "responses": {
+          "200": {
+            "description": "Published evidence view (see docs/release/C0_API_EXTENSIONS.md)"
+          },
+          "404": {
+            "description": "Unknown dataset",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid selection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
