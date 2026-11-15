@@ -1,9 +1,13 @@
 import { Link, useParams } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 import { Btn, DemoBanner, Empty, Notice, PageHeader, Panel, Scroll, Spinner } from '@/components/ui'
 import { useEvidence, useResult, useStatus } from '@/lib/hooks'
 import { isDemoRun } from '@/lib/demo'
-import { reportUrl } from '@/lib/api'
-import { isReleased, rankSites, timeBasis, unresolvedGaps } from '@/lib/analysis'
+import { getReportHtml, reportUrl } from '@/lib/api'
+import { rankSites, timeBasis, unresolvedGaps } from '@/lib/analysis'
+import { useReleaseGate } from '@/lib/release'
+import { Gated } from '@/components/ReleaseGate'
+import { missionTitle, useSiteNames } from '@/lib/names'
 import { download, idx, short, toCsv } from '@/lib/format'
 
 export default function Report() {
@@ -12,24 +16,30 @@ export default function Report() {
   const ok = status.data?.status === 'completed' || status.data?.status === 'completed_with_limits'
   const result = useResult(runId, ok)
   const evidence = useEvidence(runId, ok)
+  const gate = useReleaseGate(runId, result.data, evidence.data)
+  const name = useSiteNames(result.data)
+  // Same fetched-srcDoc approach as the dashboard (a cross-origin iframe src is blocked by some browsers/extensions).
+  const report = useQuery({ queryKey: ['report-html', runId], queryFn: () => getReportHtml(runId), enabled: ok && !isDemoRun(runId), retry: false })
   if (status.isLoading || (ok && result.isLoading)) return <Spinner />
   if (!ok || !result.data) return <div className="mx-auto max-w-3xl px-4 py-10"><Notice title="Report available after completion">Status: {status.data?.status ?? 'unknown'}. <Link className="underline" to={`/analysis/${runId}`}>View progress</Link></Notice></div>
   const r = result.data, ev = evidence.data ?? null
-  const demo = isDemoRun(runId), released = isReleased(r, ev), synthetic = r.data_status === 'synthetic'
+  const demo = isDemoRun(runId), { released, synthetic } = gate
   const ranked = rankSites(r.sites).filter((s) => s.rank)
   const csv = () => download(`${runId}-ranking.csv`, toCsv(['rank', 'site', 'body', 'observed_similarity', 'lower_utility', 'upper_utility', 'coverage', 'access'], ranked.map((s) => ({ rank: s.rank, site: s.name, body: s.body, observed_similarity: s.observed_similarity, lower_utility: s.lower_utility, upper_utility: s.upper_utility, coverage: s.coverage, access: s.access }))), 'text/csv')
   return (
     <>
       {(demo || synthetic) && <DemoBanner>This report is built from synthetic fixture values and is not a scientific finding.</DemoBanner>}
       <div className="mx-auto max-w-4xl px-4 py-8 print:text-black">
-        <PageHeader eyebrow="Source-backed report" title={`Mission ${r.mission_id}`} sub={<>Run <span className="mono">{runId}</span> · algorithm {r.algorithm_version} · input <span className="mono">{short(r.input_sha256, 16)}</span></>}
-          right={<div className="flex flex-wrap gap-2 print:hidden"><Btn onClick={() => download(`${runId}-result.json`, JSON.stringify(r, null, 2))}>Result JSON</Btn><Btn disabled={!ev} onClick={() => download(`${runId}-evidence.json`, JSON.stringify(ev, null, 2))}>Evidence JSON</Btn><Btn onClick={csv}>Ranking CSV</Btn><Btn variant="primary" onClick={() => window.print()}>Print / PDF</Btn></div>} />
+        <PageHeader eyebrow="Source-backed report" title={missionTitle(r, name)} sub={<>{!r.mission_id.startsWith('match-') ? null : <>Mission <span className="mono break-all">{r.mission_id}</span> · </>}Run <span className="mono">{runId}</span> · algorithm {r.algorithm_version} · input <span className="mono">{short(r.input_sha256, 16)}</span></>}
+          right={<div className="flex flex-wrap gap-2 print:hidden"><Btn onClick={() => download(`${runId}-result.json`, JSON.stringify(r, null, 2))}>Result JSON</Btn><Btn disabled={!ev} onClick={() => download(`${runId}-evidence.json`, JSON.stringify(ev, null, 2))}>Evidence JSON</Btn><Btn disabled={gate.hide} title={gate.hide ? 'Ranking withheld by the release gate — reveal the unreleased diagnostic values first' : undefined} onClick={csv}>Ranking CSV</Btn><Btn variant="primary" onClick={() => window.print()}>Print / PDF</Btn></div>} />
         <div className="space-y-5">
           {!ev ? <Notice tone="bad" title="Evidence unavailable">No sidecar — findings below are not approved for citation.</Notice>
             : <Notice tone={released ? 'ok' : 'bad'} title={`Release: ${ev.release_action} · strict gate ${ev.strict_gate_status}`}>{ev.blocking_issues.length ? `Blocking issues: ${ev.blocking_issues.join(', ')}` : 'No blocking issues.'} Time basis: {timeBasis(ev)}.</Notice>}
-          <Panel eyebrow="Findings" title="Ranked analogue candidates">
+          <Panel eyebrow={gate.gated ? 'Unreleased diagnostic values' : 'Findings'} title="Ranked analogue candidates">
+            <Gated gate={gate}>
             {ranked.length === 0 ? <Empty>No eligible candidates.</Empty> : <ol className="space-y-2 text-sm">{ranked.map((s) => <li key={s.id}><strong>#{s.rank} {s.name}</strong> ({s.body}) — observed similarity index {idx(s.observed_similarity)}, coverage {idx(s.coverage)}, bounds {idx(s.lower_utility)}–{idx(s.upper_utility)}.</li>)}</ol>}
             <p className="mt-3 text-xs text-mute">Index values are unitless 0–1 scores from the deterministic engine, not probabilities.</p>
+            </Gated>
           </Panel>
           <Panel eyebrow="Sources" title="Evidence and provenance">
             {ev && ev.assets.length ? <Scroll><table className="tbl"><thead><tr><th>Asset</th><th>Product / version</th><th>Body</th><th>CRS</th><th>Retrieved</th><th>SHA-256</th><th>Source</th></tr></thead>
@@ -39,7 +49,11 @@ export default function Report() {
           </Panel>
           <Panel eyebrow="Assumptions & gaps" title="What this report does not establish">
             <ul className="list-disc space-y-1 pl-5 text-sm text-ivory-dim">{[...(ev?.assumptions ?? []), ...unresolvedGaps(r, ev), ...r.limitations].map((g, i) => <li key={i}>{g}</li>)}</ul></Panel>
-          {!demo && <Panel eyebrow="Server report" title="Backend-rendered HTML"><iframe title="Server report" sandbox="" src={reportUrl(runId)} className="h-[32rem] w-full rounded border border-line bg-white" /><a className="mt-2 inline-block text-sm underline" href={reportUrl(runId)} target="_blank" rel="noreferrer">Open in new tab</a></Panel>}
+          {!demo && <Panel eyebrow="Server report" title="Backend-rendered HTML">
+            {report.isLoading ? <Spinner label="Loading report" />
+              : report.isError ? <Notice tone="bad" title="Report unavailable">{(report.error as Error).message}</Notice>
+              : <iframe title="Server report" sandbox="" srcDoc={report.data} className="h-[32rem] w-full rounded border border-line bg-white" />}
+            <a className="mt-2 inline-block text-sm underline" href={reportUrl(runId)} target="_blank" rel="noreferrer">Open in new tab</a></Panel>}
         </div>
       </div>
     </>

@@ -4,6 +4,10 @@ import { useQuery } from '@tanstack/react-query'
 import { Badge, DemoBanner, Empty, Notice, PageHeader, Panel, Spinner, Tabs } from '@/components/ui'
 import PlanetMap from '@/components/PlanetMap'
 import { SelectedSitePanel } from '@/components/SelectedSite'
+import { PlaceSearch } from '@/components/LocationPicker'
+import { ReleaseGateNotice } from '@/components/ReleaseGate'
+import { useReleaseGate } from '@/lib/release'
+import { useSiteNames } from '@/lib/names'
 import { getSciSites } from '@/lib/api'
 import { candidatePins, footprintsFor, storedSitePins } from '@/lib/overlays'
 import { pointName, type PickedSite } from '@/lib/picking'
@@ -28,9 +32,12 @@ export default function Explorer() {
   const result = useResult(runId, ok)
   const evidence = useEvidence(runId, ok)
   const r = result.data
+  // Same release-gate rule as the Analysis dashboard: no ranks (numbers or order) for unreleased measured runs.
+  const gate = useReleaseGate(runId, r, evidence.isLoading ? null : evidence.data)
+  const name = useSiteNames(r)
 
-  const pins = useMemo(() => candidatePins(r, body), [r, body])
-  const footprints = useMemo(() => footprintsFor(r, body), [r, body])
+  const pins = useMemo(() => candidatePins(r, body, !gate.hide), [r, body, gate.hide])
+  const footprints = useMemo(() => footprintsFor(r, body, name), [r, body, name])
   const sci = useQuery({ queryKey: ['sci-sites'], queryFn: getSciSites, retry: false })
   const stored = useMemo(() => storedSitePins(sci.data?.sites, body), [sci.data, body])
   const explorable = useExplorableIds()
@@ -61,10 +68,11 @@ export default function Explorer() {
             <p className="text-xs text-mute">Coordinate system: <span className="mono">{CRS[body]}</span>{body === 'Earth' ? ' · basemap tiles load from NASA GIBS; markers remain if tiles are unavailable' : ' · basemap tiles load from NASA Trek; markers remain if tiles are unavailable'}</p>
           </div>
           <aside className="space-y-4">
+            {body === 'Earth' && <Panel eyebrow="Find a place" title="Search Earth"><PlaceSearch compact onPick={(v) => setPicked({ body: 'Earth', lon: Math.round(v.lon * 1e4) / 1e4, lat: Math.round(v.lat * 1e4) / 1e4, name: v.name })} /></Panel>}
             {sel ? <SelectedSitePanel site={sel} onRename={(name) => setPicked({ ...sel, name })} onClear={() => setPicked(null)} />
               : <Notice tone="mute" title="Click the map to select a site">Pick any point on {body} to retrieve real data for it{body === 'Earth' ? '' : ' or find Earth analog matches'}.</Notice>}
-            <Panel eyebrow="Run" title={runId ? <span className="mono text-base">{runId}</span> : 'No run selected'}>
-              {runId ? (status.isError ? <Notice tone="bad" title="Run not found">{(status.error as Error).message}</Notice> : !ok ? <p className="text-sm text-mute">Status: {status.data?.status ?? 'loading'} — candidates appear after completion.</p> : <div className="space-y-1 text-sm text-ivory-dim"><div>{r?.sites.length} candidates · {r?.target_profiles.length} targets</div><div className="mono text-xs">{evidence.data?.source_snapshot_id ?? 'no snapshot'}</div><Link className="underline" to={`/analysis/${runId}`}>Open analysis</Link></div>) : <p className="text-sm text-mute">Pick a run to place candidates and target footprints.</p>}
+            <Panel eyebrow="Run" title={runId ? <span className="mono block break-all text-base" title={runId}>{runId}</span> : 'No run selected'}>
+              {runId ? (status.isError ? <Notice tone="bad" title="Run not found">{(status.error as Error).message}</Notice> : !ok ? <p className="text-sm text-mute">Status: {status.data?.status ?? 'loading'} — candidates appear after completion.</p> : <div className="space-y-2 text-sm text-ivory-dim">{gate.gated && <ReleaseGateNotice gate={gate} what="candidate ranks" />}<div>{r?.sites.length} candidates · {r?.target_profiles.length} targets</div><div className="mono break-all text-xs">{evidence.data?.source_snapshot_id ?? 'no snapshot'}</div><Link className="underline" to={`/analysis/${runId}`}>Open analysis</Link></div>) : <p className="text-sm text-mute">Pick a run to place candidates and target footprints.</p>}
               <div className="mt-3"><label className="fld" htmlFor="run-pick">Choose run</label>
                 <select id="run-pick" value={runId} onChange={(e) => { if (isDemoRun(e.target.value)) demoStart(e.target.value); setSp(e.target.value ? { run: e.target.value } : {}) }}>
                   <option value="">None</option>
@@ -86,7 +94,7 @@ export default function Explorer() {
               {([['pins', 'Candidates, stored sites & selection'], ['footprints', 'Target / search footprints'], ...(body === 'Earth' ? [['basemap', 'NASA Blue Marble basemap']] : [['basemap', body === 'Mars' ? 'NASA Viking colour mosaic' : 'NASA LRO WAC mosaic'], ['graticule', 'Lon/lat graticule']])] as Array<[keyof typeof layers, string]>).map(([k, label]) => (
                 <label key={k} className="flex items-center gap-2 py-1 text-sm"><input className="!w-4" type="checkbox" checked={layers[k]} onChange={(e) => setLayers({ ...layers, [k]: e.target.checked })} /> {label}</label>))}
             </Panel>
-            <Panel eyebrow="On this map" title={`${pins.length} candidates · ${footprints.length} footprints`}>
+            <Panel eyebrow={gate.gated ? (gate.hide ? 'On this map · ranks withheld' : 'On this map · unreleased diagnostic ranks') : 'On this map'} title={`${pins.length} candidates · ${footprints.length} footprints`}>
               {pins.length + footprints.length === 0 ? <Empty>{r ? `This run has nothing on ${body}.` : 'Nothing to show yet.'}</Empty> : <ul className="space-y-1 text-sm">{pins.map((p) => <li key={p.id} className="flex items-center justify-between gap-2"><span>{p.rank ? `#${p.rank} ` : ''}{p.label}</span>{p.eligible === false && <Badge tone="bad">ineligible</Badge>}</li>)}{footprints.map((f) => <li key={f.id} className="text-ivory-dim">▭ {f.label}</li>)}</ul>}
             </Panel>
           </aside>

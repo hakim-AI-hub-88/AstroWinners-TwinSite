@@ -34,7 +34,7 @@ export function DemoBanner({ children }: { children?: ReactNode }) {
 }
 export function Notice({ tone = 'warn', title, children }: { tone?: 'warn' | 'bad' | 'ok' | 'mute'; title: string; children?: ReactNode }) {
   return (
-    <div role={tone === 'bad' ? 'alert' : 'note'} className={cx('rounded-md border px-4 py-3 text-sm', tone === 'bad' ? 'border-bad/50 bg-bad/10' : tone === 'ok' ? 'border-ok/40 bg-ok/10' : tone === 'mute' ? 'border-line bg-panel2' : 'border-warn/50 bg-warn/10')}>
+    <div role={tone === 'bad' ? 'alert' : 'note'} className={cx('break-words rounded-md border px-4 py-3 text-sm', tone === 'bad' ? 'border-bad/50 bg-bad/10' : tone === 'ok' ? 'border-ok/40 bg-ok/10' : tone === 'mute' ? 'border-line bg-panel2' : 'border-warn/50 bg-warn/10')}>
       <div className="font-semibold">{title}</div>{children && <div className="mt-1 text-ivory-dim">{children}</div>}
     </div>
   )

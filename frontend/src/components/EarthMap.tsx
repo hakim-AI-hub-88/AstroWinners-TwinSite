@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
-import type { Footprint, Marker, Pin } from './PlanetMap'
+import { pinLabelShown, type Footprint, type Marker, type Pin } from './PlanetMap'
 
 const GIBS = 'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/BlueMarble_ShadedRelief_Bathymetry/default/GoogleMapsCompatible_Level8/{z}/{y}/{x}.jpeg'
 
@@ -51,7 +51,13 @@ export default function EarthMap({ pins, footprints, globe, layers, onPick, extr
         const d = document.createElement('div')
         d.style.cssText = `display:flex;align-items:center;gap:6px;font:600 11px Inter,sans-serif;color:#efe7d6;text-shadow:0 0 3px #000`
         d.innerHTML = `<span style="width:20px;height:20px;border-radius:50%;background:${p.eligible === false ? '#1b1815' : '#c8642b'};color:${p.eligible === false ? '#efe7d6' : '#0b0a09'};border:1.5px solid #efe7d6;display:flex;align-items:center;justify-content:center">${p.rank ?? (p.eligible === false ? '×' : '•')}</span>`
-        const label = document.createElement('span'); label.textContent = p.label; d.appendChild(label)
+        const label = document.createElement('span'); label.textContent = p.label; d.appendChild(label); d.title = p.label
+        if (!pinLabelShown(p, pins)) {
+          // Hover-only label: keeps dense candidate clusters readable.
+          label.style.display = 'none'
+          d.addEventListener('mouseenter', () => { label.style.display = ''; d.style.zIndex = '2' })
+          d.addEventListener('mouseleave', () => { label.style.display = 'none'; d.style.zIndex = '' })
+        }
         markers.current.push(new maplibregl.Marker({ element: d }).setLngLat([p.lon, p.lat]).addTo(m))
       }
       const pts = [...pins.map((p) => [p.lon, p.lat]), ...footprints.flatMap((f) => [[f.bbox[0], f.bbox[1]], [f.bbox[2], f.bbox[3]]])]
@@ -76,6 +82,8 @@ export default function EarthMap({ pins, footprints, globe, layers, onPick, extr
         d.innerHTML = '<span style="width:20px;height:20px;border-radius:50%;border:1.5px solid #efe7d6;display:flex;align-items:center;justify-content:center"><span style="width:6px;height:6px;border-radius:50%;background:#c8642b"></span></span>'
         const label = document.createElement('span'); label.textContent = marker.label; d.appendChild(label)
         extras.current.push(new maplibregl.Marker({ element: d, anchor: 'left', offset: [-10, 0] }).setLngLat([marker.lon, marker.lat]).addTo(m))
+        // A point chosen outside the current view (e.g. from place search) is brought into view without changing the zoom.
+        if (!m.getBounds().contains([marker.lon, marker.lat])) m.easeTo({ center: [marker.lon, marker.lat], duration: 600 })
       }
     }
     if (ready.current) apply(); else m.once('load', apply)

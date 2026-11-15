@@ -8,6 +8,13 @@ export interface Pin { id: string; label: string; lon: number; lat: number; rank
 export interface Marker { lon: number; lat: number; label: string }
 export interface Footprint { id: string; label: string; bbox: number[]; kind?: string }
 
+/**
+ * Whether a pin's name is drawn permanently. Only the top three ranked candidates (or every pin when there are at most
+ * three) keep a label; the rest show it on hover, so dense candidate clusters do not overprint each other.
+ * With ranks withheld no pin is preferred, so the withheld ranking cannot leak through which labels are drawn.
+ */
+export const pinLabelShown = (p: Pin, all: Pin[]) => all.length <= 3 || (p.rank != null && p.rank <= 3)
+
 const W = 720, H = 360
 export const MIN_SPAN = 0.2
 /** Mean radii (km) for the on-map scale readout only. */
@@ -183,7 +190,7 @@ export default function PlanetMap({ body, pins, footprints, layers, onPick, extr
           {layers.footprints && [...footprints, ...extraFootprints].map((f) => { const x = X(f.bbox[0]), y = Y(f.bbox[3]), w = Math.max(12, X(f.bbox[2]) - x), h = Math.max(12, Y(f.bbox[1]) - y)
             return <g key={f.id}><rect x={x} y={y} width={w} height={h} fill={accent} fillOpacity="0.18" stroke={accent} strokeWidth="1.5" strokeDasharray="4 3" /><text x={x + w + 5} y={y + 10} fill="#efe7d6" fontSize="11">{f.label}</text></g> })}
           {layers.pins && extraPins.map((p) => <g key={p.id} transform={`translate(${X(p.lon)} ${Y(p.lat)})`}><title>{p.label}</title><rect x="-4" y="-4" width="8" height="8" transform="rotate(45)" fill="#0b0a09" fillOpacity="0.6" stroke="#efe7d6" strokeWidth="1.2" /></g>)}
-          {layers.pins && pins.map((p) => <g key={p.id} transform={`translate(${X(p.lon)} ${Y(p.lat)})`}><circle r="8" fill={p.eligible === false ? '#1b1815' : accent} stroke="#efe7d6" strokeWidth="1.3" /><text y="3.5" textAnchor="middle" fontSize="10" fontWeight="600" fill={p.eligible === false ? '#efe7d6' : '#0b0a09'}>{p.rank ?? (p.eligible === false ? '×' : '•')}</text><text x="12" y="4" fill="#efe7d6" fontSize="11">{p.label}</text></g>)}
+          {layers.pins && pins.map((p) => <g key={p.id} className="group" transform={`translate(${X(p.lon)} ${Y(p.lat)})`}><title>{p.label}</title><circle r="8" fill={p.eligible === false ? '#1b1815' : accent} stroke="#efe7d6" strokeWidth="1.3" /><text y="3.5" textAnchor="middle" fontSize="10" fontWeight="600" fill={p.eligible === false ? '#efe7d6' : '#0b0a09'}>{p.rank ?? (p.eligible === false ? '×' : '•')}</text><text x="12" y="4" fill="#efe7d6" fontSize="11" className={pinLabelShown(p, pins) ? undefined : 'opacity-0 group-hover:opacity-100'}>{p.label}</text></g>)}
           {marker && <g transform={`translate(${X(marker.lon)} ${Y(marker.lat)})`} pointerEvents="none"><circle r="11" fill="none" stroke="#efe7d6" strokeWidth="1.5" /><circle r="3" fill="#c8642b" stroke="#efe7d6" strokeWidth="1" /><line x1="-16" x2="-12" stroke="#efe7d6" strokeWidth="1.5" /><line x1="12" x2="16" stroke="#efe7d6" strokeWidth="1.5" /><line y1="-16" y2="-12" stroke="#efe7d6" strokeWidth="1.5" /><line y1="12" y2="16" stroke="#efe7d6" strokeWidth="1.5" /><text x="18" y="-8" fill="#efe7d6" fontSize="11" fontWeight="600">{marker.label}</text></g>}
         </svg>
         <div className="absolute right-2 top-2 flex flex-col gap-1">

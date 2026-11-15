@@ -8,8 +8,10 @@ import { postAlternatives, ApiError } from '@/lib/api'
 import { isDemoRun } from '@/lib/demo'
 import { idx, money, days } from '@/lib/format'
 import type { Portfolio } from '@/lib/types'
+import { useReleaseGate } from '@/lib/release'
+import { Gated } from '@/components/ReleaseGate'
 
-type K = 'standalone' | 'combined'
+type K = 'top' | 'standalone' | 'combined'
 export default function Portfolios() {
   const { runId = '' } = useParams()
   const nav = useNavigate()
@@ -17,7 +19,8 @@ export default function Portfolios() {
   const ok = status.data?.status === 'completed' || status.data?.status === 'completed_with_limits'
   const result = useResult(runId, ok)
   const evidence = useEvidence(runId, ok)
-  const [kind, setKind] = useState<K>('combined')
+  // null until the user picks a tab: the default is derived from the loaded result (first non-empty list).
+  const [picked, setKind] = useState<K | null>(null)
   const [sel, setSel] = useState<number | null>(0)
   const [msg, setMsg] = useState<string | null>(null)
   const alt = useMutation({
@@ -25,11 +28,14 @@ export default function Portfolios() {
     onSuccess: (a) => nav(`/analysis/${a.run_id}`),
     onError: (e) => setMsg(e instanceof ApiError && e.status === 501 ? 'Alternatives endpoint is not implemented yet (501).' : (e as Error).message),
   })
+  const gate = useReleaseGate(runId, result.data, evidence.data)
   if (status.isLoading || (ok && result.isLoading)) return <Spinner />
   if (!ok || !result.data) return <div className="mx-auto max-w-3xl px-4 py-10"><Notice tone="warn" title="Portfolios are available after the run completes">Current status: {status.data?.status ?? 'unknown'}. <Link className="underline" to={`/analysis/${runId}`}>Back to progress</Link></Notice></div>
   const r = result.data
   const names = Object.fromEntries(r.sites.map((s) => [s.id, s.name]))
-  const list = kind === 'standalone' ? r.standalone_portfolios : r.combined_portfolios
+  const lists: Record<K, Portfolio[]> = { top: r.portfolios, standalone: r.standalone_portfolios, combined: r.combined_portfolios }
+  const kind: K = picked ?? (['top', 'standalone', 'combined'] as const).find((k) => lists[k].length > 0) ?? 'top'
+  const list = lists[kind]
   const chosen = sel != null ? list[sel] : null
   const demo = isDemoRun(runId)
   return (
@@ -43,8 +49,10 @@ export default function Portfolios() {
           {r.sites.some((s) => !s.eligible) && <ul className="mt-2 list-disc pl-5 text-sm">{r.sites.filter((s) => !s.eligible).map((s) => <li key={s.id}><span className="text-ivory">{s.name}</span>: {s.failures.join('; ') || 'not eligible'}</li>)}</ul>}
         </Notice> : (
           <div className="space-y-5">
-            <Tabs<K> label="Portfolio type" value={kind} onChange={(k) => { setKind(k); setSel(0) }} tabs={[{ id: 'combined', label: `Complementary (${r.combined_portfolios.length})` }, { id: 'standalone', label: `Individual (${r.standalone_portfolios.length})` }]} />
-            {list.length === 0 ? <Empty>No {kind} portfolios in this run{r.portfolio_mode !== 'both' && r.portfolio_mode !== kind ? ` (portfolio mode was “${r.portfolio_mode}”)` : ''}.</Empty> : (
+            <Gated gate={gate} what="portfolio objectives, utilities and ordering">
+            <div className="space-y-5">
+            <Tabs<K> label="Portfolio type" value={kind} onChange={(k) => { setKind(k); setSel(0) }} tabs={[{ id: 'top', label: `Best (${r.portfolios.length})` }, { id: 'standalone', label: `Individual (${r.standalone_portfolios.length})` }, { id: 'combined', label: `Complementary (${r.combined_portfolios.length})` }]} />
+            {list.length === 0 ? <Empty>No {kind === 'top' ? 'best' : kind === 'standalone' ? 'individual' : 'complementary'} portfolios in this run{r.portfolio_mode !== 'both' && r.portfolio_mode !== kind ? ` (portfolio mode was “${r.portfolio_mode}”)` : ''}.</Empty> : (
               <div className="grid gap-5 lg:grid-cols-[1.3fr_1fr]">
                 <Panel eyebrow="Trade-off" title="Objective vs cost"><TradeoffChart items={list} names={names} selected={sel} onSelect={setSel} />
                   <p className="text-xs text-mute">Filled = combined, outline = individual. Cost is only what you entered; “no cost” means none was provided.</p></Panel>
@@ -62,6 +70,8 @@ export default function Portfolios() {
               <thead><tr><th>Sites</th><th>Type</th><th>Objective</th><th>Coverage utility</th><th>Redundancy</th><th>Cost</th><th>Effort</th><th>Ops</th></tr></thead>
               <tbody>{list.map((p, i) => <tr key={i} className={sel === i ? 'bg-ember/10' : ''}><td><button className="text-left underline decoration-line underline-offset-4 hover:text-ember" onClick={() => setSel(i)}>{p.site_ids.map((s) => names[s] ?? s).join(' + ')}</button></td><td>{p.kind}</td><td className="mono">{idx(p.objective)}</td><td className="mono">{idx(p.test_coverage_utility)}</td><td className="mono">{idx(p.redundancy)}</td><td className="mono">{money(p.cost)}</td><td className="mono">{days(p.days)}</td><td>{p.operational_status}</td></tr>)}</tbody>
             </table></Scroll></Panel>
+            </div>
+            </Gated>
             <Panel eyebrow="Alternatives" title="If your first choice is unavailable"><p className="text-sm text-ivory-dim">Alternatives reuse the same cached source snapshot ({evidence.data?.source_snapshot_id ?? 'unavailable'}) with an explicit exclusion set — no new NASA download. Sensitivity: the top portfolio held in {Object.values(r.sensitivity.top_portfolio_counts).sort((a, b) => b - a)[0] ?? 0} of {r.sensitivity.scenarios} weight scenarios.</p></Panel>
           </div>)}
       </div>

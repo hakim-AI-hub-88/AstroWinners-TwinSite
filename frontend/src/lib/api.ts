@@ -117,7 +117,7 @@ export interface CharacterizeResult {
   site_id: string; name: string; body: Body; longitude: number; latitude: number; aoi: [number, number, number, number]
   observations: CharacterizeObs[]; acquisition_errors: Array<string | Record<string, unknown>>
 }
-/** Retrieves real data for one point (Earth: DEM + NASA POWER; Moon: LOLA + Diviner; Mars: MOLA). Can take up to a minute. */
+/** Retrieves real data for one point (Earth: DEM + NASA POWER; Moon: LOLA + Diviner; Mars: MOLA). Can take 1–3 minutes on slow connections. */
 export const postCharacterize = (body: Body, longitude: number, latitude: number, name: string): Promise<CharacterizeResult> =>
   http('/science/characterize', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ body, longitude, latitude, name }) })
 export interface MatchRequest { schema_version: '1.0'; target: { body: 'Moon' | 'Mars'; longitude: number; latitude: number; name: string }; max_candidates: number }

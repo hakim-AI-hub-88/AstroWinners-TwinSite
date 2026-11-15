@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Body } from '@/lib/types'
 import { bodyAccent } from '@/lib/regions'
-import { BASEMAPS, MapButton, RADIUS_KM, tileUrl, type Footprint, type Marker, type Pin } from './PlanetMap'
+import { BASEMAPS, MapButton, RADIUS_KM, pinLabelShown, tileUrl, type Footprint, type Marker, type Pin } from './PlanetMap'
 import { ClickTracker, round4 } from '@/lib/picking'
 
 /** Orthographic 3D globe for the Moon and Mars. The NASA Trek equirectangular mosaic of the same body is assembled
@@ -166,7 +166,7 @@ export default function PlanetGlobe({ body, pins, footprints, layers, onPick, ex
       o2.beginPath(); o2.arc(s.x, s.y, 8, 0, 2 * Math.PI); o2.fillStyle = p.eligible === false ? '#1b1815' : accent; o2.fill()
       o2.lineWidth = 1.3; o2.strokeStyle = '#efe7d6'; o2.stroke()
       o2.fillStyle = p.eligible === false ? '#efe7d6' : '#0b0a09'; o2.textAlign = 'center'; o2.fillText(String(p.rank ?? (p.eligible === false ? '×' : '•')), s.x, s.y + 4)
-      o2.textAlign = 'left'; o2.fillStyle = '#efe7d6'; o2.fillText(p.label, s.x + 12, s.y + 4)
+      if (pinLabelShown(p, pins)) { o2.textAlign = 'left'; o2.fillStyle = '#efe7d6'; o2.fillText(p.label, s.x + 12, s.y + 4) }
     }
     if (marker) {
       const s = S(marker.lon, marker.lat)

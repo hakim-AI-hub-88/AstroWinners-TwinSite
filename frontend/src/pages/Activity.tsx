@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom'
 import { Badge, DemoBanner, Notice, PageHeader, Panel, Spinner } from '@/components/ui'
-import { EventLog, PhaseTimeline } from '@/components/Progress'
+import { EventLog, PhaseTimeline, phaseLabel, splitAgentPhase } from '@/components/Progress'
 import { useEvents, useStatus } from '@/lib/hooks'
 import { TERMINAL } from '@/lib/types'
 import { isDemoRun } from '@/lib/demo'
@@ -27,7 +27,7 @@ export default function Activity() {
         <div className="grid gap-5 lg:grid-cols-[22rem_1fr]">
           <Panel eyebrow="P00 – P90" title="Phases"><PhaseTimeline events={events} /></Panel>
           <div className="space-y-5">
-            {warnings.length > 0 && <Panel eyebrow="Warnings" title="Retries, failures, quarantines"><ul className="space-y-1 text-sm">{warnings.map((w) => <li key={w.sequence}><Badge tone="warn">{w.state}</Badge> <span className="mono">{w.phase}</span> {w.summary}</li>)}</ul></Panel>}
+            {warnings.length > 0 && <Panel eyebrow="Warnings" title="Retries, failures, quarantines"><ul className="space-y-1 text-sm">{warnings.map((w) => <li key={w.sequence}><Badge tone="warn">{w.state}</Badge> <span className="mono">{phaseLabel(w)}</span> {splitAgentPhase(w.summary).text}</li>)}</ul></Panel>}
             <Panel eyebrow="History" title="All events"><EventLog events={events} /></Panel>
           </div>
         </div>

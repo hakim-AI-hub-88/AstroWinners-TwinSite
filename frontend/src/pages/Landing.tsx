@@ -41,7 +41,7 @@ export default function Landing() {
 
       <Section id="architecture" eyebrow="Architecture" title="Deterministic core, thin interface">
         <div className="grid gap-4 md:grid-cols-4">{[['Data lane', 'Pins and checksums public NASA assets.'], ['Science engine', 'Decodes, cleans, scores. No AI in the measurement path.'], ['API', 'Idempotent jobs, real event stream, evidence sidecar.'], ['This UI', 'Reads results and evidence; runs only on explicit request.']].map(([t, d]) => <div key={t} className="rounded-md border border-line bg-panel p-4"><div className="eyebrow">{t}</div><p className="mt-2 text-sm text-ivory-dim">{d}</p></div>)}</div>
-        <p className="mt-4 text-sm text-ivory-dim">The whole demo runs end-to-end with AI disabled. Uploads are disabled; there are no accounts or settings.</p>
+        <p className="mt-4 text-sm text-ivory-dim">AI-Powered Analysis is the default: specialised agents interpret, review and write up results, while every measurement, score and release decision stays with the deterministic engine. Simple Analysis is the fallback and runs end-to-end with AI disabled. Uploads are disabled; there are no accounts or settings.</p>
       </Section>
 
       <Section id="usage" eyebrow="Usage" title="Three screens to a result">

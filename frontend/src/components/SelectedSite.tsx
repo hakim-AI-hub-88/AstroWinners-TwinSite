@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Badge, Btn, Notice, Panel, Scroll } from '@/components/ui'
-import { ApiError, getAnalysisMode, postCharacterize, postMatch } from '@/lib/api'
+import { ApiError, getAnalysisMode, getSciObservations, postCharacterize, postMatch, type SciObs } from '@/lib/api'
 import { rememberRun } from '@/lib/recent'
 import type { PickedSite } from '@/lib/picking'
 
@@ -39,7 +39,7 @@ export function SelectedSitePanel({ site, onRename, onClear }: { site: PickedSit
   const qc = useQueryClient()
   const characterize = useMutation({
     mutationFn: (s: PickedSite) => postCharacterize(s.body, s.lon, s.lat, s.name),
-    onSuccess: () => { void qc.invalidateQueries({ queryKey: ['sci-sites'] }) },
+    onSuccess: (r) => { void qc.invalidateQueries({ queryKey: ['sci-sites'] }); void qc.invalidateQueries({ queryKey: ['site-obs', r.site_id] }) },
   })
   const match = useMatch()
   const charSecs = useElapsed(characterize.isPending), matchSecs = useElapsed(match.isPending)
@@ -59,7 +59,7 @@ export function SelectedSitePanel({ site, onRename, onClear }: { site: PickedSit
           {offWorld && <Btn variant="primary" disabled={match.isPending || !site.name.trim()} onClick={() => match.mutate(site)}>
             {match.isPending ? `Submitting… ${matchSecs}s` : 'Find Earth analog matches'}</Btn>}
         </div>
-        {characterize.isPending && <p className="text-xs text-mute" role="status">Retrieving {site.body === 'Earth' ? 'DEM and NASA POWER' : site.body === 'Moon' ? 'LRO LOLA and Diviner' : 'MGS MOLA'} data for this point. This can take up to a minute.</p>}
+        {characterize.isPending && <p className="text-xs text-mute" role="status">Retrieving {site.body === 'Earth' ? 'DEM and NASA POWER' : site.body === 'Moon' ? 'LRO LOLA and Diviner' : 'MGS MOLA'} data for this point. This can take 1–3 minutes on slow connections.</p>}
         {match.isPending && <p className="text-xs text-mute" role="status">Characterising the target from real data and ranking stored Earth sites. You will be taken to the mission page.</p>}
         {offWorld && <p className="text-xs text-mute">Matching runs a full mission in {getAnalysisMode() === 'ai' ? 'AI-Powered' : 'Simple'} Analysis mode on the top stored Earth candidates.</p>}
         {characterize.isError && <Notice tone="bad" title="Data retrieval failed">{errText(characterize.error)}</Notice>}
@@ -70,10 +70,38 @@ export function SelectedSitePanel({ site, onRename, onClear }: { site: PickedSit
   )
 }
 
-function CharacterizeResultView({ d }: { d: Awaited<ReturnType<typeof postCharacterize>> }) {
+const fmt = (v: number | null) => (v == null ? '—' : Math.abs(v) >= 1e5 || (Math.abs(v) < 0.01 && v !== 0) ? v.toExponential(2) : String(Math.round(v * 1000) / 1000))
+
+/** Every observation stored for the site (topography plus, on Earth, climate and OpenStreetMap rows), grouped by domain. */
+function StoredObservations({ siteId }: { siteId: string }) {
+  const q = useQuery({ queryKey: ['site-obs', siteId], queryFn: () => getSciObservations([siteId], 200), retry: false })
+  if (q.isLoading) return <p className="text-xs text-mute" role="status">Loading all stored observations for this site…</p>
+  if (q.isError) return <Notice tone="warn" title="Stored observations unavailable">{errText(q.error)}</Notice>
+  const obs = q.data?.observations ?? []
+  const groups = new Map<string, SciObs[]>()
+  for (const o of obs) { const g = groups.get(o.domain) ?? []; g.push(o); groups.set(o.domain, g) }
   return (
     <div className="space-y-2">
-      <div className="text-xs text-ivory-dim">Stored as <span className="mono">{d.site_id}</span>{d.aoi?.length === 4 && <> · AOI <span className="mono">[{d.aoi.map((v) => Number(v).toFixed(3)).join(', ')}]</span></>}</div>
+      <div className="text-xs uppercase tracking-wide text-ember">All stored observations ({obs.length}{q.data && q.data.total > obs.length ? ` of ${q.data.total}` : ''}) · {groups.size} domain{groups.size === 1 ? '' : 's'}</div>
+      {obs.length === 0 ? <p className="text-xs text-mute">No observations are stored for this site.</p> : [...groups.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([domain, rows]) => (
+        <details key={domain} open className="rounded border border-line">
+          <summary className="cursor-pointer px-2 py-1 text-xs text-ivory-dim">{domain.replace(/_/g, ' ')} <span className="text-mute">({rows.length})</span></summary>
+          <ul className="divide-y divide-line text-xs">{rows.map((o) => (
+            <li key={o.evidence_id} className="flex items-baseline justify-between gap-2 px-2 py-1" title={`${o.evidence_id}\n${o.source_id} · ${o.product_id}${o.temporal_support ? `\n${o.temporal_support}` : ''}`}>
+              <span className="min-w-0 break-words">{o.quantity.replace(/_/g, ' ')}{o.statistic ? <span className="text-mute"> · {o.statistic}</span> : null}</span>
+              <span className="mono shrink-0 text-right">{o.value == null ? <span className="text-warn">{o.missing_reason ? 'missing' : 'n/a'}</span> : fmt(o.value)} <span className="text-ivory-dim">{o.unit ?? ''}</span></span>
+            </li>))}</ul>
+        </details>))}
+    </div>
+  )
+}
+
+function CharacterizeResultView({ d }: { d: Awaited<ReturnType<typeof postCharacterize>> }) {
+  return (
+    <div className="space-y-3">
+      <div className="break-words text-xs text-ivory-dim">Stored as <span className="mono">{d.site_id}</span>{d.aoi?.length === 4 && <> · AOI <span className="mono">[{d.aoi.map((v) => Number(v).toFixed(3)).join(', ')}]</span></>}</div>
+      <StoredObservations siteId={d.site_id} />
+      <div className="text-xs uppercase tracking-wide text-mute">Returned by this retrieval ({d.observations.length})</div>
       {d.observations.length === 0 ? <Notice tone="warn" title="No observations returned">The API retrieved no values for this point.</Notice> : (
         <Scroll><table className="tbl">
           <caption className="sr-only">Observations retrieved for {d.name}</caption>

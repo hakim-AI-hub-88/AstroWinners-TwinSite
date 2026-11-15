@@ -87,7 +87,7 @@ export function ScienceGateway() {
             {images.map((o) => (
               <figure key={o.evidence_id} className="rounded-md border border-line p-2">
                 <img src={sciAssetUrl(o.asset_id!)} alt={`NASA GIBS true colour over ${name(o.site_id)}`} className="w-full rounded" loading="lazy" />
-                <figcaption className="mt-1 text-xs text-mute">{name(o.site_id)} · {o.product_id} · {o.temporal_support} · visualization only</figcaption>
+                <figcaption className="mt-1 break-words text-xs text-mute">{name(o.site_id)} · {o.product_id} · {o.temporal_support} · visualization only</figcaption>
               </figure>))}
           </div>)}
       </Panel>

@@ -12,6 +12,7 @@ import { observationsCsv, safeHref } from '@/lib/exports'
 import { download, idx, money, days, short, toCsv } from '@/lib/format'
 import { rankSites, stability } from '@/lib/analysis'
 import { CRS } from '@/lib/regions'
+import { useSiteNames } from '@/lib/names'
 import type { Body, MissionResult, Portfolio, ProgressEvent, ReleaseEvidence } from '@/lib/types'
 const EarthMap = lazy(() => import('@/components/EarthMap'))
 const PlanetGlobe = lazy(() => import('@/components/PlanetGlobe'))
@@ -34,13 +35,14 @@ export function SectionNav() {
 /** Target body map (2D / 3D for Moon and Mars) beside an Earth map of the candidate sites. */
 export function MissionMaps({ r, showRanks }: { r: MissionResult; showRanks: boolean }) {
   const bodies = useMemo(() => targetBodies(r), [r])
+  const name = useSiteNames(r)
   const [target, setTarget] = useState<Body | null>(bodies[0] ?? null)
   const [mode, setMode] = useState<'2d' | 'globe'>('2d')
   const tb = target && bodies.includes(target) ? target : bodies[0] ?? null
-  const tFootprints = useMemo(() => (tb ? footprintsFor(r, tb) : []), [r, tb])
+  const tFootprints = useMemo(() => (tb ? footprintsFor(r, tb, name) : []), [r, tb, name])
   const tPins = useMemo(() => (tb ? candidatePins(r, tb, showRanks) : []), [r, tb, showRanks])
   const ePins = useMemo(() => candidatePins(r, 'Earth', showRanks), [r, showRanks])
-  const eFootprints = useMemo(() => footprintsFor(r, 'Earth'), [r])
+  const eFootprints = useMemo(() => footprintsFor(r, 'Earth', name), [r, name])
   const eligible = r.sites.filter((s) => s.body === 'Earth' && s.eligible).length
   const ineligible = r.sites.filter((s) => s.body === 'Earth' && !s.eligible).length
   return (
@@ -54,11 +56,11 @@ export function MissionMaps({ r, showRanks }: { r: MissionResult; showRanks: boo
           : tb === 'Earth' ? <Suspense fallback={<Spinner label="Loading Earth map" />}><EarthMap pins={tPins} footprints={tFootprints} globe={false} layers={LAYERS} /></Suspense>
           : mode === 'globe' ? <Suspense fallback={<Spinner label={`Loading ${tb} globe`} />}><PlanetGlobe body={tb} pins={tPins} footprints={tFootprints} layers={LAYERS} /></Suspense>
           : <PlanetMap body={tb} pins={tPins} footprints={tFootprints} layers={LAYERS} />}
-        {tb && <ul className="mt-2 space-y-0.5 text-xs text-ivory-dim">{tFootprints.map((f) => <li key={f.id}><span className="mono">{f.label}</span> · bbox [{f.bbox.map((v) => v.toFixed(3)).join(', ')}] · <span className="mono">{CRS[tb]}</span></li>)}</ul>}
+        {tb && <ul className="mt-2 space-y-0.5 text-xs text-ivory-dim">{tFootprints.map((f) => <li key={f.id} className="break-words"><span title={f.id}>{f.label}</span> · bbox [{f.bbox.map((v) => v.toFixed(3)).join(', ')}] · <span className="mono">{CRS[tb]}</span></li>)}</ul>}
       </Panel>
       <Panel eyebrow="Earth candidates" title={showRanks ? `${eligible} eligible · ${ineligible} not eligible` : `${eligible + ineligible} candidate site${eligible + ineligible === 1 ? '' : 's'}`}>
         <Suspense fallback={<Spinner label="Loading Earth map" />}><EarthMap pins={ePins} footprints={eFootprints} globe={false} layers={LAYERS} /></Suspense>
-        <p className="mt-2 text-xs text-mute">{showRanks ? 'Numbered pins are eligible candidates by rank; × marks a candidate that is not eligible.' : 'Ranks are withheld until the release gate passes; pins show positions only.'} WGS84 lon/lat.</p>
+        <p className="mt-2 text-xs text-mute">{showRanks ? 'Numbered pins are eligible candidates by rank; × marks a candidate that is not eligible. Names are drawn for the top 3; hover a pin for the others.' : 'Ranks are withheld until the release gate passes; pins show positions only. Hover a pin for its name.'} WGS84 lon/lat.</p>
       </Panel>
     </div>
   )
@@ -107,15 +109,22 @@ function SrcLink({ url, children }: { url: string | null | undefined; children?:
 }
 
 /** Every observation and asset with a link to its Data Explorer dataset (when one exists) and its source product / URL. */
-export function DataProvenance({ r, ev, synthetic }: { r: MissionResult; ev: ReleaseEvidence | null; synthetic: boolean }) {
+export function DataProvenance({ r, ev, synthetic, hideRanks = false }: { r: MissionResult; ev: ReleaseEvidence | null; synthetic: boolean; hideRanks?: boolean }) {
   const ids = useExplorableIds()
+  const name = useSiteNames(r)
   const obs = ev?.observations ?? []
+  // One row per source product (not per asset URL): observation count, distinct source URLs and assets.
   const products = useMemo(() => {
-    const m = new Map<string, { product: string; url: string; n: number }>()
-    for (const o of obs) { const k = `${o.source_product}|${o.source_url}`; const e = m.get(k); if (e) e.n++; else m.set(k, { product: o.source_product, url: o.source_url, n: 1 }) }
-    return [...m.values()]
+    const m = new Map<string, { product: string; urls: Set<string>; assets: Set<string>; n: number }>()
+    for (const o of obs) {
+      const e = m.get(o.source_product) ?? { product: o.source_product, urls: new Set<string>(), assets: new Set<string>(), n: 0 }
+      e.n++; if (o.source_url) e.urls.add(o.source_url); for (const a of o.source_asset_ids) e.assets.add(a)
+      m.set(o.source_product, e)
+    }
+    return [...m.values()].sort((a, b) => b.n - a.n)
   }, [obs])
-  const ranked = useMemo(() => rankSites(r.sites), [r])
+  // With ranks withheld, list candidates by name so the order does not reveal the ranking.
+  const ranked = useMemo(() => (hideRanks ? [...r.sites].sort((a, b) => a.name.localeCompare(b.name)) : rankSites(r.sites)), [r, hideRanks])
   return (
     <div className="space-y-5">
       <Panel eyebrow="Data navigation" title="Candidate and target datasets">
@@ -125,7 +134,7 @@ export function DataProvenance({ r, ev, synthetic }: { r: MissionResult; ev: Rel
               <span className="mono text-xs text-mute">{[...new Set(Object.values(s.contributions).map((c) => c.source_id))].join(', ')}</span></li>)}</ul></div>
           <div><h3 className="mb-1 text-sm text-ivory-dim">Target profiles</h3>
             {r.target_profiles.length === 0 ? <p className="text-sm text-mute">None.</p> : <ul className="space-y-2 text-sm">{r.target_profiles.map((t) => (
-              <li key={t.location.id}><DataLink id={t.location.id} ids={ids} /> <span className="text-xs text-mute">{t.body}</span>
+              <li key={t.location.id}>{name(t.location.id) !== t.location.id && <span className="mr-2">{name(t.location.id)}</span>}<DataLink id={t.location.id} ids={ids} /> <span className="text-xs text-mute">{t.body}</span>
                 <ul className="mt-1 space-y-0.5 pl-4 text-xs text-ivory-dim">{Object.entries(t.observations).map(([k, o]) => <li key={k}><span className="mono">{k}</span> = <span className="mono">{o.value ?? '—'}</span> {o.unit} <span className="mono text-mute">· {o.source_id}</span>{o.missing_reason && <span className="text-warn"> · {o.missing_reason}</span>}</li>)}</ul></li>))}</ul>}
           </div>
         </div>
@@ -135,14 +144,15 @@ export function DataProvenance({ r, ev, synthetic }: { r: MissionResult; ev: Rel
         {!ev ? <Empty>Evidence sidecar unavailable.</Empty> : obs.length === 0 ? <Empty>No observations are attested in this run{synthetic ? ' (synthetic runs carry none)' : ''}.</Empty> : (
           <Scroll><table className="tbl">
             <thead><tr><th>Evidence</th><th>Site</th><th>Feature</th><th>Value</th><th>QA</th><th>Source product</th><th>Granule</th><th>Assets</th><th>URL</th></tr></thead>
-            <tbody>{obs.map((o) => <tr key={o.evidence_id}><td className="mono text-xs">{o.evidence_id}</td><td><DataLink id={o.site_id} ids={ids} /></td><td className="mono">{o.feature_id}</td>
+            <tbody>{obs.map((o) => <tr key={o.evidence_id}><td className="mono text-xs">{o.evidence_id}</td><td>{name(o.site_id) !== o.site_id && <div className="whitespace-nowrap">{name(o.site_id)}</div>}<DataLink id={o.site_id} ids={ids} /></td><td className="mono">{o.feature_id}</td>
               <td className="mono">{o.value ?? '—'} <span className="text-ivory-dim">{o.unit}</span></td><td><Badge tone={o.qa_status === 'ACCEPT' ? 'ok' : 'warn'}>{o.qa_status}</Badge></td>
               <td className="text-xs">{o.source_product}</td><td className="mono text-xs">{short(o.source_granule_id ?? '', 28)}</td><td className="mono text-xs">{o.source_asset_ids.join(', ')}</td><td className="text-xs"><SrcLink url={o.source_url} /></td></tr>)}</tbody>
           </table></Scroll>)}
       </Panel>
       <div className="grid gap-5 md:grid-cols-2">
         <Panel eyebrow="Source products" title={`${products.length} product${products.length === 1 ? '' : 's'}`}>
-          {products.length === 0 ? <Empty>No source products are attested.</Empty> : <ul className="space-y-1 text-sm">{products.map((p) => <li key={p.product + p.url}>{p.product} <span className="text-xs text-mute">({p.n} obs)</span> · <SrcLink url={p.url} /></li>)}</ul>}
+          {products.length === 0 ? <Empty>No source products are attested.</Empty> : <ul className="space-y-1 text-sm">{products.map((p) => { const url = [...p.urls][0]; return (
+            <li key={p.product} className="break-words"><span className="mono text-xs">{p.product}</span> <span className="text-xs text-mute">({p.n} obs · {p.assets.size} asset{p.assets.size === 1 ? '' : 's'}{p.urls.size > 1 ? ` · ${p.urls.size} source URLs` : ''})</span>{url && <> · <SrcLink url={url}>{p.urls.size > 1 ? 'example source' : 'source'}</SrcLink></>}</li>) })}</ul>}
         </Panel>
         <Panel eyebrow="Assets" title={`${ev?.assets.length ?? 0} source asset${ev?.assets.length === 1 ? '' : 's'}`}>
           {!ev || ev.assets.length === 0 ? <Empty>No source assets are attested{synthetic ? ' (synthetic fixture)' : ''}.</Empty> : (
@@ -154,7 +164,7 @@ export function DataProvenance({ r, ev, synthetic }: { r: MissionResult; ev: Rel
 }
 
 /** Embedded backend report and Blob downloads of every mission artefact. */
-export function ReportSection({ runId, r, ev, demo }: { runId: string; r: MissionResult; ev: ReleaseEvidence | null; demo: boolean }) {
+export function ReportSection({ runId, r, ev, demo, hideRanks = false }: { runId: string; r: MissionResult; ev: ReleaseEvidence | null; demo: boolean; hideRanks?: boolean }) {
   const report = useQuery({ queryKey: ['report-html', runId], queryFn: () => getReportHtml(runId), enabled: !demo, retry: false })
   const [busy, setBusy] = useState(false), [msg, setMsg] = useState<string | null>(null)
   const obs = ev?.observations ?? []
@@ -174,7 +184,7 @@ export function ReportSection({ runId, r, ev, demo }: { runId: string; r: Missio
         <Btn disabled={demo || busy} title={demo ? 'Demo runs have no agent trace' : undefined} onClick={() => void trace()}>{busy ? 'Fetching…' : 'Agent trace JSON'}</Btn>
         <Btn disabled={!report.data} title={report.data ? undefined : 'Report HTML not loaded'} onClick={() => download(`${runId}-report.html`, report.data!, 'text/html')}>Report HTML</Btn>
         <Btn disabled={obs.length === 0} title={obs.length ? undefined : 'No attested observations'} onClick={() => download(`${runId}-observations.csv`, observationsCsv(obs), 'text/csv')}>Observations CSV ({obs.length})</Btn>
-        <Btn onClick={ranking}>Ranking CSV</Btn>
+        <Btn disabled={hideRanks} title={hideRanks ? 'Ranking withheld by the release gate — reveal the unreleased diagnostic values first' : undefined} onClick={ranking}>Ranking CSV</Btn>
         <Link to={`/reports/${runId}`}><Btn variant="primary">Printable report</Btn></Link>
       </div>
       {msg && <div className="mb-3"><Notice tone="bad" title="Download failed">{msg}</Notice></div>}
