@@ -40,9 +40,14 @@ reference-dev:
 ## test: integration harness tests (needs `make bootstrap` for the extracted reference engine)
 test:
 	$(VENV_PYTHON) -m unittest discover -s scripts/integration/tests -v
-## test-backend: platform + Flask unit tests (backend/tests, incl. backend/tests/flask)
+## test-backend: platform + Flask unit tests, one process per backend/tests/<dir> (ai, api, data, flask, integration,
+## science ...). Per-directory discovery also covers dirs without __init__.py. Skip dirs: make test-backend SKIP="data"
+SKIP ?=
 test-backend:
-	$(PYPATH) $(VENV_PYTHON) -m unittest discover -s backend/tests -t .
+	@set -e; for d in backend/tests/*/; do n=$$(basename $$d); \
+	  case " $(SKIP) " in *" $$n "*) echo "== $$n (skipped)"; continue;; esac; \
+	  ls $$d/test_*.py >/dev/null 2>&1 || continue; echo "== backend/tests/$$n"; \
+	  $(PYPATH) $(VENV_PYTHON) -m unittest discover -s $$d -p 'test_*.py'; done
 ## test-acceptance: provenance / terrain reference checks
 test-acceptance:
 	$(PYPATH) $(VENV_PYTHON) -m unittest discover -s tests/acceptance

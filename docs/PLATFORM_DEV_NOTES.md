@@ -32,7 +32,7 @@ Read [contracts/SHARED_CONTRACT.md](contracts/SHARED_CONTRACT.md) before coding.
 make dev
 ```
 
-This runs TwinSite only after the C3/C4 entry points exist. Required owner entry points: `python -m twinsite.api`, `python -m twinsite.jobs`, and `npm run dev` in `frontend`. API binds loopback on port 8080; frontend must proxy `/v1` to it and import `../contracts/types.ts` plus shared examples in development. Backend imports `contracts.validation` from the workspace root. Processes share `.runtime` storage. Ctrl+C stops the stack. No automatic synthetic fallback.
+This starts the Flask site (`backend/app.py`, port 5050), the platform API (`python -m twinsite.api`, port 8080) and the worker (`python -m twinsite.jobs`) with `PYTHONPATH=backend:.`; Flask serves the built console at `/console/` and proxies `/v1` to the API. Ports: `make dev WEB_PORT=5051 API_PORT=8091`. The Vite dev server (5173, `/console/`, proxying `/v1`) is opt-in: `make console-dev`. Backend imports `contracts.validation` from the workspace root. Processes share `.runtime` storage. Ctrl+C stops the stack. No automatic synthetic fallback.
 
 For the existing unmodified historical reference:
 
@@ -43,7 +43,7 @@ make reference-dev
 
 That command runs the historical API/worker/UI with synthetic examples and a separate local SQLite database. It is NOT a NASA-validated service; never deploy it publicly. All core calculations in that reference run without AI keys. The reference map requires external assets; tables and reports are separate. Visual UI acceptance is still pending.
 
-`.env.example` lists placeholder names only. The launcher does not load `.env` automatically. Configure server secrets locally outside Git; never use frontend-prefixed variables for secrets. AI and private uploads remain forcibly disabled in the default dev launcher until the owners deliver reviewed enablement. No paid fallback.
+`.env.example` lists placeholder names only. The launcher loads an optional repo-root `.env` (shell variables win; values are never printed). Configure server secrets locally outside Git; never use frontend-prefixed variables for secrets. Private uploads stay disabled. AI is enabled only when free-provider keys or the 0600 secret file are present (`--no-ai` forces Simple Analysis). No paid fallback.
 
 ## Checkpoints
 

@@ -37,12 +37,13 @@ Ports 5050 and 8080 bind to `127.0.0.1` only. Open only 80/443 in the firewall.
   harmonized datasets), 20 GB disk.
 - Packages: `apt install git nginx python3 python3-venv nodejs npm` (Node.js ≥ 20; use NodeSource if the
   distro's is older). Python ≥ 3.11.
-- A DNS name pointing at the VM (used below as `twinsite.example.org`).
+- A DNS name pointing at the VM: the **origin host** (used below as `origin.example.org`). With Vercel in front,
+  the public domain (e.g. `twinsite.example.org`) is attached to Vercel instead and proxies to this origin.
 
 ## 2. Install (idempotent)
 
 ```sh
-git clone https://github.com/hakim-AI-hub-88/AstroWinners-TwinSite.git /srv/twinsite/app   # or let install.sh clone
+sudo git clone https://github.com/hakim-AI-hub-88/AstroWinners-TwinSite.git /srv/twinsite/app   # root-owned; or let install.sh clone
 sudo REF=master bash /srv/twinsite/app/ops/vm/install.sh
 ```
 
@@ -104,15 +105,15 @@ not prove the worker runs). `--skip-mission` skips the run. Exit code 0 only whe
 ```sh
 sudo install -d /var/www/letsencrypt
 sudo cp /srv/twinsite/app/ops/vm/nginx-https.conf.example /etc/nginx/conf.d/twinsite-https.conf
-sudo sed -i 's/twinsite.example.org/YOUR.HOST.NAME/g' /etc/nginx/conf.d/twinsite-https.conf
+sudo sed -i 's/origin.example.org/YOUR.ORIGIN.HOST/g' /etc/nginx/conf.d/twinsite-https.conf
 # first issue the certificate with only the :80 block active (comment the :443 block), then:
-sudo certbot certonly --webroot -w /var/www/letsencrypt -d YOUR.HOST.NAME
+sudo certbot certonly --webroot -w /var/www/letsencrypt -d YOUR.ORIGIN.HOST
 sudo nginx -t && sudo systemctl reload nginx
-/srv/twinsite/venv/bin/python /srv/twinsite/app/ops/vm/smoke.py --base-url https://YOUR.HOST.NAME --expect-security-headers --skip-mission
+/srv/twinsite/venv/bin/python /srv/twinsite/app/ops/vm/smoke.py --base-url https://YOUR.ORIGIN.HOST --expect-security-headers --skip-mission
 ```
 
-Keep the loopback block (`nginx.conf`, :8081) for health checks. If Vercel fronts the site, this hostname
-is the `TWINSITE_VM_HOST` in `vercel.json`.
+Keep the loopback block (`nginx.conf`, :8081) for health checks. If Vercel fronts the site, this origin host
+is the `TWINSITE_VM_HOST` in `vercel.json` ([Vercel guide](../../docs/deployment/VERCEL.md)).
 
 ## 6. Security notes
 

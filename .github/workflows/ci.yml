@@ -19,8 +19,7 @@ jobs:
     timeout-minutes: 20
     env:
       PYTHONPATH: backend:.
-      TWINSITE_AI_ENABLED: "false"      # no secrets in CI: AI paths run their documented fallbacks
-      TWINSITE_UPLOADS_ENABLED: "false"
+      TWINSITE_UPLOADS_ENABLED: "false"   # no secrets are configured in CI; AI tests use their own fakes
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -32,8 +31,11 @@ jobs:
             requirements-integration.txt
       - name: Install dependencies
         run: python -m pip install -r requirements.txt -r requirements-integration.txt
-      - name: Unit tests (backend/tests, incl. backend/tests/flask)
-        run: python -m unittest discover -s backend/tests -t . -v
+      # One process per backend/tests/<dir> (ai, api, science, flask, ...), same as `make test-backend`.
+      # data + integration are skipped until twinsite.sources.credentials is committed: the module is
+      # matched by the `*credentials*` .gitignore rule, so a fresh clone cannot import it.
+      - name: Unit tests (backend/tests/*, incl. backend/tests/flask)
+        run: make test-backend VENV_PYTHON=python SKIP="data integration"
       - name: Acceptance checks (provenance, terrain reference)
         run: python -m unittest discover -s tests/acceptance -v
       - name: Contract schemas and examples
