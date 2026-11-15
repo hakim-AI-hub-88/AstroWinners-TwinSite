@@ -31,6 +31,9 @@ from flask import Flask, jsonify, render_template
 from routes.assistant_routes import bp as assistant_bp
 from routes.ml_routes import bp as ml_bp
 from routes.platform_routes import bp as platform_bp
+from routes.data_routes import bp as data_bp
+from routes.auto_routes import bp as auto_bp
+from routes.ai_routes import bp as ai_bp
 from routes.report_routes import bp as report_bp
 from routes.similarity_routes import bp as similarity_bp
 from routes.twin_routes import bp as twin_bp
@@ -53,6 +56,9 @@ def create_app(preload: bool = True) -> Flask:
     app.register_blueprint(report_bp)         # TWINSITE mission report (AI narrative + map images)
     app.register_blueprint(twin_bp)           # TWINSITE interactive globes (data layers, region check)
     app.register_blueprint(platform_bp)       # pages, sitemap, React console, /v1 platform API proxy
+    app.register_blueprint(data_bp)           # Data Hub API: bundled datasets, cleaning, downloads
+    app.register_blueprint(auto_bp)           # Agentic Auto Mode: autonomous end-to-end missions
+    app.register_blueprint(ai_bp)             # AI provider status (multi-provider free router)
 
     # ----------------------------------------------------------------------
     # PAGE ROUTES
