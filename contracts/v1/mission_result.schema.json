@@ -1,0 +1,866 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "algorithm_version": {
+      "type": "string"
+    },
+    "input_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "cleaned_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "data_status": {
+      "enum": [
+        "synthetic",
+        "measured"
+      ]
+    },
+    "mission_id": {
+      "type": "string"
+    },
+    "weights": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      }
+    },
+    "transformations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "rule": {
+            "type": "string"
+          },
+          "site_id": {
+            "type": "string"
+          },
+          "feature": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "rule",
+          "site_id",
+          "feature"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "sites": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "eligible": {
+            "type": "boolean"
+          },
+          "failures": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "coverage": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1.000000000001
+          },
+          "observed_similarity": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 1.000000000001
+          },
+          "lower_utility": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1.000000000001
+          },
+          "upper_utility": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "contributions": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "similarity": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "weighted_contribution": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "value": {
+                  "type": "number"
+                },
+                "unit": {
+                  "type": "string"
+                },
+                "source_id": {
+                  "type": "string"
+                },
+                "target_source_id": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "target_value": {
+                  "type": "number"
+                },
+                "target_body": {
+                  "type": "string"
+                },
+                "target_location_id": {
+                  "type": "string"
+                },
+                "feature_id": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "similarity",
+                "weighted_contribution",
+                "value",
+                "unit",
+                "source_id",
+                "target_source_id",
+                "target_value",
+                "target_body",
+                "target_location_id",
+                "feature_id"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "missing": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "access": {
+            "enum": [
+              "pass",
+              "fail",
+              "unknown"
+            ]
+          },
+          "cost": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "days": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "longitude": {
+            "type": "number"
+          },
+          "latitude": {
+            "type": "number"
+          },
+          "body": {
+            "enum": [
+              "Earth",
+              "Moon",
+              "Mars"
+            ]
+          },
+          "coordinate_system": {
+            "enum": [
+              "WGS84_lonlat",
+              "Moon_planetocentric_east_180",
+              "Mars_planetocentric_east_180"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "eligible",
+          "failures",
+          "coverage",
+          "observed_similarity",
+          "lower_utility",
+          "upper_utility",
+          "contributions",
+          "missing",
+          "access",
+          "cost",
+          "days",
+          "longitude",
+          "latitude",
+          "body",
+          "coordinate_system"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "portfolios": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "site_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "maxItems": 3,
+            "uniqueItems": true
+          },
+          "objective": {
+            "type": "number"
+          },
+          "test_coverage_utility": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1.000000000001
+          },
+          "dimension_coverage": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          },
+          "redundancy": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1.000000000001
+          },
+          "cost": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "days": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "operational_status": {
+            "enum": [
+              "pass",
+              "unknown"
+            ]
+          },
+          "minimum_evidence_coverage": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1.000000000001
+          },
+          "kind": {
+            "enum": [
+              "standalone",
+              "combined"
+            ]
+          }
+        },
+        "required": [
+          "site_ids",
+          "objective",
+          "test_coverage_utility",
+          "dimension_coverage",
+          "redundancy",
+          "cost",
+          "days",
+          "operational_status",
+          "minimum_evidence_coverage",
+          "kind"
+        ],
+        "additionalProperties": false
+      },
+      "maxItems": 10
+    },
+    "feasible_portfolio_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "status": {
+      "enum": [
+        "completed",
+        "no_feasible_portfolio"
+      ]
+    },
+    "sensitivity": {
+      "type": "object",
+      "properties": {
+        "seed": {
+          "type": "integer"
+        },
+        "scenarios": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "weight_factor_range": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "top_portfolio_counts": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "infeasible_scenarios": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "seed",
+        "scenarios",
+        "weight_factor_range",
+        "top_portfolio_counts",
+        "infeasible_scenarios"
+      ],
+      "additionalProperties": false
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "locations"
+      ],
+      "properties": {
+        "locations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "body",
+              "coordinate_system",
+              "bbox"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "body": {
+                "enum": [
+                  "Earth",
+                  "Moon",
+                  "Mars"
+                ]
+              },
+              "coordinate_system": {
+                "enum": [
+                  "WGS84_lonlat",
+                  "Moon_planetocentric_east_180",
+                  "Mars_planetocentric_east_180"
+                ]
+              },
+              "bbox": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 4,
+                "maxItems": 4
+              },
+              "kind": {
+                "enum": [
+                  "site",
+                  "zone"
+                ],
+                "default": "site"
+              }
+            }
+          },
+          "minItems": 1,
+          "maxItems": 3
+        },
+        "compare_with": {
+          "type": "array",
+          "uniqueItems": true,
+          "maxItems": 2,
+          "items": {
+            "enum": [
+              "Earth",
+              "Moon",
+              "Mars"
+            ]
+          }
+        }
+      },
+      "description": "One selected site or zone per body. A zone contains multiple candidate/reference locations. Earth-centered comparison rules apply.",
+      "allOf": [
+        {
+          "properties": {
+            "locations": {
+              "contains": {
+                "properties": {
+                  "body": {
+                    "const": "Earth"
+                  }
+                },
+                "required": [
+                  "body"
+                ]
+              },
+              "minContains": 0,
+              "maxContains": 1
+            }
+          }
+        },
+        {
+          "properties": {
+            "locations": {
+              "contains": {
+                "properties": {
+                  "body": {
+                    "const": "Moon"
+                  }
+                },
+                "required": [
+                  "body"
+                ]
+              },
+              "minContains": 0,
+              "maxContains": 1
+            }
+          }
+        },
+        {
+          "properties": {
+            "locations": {
+              "contains": {
+                "properties": {
+                  "body": {
+                    "const": "Mars"
+                  }
+                },
+                "required": [
+                  "body"
+                ]
+              },
+              "minContains": 0,
+              "maxContains": 1
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "locations": {
+                "contains": {
+                  "properties": {
+                    "body": {
+                      "const": "Earth"
+                    }
+                  },
+                  "required": [
+                    "body"
+                  ]
+                }
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "compare_with"
+            ],
+            "properties": {
+              "compare_with": {
+                "minItems": 1,
+                "items": {
+                  "enum": [
+                    "Moon",
+                    "Mars"
+                  ]
+                }
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "compare_with": {
+                "maxItems": 1,
+                "items": {
+                  "const": "Earth"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "mode": {
+      "enum": [
+        "auto",
+        "custom"
+      ]
+    },
+    "start_trigger": {
+      "const": "user_request"
+    },
+    "excluded_outside_scope": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "comparison_pairs": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          [
+            "Earth",
+            "Moon"
+          ],
+          [
+            "Earth",
+            "Mars"
+          ]
+        ]
+      }
+    },
+    "target_profiles": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 12,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "body",
+          "location",
+          "observations"
+        ],
+        "properties": {
+          "body": {
+            "enum": [
+              "Moon",
+              "Mars"
+            ]
+          },
+          "location": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "body",
+              "coordinate_system",
+              "bbox"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "body": {
+                "enum": [
+                  "Earth",
+                  "Moon",
+                  "Mars"
+                ]
+              },
+              "coordinate_system": {
+                "enum": [
+                  "WGS84_lonlat",
+                  "Moon_planetocentric_east_180",
+                  "Mars_planetocentric_east_180"
+                ]
+              },
+              "bbox": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 4,
+                "maxItems": 4
+              },
+              "kind": {
+                "enum": [
+                  "site",
+                  "zone"
+                ],
+                "default": "site"
+              }
+            }
+          },
+          "observations": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "unit": {
+                  "type": "string"
+                },
+                "source_id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "missing_sentinel": {
+                  "type": "number"
+                },
+                "missing_reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "value",
+                "unit",
+                "source_id"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      }
+    },
+    "portfolio_mode": {
+      "enum": [
+        "standalone",
+        "combined",
+        "both"
+      ],
+      "default": "both"
+    },
+    "standalone_portfolios": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "site_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "maxItems": 3,
+            "uniqueItems": true
+          },
+          "objective": {
+            "type": "number"
+          },
+          "test_coverage_utility": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1.000000000001
+          },
+          "dimension_coverage": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          },
+          "redundancy": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1.000000000001
+          },
+          "cost": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "days": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "operational_status": {
+            "enum": [
+              "pass",
+              "unknown"
+            ]
+          },
+          "minimum_evidence_coverage": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1.000000000001
+          },
+          "kind": {
+            "enum": [
+              "standalone",
+              "combined"
+            ]
+          }
+        },
+        "required": [
+          "site_ids",
+          "objective",
+          "test_coverage_utility",
+          "dimension_coverage",
+          "redundancy",
+          "cost",
+          "days",
+          "operational_status",
+          "minimum_evidence_coverage",
+          "kind"
+        ],
+        "additionalProperties": false
+      },
+      "maxItems": 10
+    },
+    "combined_portfolios": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "site_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "maxItems": 3,
+            "uniqueItems": true
+          },
+          "objective": {
+            "type": "number"
+          },
+          "test_coverage_utility": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1.000000000001
+          },
+          "dimension_coverage": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          },
+          "redundancy": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1.000000000001
+          },
+          "cost": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "days": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "operational_status": {
+            "enum": [
+              "pass",
+              "unknown"
+            ]
+          },
+          "minimum_evidence_coverage": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1.000000000001
+          },
+          "kind": {
+            "enum": [
+              "standalone",
+              "combined"
+            ]
+          }
+        },
+        "required": [
+          "site_ids",
+          "objective",
+          "test_coverage_utility",
+          "dimension_coverage",
+          "redundancy",
+          "cost",
+          "days",
+          "operational_status",
+          "minimum_evidence_coverage",
+          "kind"
+        ],
+        "additionalProperties": false
+      },
+      "maxItems": 10
+    }
+  },
+  "required": [
+    "schema_version",
+    "algorithm_version",
+    "input_sha256",
+    "cleaned_sha256",
+    "data_status",
+    "mission_id",
+    "weights",
+    "transformations",
+    "sites",
+    "portfolios",
+    "feasible_portfolio_count",
+    "status",
+    "sensitivity",
+    "limitations",
+    "scope",
+    "mode",
+    "start_trigger",
+    "excluded_outside_scope",
+    "comparison_pairs",
+    "target_profiles",
+    "portfolio_mode",
+    "standalone_portfolios",
+    "combined_portfolios"
+  ],
+  "additionalProperties": false
+}

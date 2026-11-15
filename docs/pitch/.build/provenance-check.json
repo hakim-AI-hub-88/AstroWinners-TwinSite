@@ -1,0 +1,100 @@
+{
+  "items": [
+    {
+      "level": "PASS",
+      "code": "PRODUCT_NAMING",
+      "detail": "srtmgl1-n30w006-2493d4ce40b0: SRTMGL1 on Earth via NASA"
+    },
+    {
+      "level": "PASS",
+      "code": "RAW_CHECKSUM",
+      "detail": "srtmgl1-n30w006-2493d4ce40b0: sha256 2493d4ce40b0\u2026 10595645 bytes"
+    },
+    {
+      "level": "PASS",
+      "code": "PRODUCT_NAMING",
+      "detail": "mola-megt00n090hb.img-sub-2bc27bff39c9: MOLA_MEGDR on Mars via NASA PDS Geosciences Node"
+    },
+    {
+      "level": "PASS",
+      "code": "RAW_CHECKSUM",
+      "detail": "mola-megt00n090hb.img-sub-2bc27bff39c9: sha256 2bc27bff39c9\u2026 2888 bytes"
+    },
+    {
+      "level": "PASS",
+      "code": "PRODUCT_NAMING",
+      "detail": "mola-megc00n090hb.img-sub-0e47c5bf42c1: MOLA_MEGDR on Mars via NASA PDS Geosciences Node"
+    },
+    {
+      "level": "PASS",
+      "code": "RAW_CHECKSUM",
+      "detail": "mola-megc00n090hb.img-sub-0e47c5bf42c1: sha256 0e47c5bf42c1\u2026 1444 bytes"
+    },
+    {
+      "level": "PASS",
+      "code": "PRODUCT_NAMING",
+      "detail": "mola-megt00n090hb.lbl-c85891df3c11: MOLA_MEGDR on Mars via NASA PDS Geosciences Node"
+    },
+    {
+      "level": "PASS",
+      "code": "RAW_CHECKSUM",
+      "detail": "mola-megt00n090hb.lbl-c85891df3c11: sha256 c85891df3c11\u2026 4820 bytes"
+    },
+    {
+      "level": "PASS",
+      "code": "PRODUCT_NAMING",
+      "detail": "mola-megc00n090hb.lbl-7c373fcff18e: MOLA_MEGDR on Mars via NASA PDS Geosciences Node"
+    },
+    {
+      "level": "PASS",
+      "code": "RAW_CHECKSUM",
+      "detail": "mola-megc00n090hb.lbl-7c373fcff18e: sha256 7c373fcff18e\u2026 3088 bytes"
+    },
+    {
+      "level": "PASS",
+      "code": "INDEPENDENT_RECOMPUTE_AGREES",
+      "detail": "ev-earth-zagora-draa-slope_deg-304b73090a700585: C1=0.5838 C5=0.584 (slope_mean_deg, n-valid=1.000)"
+    },
+    {
+      "level": "PASS",
+      "code": "INDEPENDENT_RECOMPUTE_AGREES",
+      "detail": "ev-earth-zagora-draa-roughness_m-ad5024390946a3a6: C1=17.9224 C5=17.922 (roughness_m, n-valid=1.000)"
+    },
+    {
+      "level": "PASS",
+      "code": "INDEPENDENT_RECOMPUTE_AGREES",
+      "detail": "ev-earth-zagora-draa-local_relief_m-d711fc422b473960: C1=313.811 C5=313.811 (relief_m, n-valid=1.000)"
+    },
+    {
+      "level": "PASS",
+      "code": "INDEPENDENT_RECOMPUTE_AGREES",
+      "detail": "ev-mars-gale-aeolis-slope_deg-164109cd32a9b22a: C1=1.5093 C5=1.509 (slope_mean_deg, n-valid=0.741)"
+    },
+    {
+      "level": "PASS",
+      "code": "INDEPENDENT_RECOMPUTE_AGREES",
+      "detail": "ev-mars-gale-aeolis-roughness_m-14c3e59c911b8558: C1=42.837 C5=42.837 (roughness_m, n-valid=0.741)"
+    },
+    {
+      "level": "PASS",
+      "code": "INDEPENDENT_RECOMPUTE_AGREES",
+      "detail": "ev-mars-gale-aeolis-local_relief_m-f76821d077242461: C1=925.562 C5=925.562 (relief_m, n-valid=0.741)"
+    },
+    {
+      "level": "PASS",
+      "code": "COMMON_ANALYSIS_SCALE",
+      "detail": "slope_deg: [1852.3] m across ['Earth', 'Mars']"
+    },
+    {
+      "level": "PASS",
+      "code": "COMMON_ANALYSIS_SCALE",
+      "detail": "roughness_m: [1852.3] m across ['Earth', 'Mars']"
+    },
+    {
+      "level": "PASS",
+      "code": "COMMON_ANALYSIS_SCALE",
+      "detail": "local_relief_m: [1852.3] m across ['Earth', 'Mars']"
+    }
+  ],
+  "nasa_bytes_verified": false
+}

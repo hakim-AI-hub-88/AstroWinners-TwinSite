@@ -1,0 +1,7 @@
+{
+  "schema_version": "1.0",
+  "run_id": "run-fixture-001",
+  "id": "run-fixture-001",
+  "status": "queued",
+  "status_url": "/v1/missions/run-fixture-001"
+}

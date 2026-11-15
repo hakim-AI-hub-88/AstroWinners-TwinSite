@@ -1,0 +1,19 @@
+{
+  "schema_version": "1.0.0",
+  "project": "TwinSite",
+  "routes": [
+    {"path":"/","purpose":"public landing, science, usage, architecture, team"},
+    {"path":"/workspace","purpose":"new mission, auto/custom parameters, upload consent"},
+    {"path":"/explorer","purpose":"planetary 2D map, Earth 3D globe, candidates"},
+    {"path":"/analysis/:runId","purpose":"scientific features, comparisons, strengths, gaps, temporal data"},
+    {"path":"/portfolios/:runId","purpose":"single/combined portfolio tradeoffs, alternatives"},
+    {"path":"/data","purpose":"read-only approved dataset catalog"},
+    {"path":"/data/:datasetId","purpose":"raw/cleaned/derived previews, provenance, comparison"},
+    {"path":"/activity/:runId","purpose":"P00-P90 pipeline jobs, history, warnings"},
+    {"path":"/reports/:runId","purpose":"source-backed scientific findings and downloads"},
+    {"path":"/docs","purpose":"scientific methods, data products, software and restrictions"}
+  ],
+  "no_auth_or_settings_pages": true,
+  "source_data_public_readonly": true,
+  "user_uploads_private_by_capability_or_disabled": true
+}

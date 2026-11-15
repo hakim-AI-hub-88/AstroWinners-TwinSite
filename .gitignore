@@ -1,7 +1,30 @@
 # secrets: real API keys stay local (copy .env.example to .env)
 .env
-# local Python virtual environment (recreate with: python3 -m venv .venv)
+.env.*
+!.env.example
+*.pem
+*.key
+*credentials*
+# Python
 .venv/
 __pycache__/
-*.pyc
+*.py[cod]
 .pytest_cache/
+# Node / builds
+node_modules/
+dist/
+!frontend/dist/.gitkeep
+# runtime state (SQLite, blobs, caches, secrets files)
+.runtime/
+.worktrees/
+*.sqlite*
+*.log
+.DS_Store
+# local-only source material
+ARES 2/
+ARES_Data_Source_Update/
+/*.pdf
+/*.png
+/*.jpeg
+references/extracted/
+.vercel/

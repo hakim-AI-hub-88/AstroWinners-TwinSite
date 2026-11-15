@@ -1,0 +1,979 @@
+{
+  "analysis_scale_m": 1895.3,
+  "assets": [
+    {
+      "adapter_version": "twinsite-data/1.0.0",
+      "asset_id": "srtmgl1-n30w006-2493d4ce40b0",
+      "body": "Earth",
+      "byte_size": 10595645,
+      "coordinate_conventions": "WGS84 geodetic lon/lat, east-positive; point-registered 1 arc-second posts; EGM96 heights",
+      "crs": "EPSG:4326",
+      "format": "zip(HGT int16 big-endian)",
+      "license_url": "https://lpdaac.usgs.gov/data/data-citation-and-policies/",
+      "object_key": "raw/SRTMGL1/2493d4ce40b0405ee1926365533faf3b04d8c84a765fc5add763e1c0ebd13c82/N30W006.SRTMGL1.hgt.zip",
+      "observation_end": "2000-02-21T23:59:59Z",
+      "observation_start": "2000-02-11T00:00:00Z",
+      "parent_asset_ids": [],
+      "product_id": "SRTMGL1",
+      "product_version": "003",
+      "retrieved_at": "2026-11-15T08:31:39Z",
+      "schema_version": "1.0",
+      "sha256": "2493d4ce40b0405ee1926365533faf3b04d8c84a765fc5add763e1c0ebd13c82",
+      "source_id": "SRTMGL1",
+      "source_url": "https://data.lpdaac.earthdatacloud.nasa.gov/lp-prod-protected/SRTMGL1.003/N30W006.SRTMGL1.hgt/N30W006.SRTMGL1.hgt.zip"
+    },
+    {
+      "adapter_version": "twinsite-data/1.0.0",
+      "asset_id": "lola-ldem_64.img-sub-9d2d7dac1470",
+      "body": "Moon",
+      "byte_size": 9800,
+      "coordinate_conventions": "IAU2000 planetocentric lat, east-positive lon 0..360; simple cylindrical 64 ppd; pixel-registered heights relative to 1737.4 km sphere; byte ranges (inclusive) of source file: 70 ranges 203216672..206396331",
+      "crs": "IAU_2000:30100",
+      "format": "concatenated HTTP byte ranges of PDS3 IMG",
+      "license_url": "https://pds.nasa.gov/datastandards/about/",
+      "object_key": "raw/LOLA_GDR/9d2d7dac1470b8518b6773f804f7832bf1d56e2665f63642af237c32db9693b2/ldem_64.img.r203216672-206396331.n70.bin",
+      "observation_end": "2016-11-29T05:48:19Z",
+      "observation_start": "2009-07-13T17:33:17Z",
+      "parent_asset_ids": [
+        "lola-ldem_64.lbl-4e7a94c76c71"
+      ],
+      "product_id": "LRO-L-LOLA-4-GDR-V1.0:LDEM_64",
+      "product_version": "V3.1",
+      "retrieved_at": "2026-11-15T12:25:10Z",
+      "schema_version": "1.0",
+      "sha256": "9d2d7dac1470b8518b6773f804f7832bf1d56e2665f63642af237c32db9693b2",
+      "source_id": "LOLA_GDR",
+      "source_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/data/lola_gdr/cylindrical/img/ldem_64.img"
+    },
+    {
+      "adapter_version": "twinsite-data/1.0.0",
+      "asset_id": "lola-ldem_64.lbl-4e7a94c76c71",
+      "body": "Moon",
+      "byte_size": 5128,
+      "coordinate_conventions": "IAU2000 planetocentric lat, east-positive lon 0..360; simple cylindrical 64 ppd; pixel-registered heights relative to 1737.4 km sphere",
+      "crs": "IAU_2000:30100",
+      "format": "PDS3 ODL label (ASCII)",
+      "license_url": "https://pds.nasa.gov/datastandards/about/",
+      "object_key": "raw/LOLA_GDR/4e7a94c76c716a147b21ccf07669d004246b0d1b017b7d63d50befaa1a34142d/ldem_64.lbl",
+      "observation_end": "2016-11-29T05:48:19Z",
+      "observation_start": "2009-07-13T17:33:17Z",
+      "parent_asset_ids": [],
+      "product_id": "LRO-L-LOLA-4-GDR-V1.0:LDEM_64",
+      "product_version": "V3.1",
+      "retrieved_at": "2026-11-15T12:20:21Z",
+      "schema_version": "1.0",
+      "sha256": "4e7a94c76c716a147b21ccf07669d004246b0d1b017b7d63d50befaa1a34142d",
+      "source_id": "LOLA_GDR",
+      "source_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/data/lola_gdr/cylindrical/img/ldem_64.lbl"
+    },
+    {
+      "adapter_version": "twinsite-data/1.0.0",
+      "asset_id": "diviner-global_cumul_avg_cyl_20n30n_002.tab-sub-f373a669f1d9",
+      "body": "Moon",
+      "byte_size": 65088,
+      "coordinate_conventions": "planetocentric lat, east lon -180..180; 0.5 deg bins; local time hours; byte ranges (inclusive) of source file: 3 ranges 91123313..91578928",
+      "crs": "IAU_2000:30100",
+      "format": "fixed-width ASCII table rows (113 B) from PDS3 GCP TAB",
+      "license_url": "https://pds.nasa.gov/datastandards/about/",
+      "object_key": "raw/DIVINER_GCP/f373a669f1d97dd0d22e068317f306b640aed87d34fee75c9daad83ee9febf49/global_cumul_avg_cyl_20n30n_002.tab.sub.bin",
+      "observation_end": "2015-04-01T00:00:00Z",
+      "observation_start": "2009-07-05T16:50:26Z",
+      "parent_asset_ids": [],
+      "product_id": "LRO-L-DLRE-5-GCP-V1.0",
+      "product_version": "002",
+      "retrieved_at": "2026-11-15T12:23:04Z",
+      "schema_version": "1.0",
+      "sha256": "f373a669f1d97dd0d22e068317f306b640aed87d34fee75c9daad83ee9febf49",
+      "source_id": "DIVINER_GCP",
+      "source_url": "https://pds-geosciences.wustl.edu/lro/urn-nasa-pds-lro_diviner_derived1/data_derived_gcp/global_cumul_avg_cyl_20n30n_002.tab"
+    }
+  ],
+  "comparison_pairs": [
+    {
+      "earth_evidence_id": "ev-earth-zagora-draa-m1895-slope_deg-f4d2d335c4222e68",
+      "feature_id": "slope_deg",
+      "target_evidence_id": "ev-moon-taurus-littrow-slope_deg-030531b7413988dd"
+    },
+    {
+      "earth_evidence_id": "ev-earth-zagora-draa-m1895-roughness_m-af4655033135d737",
+      "feature_id": "roughness_m",
+      "target_evidence_id": "ev-moon-taurus-littrow-roughness_m-697c8968ef7ae05d"
+    },
+    {
+      "earth_evidence_id": "ev-earth-zagora-draa-m1895-local_relief_m-1dbe93db5c40f773",
+      "feature_id": "local_relief_m",
+      "target_evidence_id": "ev-moon-taurus-littrow-local_relief_m-e81cf04855447d10"
+    }
+  ],
+  "data_status": "measured",
+  "dataset_id": "zagora-taurus-littrow-v1",
+  "observations": [
+    {
+      "analysis_scale_m": 1895.3,
+      "body": "Earth",
+      "data_status": "measured",
+      "evidence_id": "ev-earth-zagora-draa-m1895-slope_deg-f4d2d335c4222e68",
+      "evidence_kind": "derived_measurement",
+      "feature_id": "slope_deg",
+      "geometry": {
+        "coordinates": [
+          -5.95,
+          30.2,
+          -5.65,
+          30.5
+        ],
+        "crs": "EPSG:4326",
+        "type": "bbox"
+      },
+      "missing_reason": null,
+      "observation_period": {
+        "end": "2000-02-21T23:59:59Z",
+        "start": "2000-02-11T00:00:00Z"
+      },
+      "processing_version": "twinsite-data/1.0.0; terrain/1.0.0 (block-mean, Horn-1981 slope, 3x3 SD roughness)",
+      "provenance_id": "prov-earth-zagora-draa-m1895-e6d7d27dd6123824",
+      "qa_status": "ACCEPT",
+      "quality_flags": [
+        "SRTM_C_BAND_SURFACE_INCLUDES_CANOPY_AND_STRUCTURES"
+      ],
+      "schema_version": "1.0",
+      "site_id": "earth-zagora-draa-m1895",
+      "source_asset_ids": [
+        "srtmgl1-n30w006-2493d4ce40b0"
+      ],
+      "source_checksum": "2493d4ce40b0405ee1926365533faf3b04d8c84a765fc5add763e1c0ebd13c82",
+      "source_granule_id": "N30W006.SRTMGL1.hgt",
+      "source_product": "SRTMGL1",
+      "source_url": "https://data.lpdaac.earthdatacloud.nasa.gov/lp-prod-protected/SRTMGL1.003/N30W006.SRTMGL1.hgt/N30W006.SRTMGL1.hgt.zip",
+      "spatial_resolution_m": 30.794,
+      "uncertainty": {
+        "basis": "10th-90th percentile of per-cell values within the AOI at analysis scale (spatial variability, not instrument error). SRTM product spec: absolute vertical error < 16 m (90%); not propagated.",
+        "high": 1.5294,
+        "kind": "interval",
+        "low": 0.1525,
+        "standard_deviation": null
+      },
+      "unit": "degree",
+      "valid_coverage_fraction": 1.0,
+      "value": 0.5847
+    },
+    {
+      "analysis_scale_m": 1895.3,
+      "body": "Earth",
+      "data_status": "measured",
+      "evidence_id": "ev-earth-zagora-draa-m1895-roughness_m-af4655033135d737",
+      "evidence_kind": "derived_measurement",
+      "feature_id": "roughness_m",
+      "geometry": {
+        "coordinates": [
+          -5.95,
+          30.2,
+          -5.65,
+          30.5
+        ],
+        "crs": "EPSG:4326",
+        "type": "bbox"
+      },
+      "missing_reason": null,
+      "observation_period": {
+        "end": "2000-02-21T23:59:59Z",
+        "start": "2000-02-11T00:00:00Z"
+      },
+      "processing_version": "twinsite-data/1.0.0; terrain/1.0.0 (block-mean, Horn-1981 slope, 3x3 SD roughness)",
+      "provenance_id": "prov-earth-zagora-draa-m1895-e6d7d27dd6123824",
+      "qa_status": "ACCEPT",
+      "quality_flags": [
+        "SRTM_C_BAND_SURFACE_INCLUDES_CANOPY_AND_STRUCTURES"
+      ],
+      "schema_version": "1.0",
+      "site_id": "earth-zagora-draa-m1895",
+      "source_asset_ids": [
+        "srtmgl1-n30w006-2493d4ce40b0"
+      ],
+      "source_checksum": "2493d4ce40b0405ee1926365533faf3b04d8c84a765fc5add763e1c0ebd13c82",
+      "source_granule_id": "N30W006.SRTMGL1.hgt",
+      "source_product": "SRTMGL1",
+      "source_url": "https://data.lpdaac.earthdatacloud.nasa.gov/lp-prod-protected/SRTMGL1.003/N30W006.SRTMGL1.hgt/N30W006.SRTMGL1.hgt.zip",
+      "spatial_resolution_m": 30.794,
+      "uncertainty": {
+        "basis": "10th-90th percentile of per-cell values within the AOI at analysis scale (spatial variability, not instrument error). SRTM product spec: absolute vertical error < 16 m (90%); not propagated.",
+        "high": 45.6368,
+        "kind": "interval",
+        "low": 4.4475,
+        "standard_deviation": null
+      },
+      "unit": "m",
+      "valid_coverage_fraction": 1.0,
+      "value": 18.7893
+    },
+    {
+      "analysis_scale_m": 1895.3,
+      "body": "Earth",
+      "data_status": "measured",
+      "evidence_id": "ev-earth-zagora-draa-m1895-local_relief_m-1dbe93db5c40f773",
+      "evidence_kind": "derived_measurement",
+      "feature_id": "local_relief_m",
+      "geometry": {
+        "coordinates": [
+          -5.95,
+          30.2,
+          -5.65,
+          30.5
+        ],
+        "crs": "EPSG:4326",
+        "type": "bbox"
+      },
+      "missing_reason": null,
+      "observation_period": {
+        "end": "2000-02-21T23:59:59Z",
+        "start": "2000-02-11T00:00:00Z"
+      },
+      "processing_version": "twinsite-data/1.0.0; terrain/1.0.0 (block-mean, Horn-1981 slope, 3x3 SD roughness)",
+      "provenance_id": "prov-earth-zagora-draa-m1895-e6d7d27dd6123824",
+      "qa_status": "ACCEPT",
+      "quality_flags": [
+        "SRTM_C_BAND_SURFACE_INCLUDES_CANOPY_AND_STRUCTURES"
+      ],
+      "schema_version": "1.0",
+      "site_id": "earth-zagora-draa-m1895",
+      "source_asset_ids": [
+        "srtmgl1-n30w006-2493d4ce40b0"
+      ],
+      "source_checksum": "2493d4ce40b0405ee1926365533faf3b04d8c84a765fc5add763e1c0ebd13c82",
+      "source_granule_id": "N30W006.SRTMGL1.hgt",
+      "source_product": "SRTMGL1",
+      "source_url": "https://data.lpdaac.earthdatacloud.nasa.gov/lp-prod-protected/SRTMGL1.003/N30W006.SRTMGL1.hgt/N30W006.SRTMGL1.hgt.zip",
+      "spatial_resolution_m": 30.794,
+      "uncertainty": {
+        "basis": "range statistic; SRTM product spec: absolute vertical error < 16 m (90%); not propagated.",
+        "high": null,
+        "kind": "unknown",
+        "low": null,
+        "standard_deviation": null
+      },
+      "unit": "m",
+      "valid_coverage_fraction": 1.0,
+      "value": 317.463
+    },
+    {
+      "analysis_scale_m": 1895.3,
+      "body": "Moon",
+      "data_status": "measured",
+      "evidence_id": "ev-moon-taurus-littrow-slope_deg-030531b7413988dd",
+      "evidence_kind": "derived_measurement",
+      "feature_id": "slope_deg",
+      "geometry": {
+        "coordinates": [
+          30.25,
+          20.0,
+          31.35,
+          21.1
+        ],
+        "crs": "IAU_2000:30100",
+        "type": "bbox"
+      },
+      "missing_reason": null,
+      "observation_period": {
+        "end": "2016-11-29T05:48:19Z",
+        "start": "2009-07-13T17:33:17Z"
+      },
+      "processing_version": "twinsite-data/1.0.0; terrain/1.0.0 (block-mean, Horn-1981 slope, 3x3 SD roughness)",
+      "provenance_id": "prov-moon-taurus-littrow-59cd3632dc1c3426",
+      "qa_status": "ACCEPT",
+      "quality_flags": [
+        "LOLA_GRIDDED_SURFACE_PARTLY_INTERPOLATED"
+      ],
+      "schema_version": "1.0",
+      "site_id": "moon-taurus-littrow",
+      "source_asset_ids": [
+        "lola-ldem_64.img-sub-9d2d7dac1470",
+        "lola-ldem_64.lbl-4e7a94c76c71"
+      ],
+      "source_checksum": "9d2d7dac1470b8518b6773f804f7832bf1d56e2665f63642af237c32db9693b2",
+      "source_granule_id": "LDEM_64.IMG",
+      "source_product": "LRO-L-LOLA-4-GDR-V1.0:LDEM_64",
+      "source_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/data/lola_gdr/cylindrical/img/ldem_64.img",
+      "spatial_resolution_m": 473.802,
+      "uncertainty": {
+        "basis": "10th-90th percentile of per-cell values within the AOI at analysis scale (spatial variability, not instrument error). LOLA ranging precision ~10 cm, radial accuracy ~1 m (Smith et al. 2010/2017); gridding interpolation error not propagated.",
+        "high": 12.3071,
+        "kind": "interval",
+        "low": 1.7982,
+        "standard_deviation": null
+      },
+      "unit": "degree",
+      "valid_coverage_fraction": 1.0,
+      "value": 6.9852
+    },
+    {
+      "analysis_scale_m": 1895.3,
+      "body": "Moon",
+      "data_status": "measured",
+      "evidence_id": "ev-moon-taurus-littrow-roughness_m-697c8968ef7ae05d",
+      "evidence_kind": "derived_measurement",
+      "feature_id": "roughness_m",
+      "geometry": {
+        "coordinates": [
+          30.25,
+          20.0,
+          31.35,
+          21.1
+        ],
+        "crs": "IAU_2000:30100",
+        "type": "bbox"
+      },
+      "missing_reason": null,
+      "observation_period": {
+        "end": "2016-11-29T05:48:19Z",
+        "start": "2009-07-13T17:33:17Z"
+      },
+      "processing_version": "twinsite-data/1.0.0; terrain/1.0.0 (block-mean, Horn-1981 slope, 3x3 SD roughness)",
+      "provenance_id": "prov-moon-taurus-littrow-59cd3632dc1c3426",
+      "qa_status": "ACCEPT",
+      "quality_flags": [
+        "LOLA_GRIDDED_SURFACE_PARTLY_INTERPOLATED"
+      ],
+      "schema_version": "1.0",
+      "site_id": "moon-taurus-littrow",
+      "source_asset_ids": [
+        "lola-ldem_64.img-sub-9d2d7dac1470",
+        "lola-ldem_64.lbl-4e7a94c76c71"
+      ],
+      "source_checksum": "9d2d7dac1470b8518b6773f804f7832bf1d56e2665f63642af237c32db9693b2",
+      "source_granule_id": "LDEM_64.IMG",
+      "source_product": "LRO-L-LOLA-4-GDR-V1.0:LDEM_64",
+      "source_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/data/lola_gdr/cylindrical/img/ldem_64.img",
+      "spatial_resolution_m": 473.802,
+      "uncertainty": {
+        "basis": "10th-90th percentile of per-cell values within the AOI at analysis scale (spatial variability, not instrument error). LOLA ranging precision ~10 cm, radial accuracy ~1 m (Smith et al. 2010/2017); gridding interpolation error not propagated.",
+        "high": 345.952,
+        "kind": "interval",
+        "low": 73.875,
+        "standard_deviation": null
+      },
+      "unit": "m",
+      "valid_coverage_fraction": 1.0,
+      "value": 206.5547
+    },
+    {
+      "analysis_scale_m": 1895.3,
+      "body": "Moon",
+      "data_status": "measured",
+      "evidence_id": "ev-moon-taurus-littrow-local_relief_m-e81cf04855447d10",
+      "evidence_kind": "derived_measurement",
+      "feature_id": "local_relief_m",
+      "geometry": {
+        "coordinates": [
+          30.25,
+          20.0,
+          31.35,
+          21.1
+        ],
+        "crs": "IAU_2000:30100",
+        "type": "bbox"
+      },
+      "missing_reason": null,
+      "observation_period": {
+        "end": "2016-11-29T05:48:19Z",
+        "start": "2009-07-13T17:33:17Z"
+      },
+      "processing_version": "twinsite-data/1.0.0; terrain/1.0.0 (block-mean, Horn-1981 slope, 3x3 SD roughness)",
+      "provenance_id": "prov-moon-taurus-littrow-59cd3632dc1c3426",
+      "qa_status": "ACCEPT",
+      "quality_flags": [
+        "LOLA_GRIDDED_SURFACE_PARTLY_INTERPOLATED"
+      ],
+      "schema_version": "1.0",
+      "site_id": "moon-taurus-littrow",
+      "source_asset_ids": [
+        "lola-ldem_64.img-sub-9d2d7dac1470",
+        "lola-ldem_64.lbl-4e7a94c76c71"
+      ],
+      "source_checksum": "9d2d7dac1470b8518b6773f804f7832bf1d56e2665f63642af237c32db9693b2",
+      "source_granule_id": "LDEM_64.IMG",
+      "source_product": "LRO-L-LOLA-4-GDR-V1.0:LDEM_64",
+      "source_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/data/lola_gdr/cylindrical/img/ldem_64.img",
+      "spatial_resolution_m": 473.802,
+      "uncertainty": {
+        "basis": "range statistic; LOLA ranging precision ~10 cm, radial accuracy ~1 m (Smith et al. 2010/2017); gridding interpolation error not propagated.",
+        "high": null,
+        "kind": "unknown",
+        "low": null,
+        "standard_deviation": null
+      },
+      "unit": "m",
+      "valid_coverage_fraction": 1.0,
+      "value": 2255.156
+    },
+    {
+      "analysis_scale_m": 15162.0,
+      "body": "Moon",
+      "data_status": "measured",
+      "evidence_id": "ev-moon-taurus-littrow-surface_temperature_day_K-1faad500bde92900",
+      "evidence_kind": "derived_measurement",
+      "feature_id": "surface_temperature_day_K",
+      "geometry": {
+        "coordinates": [
+          30.25,
+          20.0,
+          31.35,
+          21.1
+        ],
+        "crs": "IAU_2000:30100",
+        "type": "bbox"
+      },
+      "missing_reason": null,
+      "observation_period": {
+        "end": "2015-04-01T00:00:00Z",
+        "start": "2009-07-05T16:50:26Z"
+      },
+      "processing_version": "twinsite-data/1.0.0; terrain/1.0.0 (block-mean, Horn-1981 slope, 3x3 SD roughness); diviner-gcp/1.0 (tbol>0, fill -9999 masked, day 06-18h max, night 18-06h min, AOI median)",
+      "provenance_id": "prov-moon-taurus-littrow-59cd3632dc1c3426",
+      "qa_status": "ACCEPT",
+      "quality_flags": [
+        "BINS_IN_AOI=6",
+        "BOLOMETRIC_TEMPERATURE_FROM_7_CHANNELS",
+        "DIVINER_0P5DEG_BINS",
+        "LOCAL_TIME_SLOT_COVERAGE=0.5417"
+      ],
+      "schema_version": "1.0",
+      "site_id": "moon-taurus-littrow",
+      "source_asset_ids": [
+        "diviner-global_cumul_avg_cyl_20n30n_002.tab-sub-f373a669f1d9"
+      ],
+      "source_checksum": "f373a669f1d97dd0d22e068317f306b640aed87d34fee75c9daad83ee9febf49",
+      "source_granule_id": "GLOBAL_CUMUL_AVG_CYL_20N30N_002.TAB",
+      "source_product": "LRO-L-DLRE-5-GCP-V1.0",
+      "source_url": "https://pds-geosciences.wustl.edu/lro/urn-nasa-pds-lro_diviner_derived1/data_derived_gcp/global_cumul_avg_cyl_20n30n_002.tab",
+      "spatial_resolution_m": 15162.0,
+      "uncertainty": {
+        "basis": "10th-90th percentile across 0.5-deg bins in the AOI (spatial variability). Diviner absolute calibration ~1-2 K above 100 K (Williams et al. 2017); not propagated.",
+        "high": 388.789,
+        "kind": "interval",
+        "low": 382.084,
+        "standard_deviation": null
+      },
+      "unit": "K",
+      "valid_coverage_fraction": 1.0,
+      "value": 385.839
+    },
+    {
+      "analysis_scale_m": 15162.0,
+      "body": "Moon",
+      "data_status": "measured",
+      "evidence_id": "ev-moon-taurus-littrow-surface_temperature_night_K-814bd7675d7fc7ec",
+      "evidence_kind": "derived_measurement",
+      "feature_id": "surface_temperature_night_K",
+      "geometry": {
+        "coordinates": [
+          30.25,
+          20.0,
+          31.35,
+          21.1
+        ],
+        "crs": "IAU_2000:30100",
+        "type": "bbox"
+      },
+      "missing_reason": null,
+      "observation_period": {
+        "end": "2015-04-01T00:00:00Z",
+        "start": "2009-07-05T16:50:26Z"
+      },
+      "processing_version": "twinsite-data/1.0.0; terrain/1.0.0 (block-mean, Horn-1981 slope, 3x3 SD roughness); diviner-gcp/1.0 (tbol>0, fill -9999 masked, day 06-18h max, night 18-06h min, AOI median)",
+      "provenance_id": "prov-moon-taurus-littrow-59cd3632dc1c3426",
+      "qa_status": "ACCEPT",
+      "quality_flags": [
+        "BINS_IN_AOI=6",
+        "BOLOMETRIC_TEMPERATURE_FROM_7_CHANNELS",
+        "DIVINER_0P5DEG_BINS",
+        "LOCAL_TIME_SLOT_COVERAGE=0.5417"
+      ],
+      "schema_version": "1.0",
+      "site_id": "moon-taurus-littrow",
+      "source_asset_ids": [
+        "diviner-global_cumul_avg_cyl_20n30n_002.tab-sub-f373a669f1d9"
+      ],
+      "source_checksum": "f373a669f1d97dd0d22e068317f306b640aed87d34fee75c9daad83ee9febf49",
+      "source_granule_id": "GLOBAL_CUMUL_AVG_CYL_20N30N_002.TAB",
+      "source_product": "LRO-L-DLRE-5-GCP-V1.0",
+      "source_url": "https://pds-geosciences.wustl.edu/lro/urn-nasa-pds-lro_diviner_derived1/data_derived_gcp/global_cumul_avg_cyl_20n30n_002.tab",
+      "spatial_resolution_m": 15162.0,
+      "uncertainty": {
+        "basis": "10th-90th percentile across 0.5-deg bins in the AOI (spatial variability). Diviner absolute calibration ~1-2 K above 100 K (Williams et al. 2017); not propagated.",
+        "high": 95.856,
+        "kind": "interval",
+        "low": 93.622,
+        "standard_deviation": null
+      },
+      "unit": "K",
+      "valid_coverage_fraction": 1.0,
+      "value": 93.99
+    },
+    {
+      "analysis_scale_m": 15162.0,
+      "body": "Moon",
+      "data_status": "measured",
+      "evidence_id": "ev-moon-taurus-littrow-surface_temperature_diurnal_range_K-ae14b83e28e77629",
+      "evidence_kind": "derived_measurement",
+      "feature_id": "surface_temperature_diurnal_range_K",
+      "geometry": {
+        "coordinates": [
+          30.25,
+          20.0,
+          31.35,
+          21.1
+        ],
+        "crs": "IAU_2000:30100",
+        "type": "bbox"
+      },
+      "missing_reason": null,
+      "observation_period": {
+        "end": "2015-04-01T00:00:00Z",
+        "start": "2009-07-05T16:50:26Z"
+      },
+      "processing_version": "twinsite-data/1.0.0; terrain/1.0.0 (block-mean, Horn-1981 slope, 3x3 SD roughness); diviner-gcp/1.0 (tbol>0, fill -9999 masked, day 06-18h max, night 18-06h min, AOI median)",
+      "provenance_id": "prov-moon-taurus-littrow-59cd3632dc1c3426",
+      "qa_status": "ACCEPT",
+      "quality_flags": [
+        "BINS_IN_AOI=6",
+        "BOLOMETRIC_TEMPERATURE_FROM_7_CHANNELS",
+        "DIVINER_0P5DEG_BINS",
+        "LOCAL_TIME_SLOT_COVERAGE=0.5417"
+      ],
+      "schema_version": "1.0",
+      "site_id": "moon-taurus-littrow",
+      "source_asset_ids": [
+        "diviner-global_cumul_avg_cyl_20n30n_002.tab-sub-f373a669f1d9"
+      ],
+      "source_checksum": "f373a669f1d97dd0d22e068317f306b640aed87d34fee75c9daad83ee9febf49",
+      "source_granule_id": "GLOBAL_CUMUL_AVG_CYL_20N30N_002.TAB",
+      "source_product": "LRO-L-DLRE-5-GCP-V1.0",
+      "source_url": "https://pds-geosciences.wustl.edu/lro/urn-nasa-pds-lro_diviner_derived1/data_derived_gcp/global_cumul_avg_cyl_20n30n_002.tab",
+      "spatial_resolution_m": 15162.0,
+      "uncertainty": {
+        "basis": "10th-90th percentile across 0.5-deg bins in the AOI (spatial variability). Diviner absolute calibration ~1-2 K above 100 K (Williams et al. 2017); not propagated.",
+        "high": 294.202,
+        "kind": "interval",
+        "low": 287.3,
+        "standard_deviation": null
+      },
+      "unit": "K",
+      "valid_coverage_fraction": 1.0,
+      "value": 291.741
+    }
+  ],
+  "processing_version": "twinsite-data/1.0.0; terrain/1.0.0 (block-mean, Horn-1981 slope, 3x3 SD roughness)",
+  "schema_note": "observations[] follow evidence_observation.schema.json; assets[] follow asset_manifest.schema.json. REAL NASA product summaries (SRTMGL1, LOLA LDEM_64, Diviner GCP), not synthetic.",
+  "sites": [
+    {
+      "body": "Earth",
+      "provenance": {
+        "adapter": {
+          "adapter_version": "twinsite-data/1.0.0",
+          "approved_rules": [
+            "srtm_void_mask"
+          ],
+          "body": "Earth",
+          "crs": "EPSG:4326",
+          "doc_url": "https://www.earthdata.nasa.gov/s3fs-public/2025-05/SRTM_Quick_Guide.pdf",
+          "license_url": "https://lpdaac.usgs.gov/data/data-citation-and-policies/",
+          "product_id": "SRTMGL1",
+          "product_version": "003",
+          "source_id": "SRTMGL1",
+          "unit": "m",
+          "vertical_datum": "EGM96 geoid"
+        },
+        "analysis_scale_m": 1895.3,
+        "cell_size_m_used": [
+          1896.211,
+          1909.227
+        ],
+        "cleaned_object_key": "cleaned/82ebfda492b3e4d3a98824a930e07f168429758ea2687e418677062a8d4d3551.json",
+        "cleaned_sha256": "82ebfda492b3e4d3a98824a930e07f168429758ea2687e418677062a8d4d3551",
+        "description": "Draa valley / Jbel Bani foothills near Zagora, Morocco (arid terrain), summarised at the Moon-pair scale",
+        "feature_definitions": {
+          "local_relief_m": "max - min of block-mean elevation within the AOI at analysis scale",
+          "roughness_m": "AOI mean of 3x3-neighbourhood elevation standard deviation at analysis scale",
+          "slope_deg": "AOI mean of Horn (1981) 3x3 slope on the block-mean DEM at analysis scale"
+        },
+        "feature_details": {
+          "local_relief_m": {
+            "stats": {
+              "max": 996.3,
+              "mean": 756.582,
+              "median": 745.28,
+              "min": 678.837,
+              "n": 255,
+              "p10": 702.265,
+              "p90": 818.505,
+              "sd": 53.184
+            },
+            "vertical_datum": "EGM96 geoid"
+          },
+          "roughness_m": {
+            "interior_cells": 195,
+            "stats": {
+              "max": 78.6444,
+              "mean": 18.7893,
+              "median": 10.5324,
+              "min": 2.7136,
+              "n": 195,
+              "p10": 4.4475,
+              "p90": 45.6368,
+              "sd": 17.0955
+            },
+            "valid_cells": 195
+          },
+          "slope_deg": {
+            "interior_cells": 195,
+            "stats": {
+              "max": 2.9204,
+              "mean": 0.5847,
+              "median": 0.3316,
+              "min": 0.058,
+              "n": 195,
+              "p10": 0.1525,
+              "p90": 1.5294,
+              "sd": 0.5815
+            },
+            "valid_cells": 195
+          }
+        },
+        "granule": {
+          "catalog_evidence": {
+            "bounding": [
+              {
+                "EastBoundingCoordinate": -4.99972222,
+                "NorthBoundingCoordinate": 31.00027778,
+                "SouthBoundingCoordinate": 29.99972222,
+                "WestBoundingCoordinate": -6.00027778
+              }
+            ],
+            "catalog": "NASA CMR",
+            "collection_concept_id": "C2763266360-LPCLOUD",
+            "concept_id": "G2821052091-LPCLOUD",
+            "doi": [
+              "10.5067/MEaSUREs/SRTM/SRTMGL1.003"
+            ],
+            "hits": 1,
+            "query": "https://cmr.earthdata.nasa.gov/search/granules.umm_json?short_name=SRTMGL1&version=003&readable_granule_name=N30W006.SRTMGL1.hgt&page_size=5",
+            "restored_from_cached_asset": "srtmgl1-n30w006-2493d4ce40b0",
+            "revision_date": "2023-12-20T20:14:42.490Z",
+            "sha256": "a5f90226bc59019df32547fa73027d8fb35b1f3410a0bf4d113c2b6ab0d8daa7",
+            "size": [
+              {
+                "Name": "Not provided",
+                "Size": 10.1048,
+                "SizeUnit": "MB"
+              }
+            ],
+            "transcript": "transcripts/SRTMGL1/20261115T083132369711Z.jsonl"
+          },
+          "footprint": [
+            -6.0001388888888885,
+            29.999861111111112,
+            -4.9998611111111115,
+            31.000138888888888
+          ],
+          "granule_id": "N30W006.SRTMGL1.hgt"
+        },
+        "horizontal_datum": "WGS84",
+        "native_resolution_m": 30.794,
+        "radius_model": "WGS84 ellipsoid (a=6378137 m, f=1/298.257223563) local radii",
+        "sample_calculation": {
+          "block": [
+            62,
+            71
+          ],
+          "cell": {
+            "col": 7,
+            "lat": 30.35375,
+            "lon": -5.802222,
+            "row": 8
+          },
+          "dx_m": 1896.139,
+          "dy_m": 1909.228,
+          "dz_dx": 0.005493,
+          "dz_dy": -0.004577,
+          "formula": "slope = atan(hypot(((c+2f+i)-(a+2d+g))/(8dx), ((a+2b+c)-(g+2h+i))/(8dy))); rows north->south",
+          "horn_slope_deg": 0.4096,
+          "roughness_sd_m": 21.5098,
+          "window_m": [
+            [
+              730.443,
+              729.601,
+              729.401
+            ],
+            [
+              725.874,
+              726.463,
+              730.625
+            ],
+            [
+              721.202,
+              735.844,
+              796.063
+            ]
+          ]
+        },
+        "site_id": "earth-zagora-draa-m1895",
+        "transformations": [
+          "subset posts rows 1800..2880, cols 180..1260 of 3601x3601",
+          "int16 metres -> float metres (no scale/offset)",
+          "srtm_void_mask: void posts kept as null (no fill/interpolation)",
+          "aggregate: block mean 62x71 native samples -> 1896.2 m (E-W) x 1909.2 m (N-S) at lat 30.3500; block valid only if all members valid",
+          "metric spacing from WGS84 ellipsoid (a=6378137 m, f=1/298.257223563) local radii",
+          "terrain/1.0.0 (block-mean, Horn-1981 slope, 3x3 SD roughness)"
+        ],
+        "validation": {
+          "issues": [
+            {
+              "code": "SURFACE_IS_RADAR_PHASE_CENTRE",
+              "evidence": [
+                "C-band SRTM heights include canopy/buildings; not bare-rock surface"
+              ],
+              "rule_id": null,
+              "severity": "info"
+            }
+          ],
+          "metrics": {
+            "max_m": 1088.0,
+            "min_m": 667.0,
+            "posts": 1168561,
+            "voids": 0
+          },
+          "verdict": "ACCEPT"
+        },
+        "vertical_datum": "EGM96 geoid"
+      },
+      "provenance_id": "prov-earth-zagora-draa-m1895-e6d7d27dd6123824",
+      "provenance_object_key": "derived/e6d7d27dd6123824c64ecdaa598059a9c00a6c29b58befd4cac91cb538b37604.json",
+      "quality_verdict": {
+        "asset_id": "srtmgl1-n30w006-2493d4ce40b0",
+        "attempt_count": 0,
+        "cleaned_checksum": "82ebfda492b3e4d3a98824a930e07f168429758ea2687e418677062a8d4d3551",
+        "issues": [
+          {
+            "code": "SURFACE_IS_RADAR_PHASE_CENTRE",
+            "evidence": [
+              "C-band SRTM heights include canopy/buildings; not bare-rock surface"
+            ],
+            "rule_id": null,
+            "severity": "info"
+          }
+        ],
+        "method_version": "c1-qa/1.0.0",
+        "raw_checksum": "2493d4ce40b0405ee1926365533faf3b04d8c84a765fc5add763e1c0ebd13c82",
+        "source_product_id": "SRTMGL1.003",
+        "verdict": "ACCEPT"
+      },
+      "site_id": "earth-zagora-draa-m1895"
+    },
+    {
+      "body": "Moon",
+      "provenance": {
+        "adapter": {
+          "adapter_version": "twinsite-data/1.0.0",
+          "approved_rules": [
+            "lola_flag_interpolated"
+          ],
+          "body": "Moon",
+          "crs": "IAU_2000:30100",
+          "doc_url": "https://pds-geosciences.wustl.edu/missions/lro/lola.htm",
+          "license_url": "https://pds.nasa.gov/datastandards/about/",
+          "product_id": "LRO-L-LOLA-4-GDR-V1.0:LDEM_64",
+          "product_version": "V3.1",
+          "source_id": "LOLA_GDR",
+          "unit": "m",
+          "vertical_datum": "Moon reference sphere R=1737.4 km (LOLA LDEM HEIGHT = DN x 0.5 m)"
+        },
+        "analysis_scale_m": 1895.3,
+        "cell_size_m_used": [
+          1774.646,
+          1895.209
+        ],
+        "cleaned_object_key": "cleaned/e29ad6797e695e01eca4f9b7da8a8a114d4892abf9dc3b45b7eba5f9d68deee2.json",
+        "cleaned_sha256": "e29ad6797e695e01eca4f9b7da8a8a114d4892abf9dc3b45b7eba5f9d68deee2",
+        "description": "Taurus-Littrow valley and massifs around the Apollo 17 landing site (20.19 N, 30.77 E)",
+        "diviner": {
+          "bins": 6,
+          "definitions": {
+            "surface_temperature_day_K": "AOI median of per-bin maximum daytime (06-18 h) Diviner bolometric temperature",
+            "surface_temperature_diurnal_range_K": "AOI median of per-bin (day max - night min) bolometric temperature",
+            "surface_temperature_night_K": "AOI median of per-bin minimum night (18-06 h) Diviner bolometric temperature"
+          },
+          "local_time_slot_coverage": 0.5417
+        },
+        "feature_definitions": {
+          "local_relief_m": "max - min of block-mean elevation within the AOI at analysis scale",
+          "roughness_m": "AOI mean of 3x3-neighbourhood elevation standard deviation at analysis scale",
+          "slope_deg": "AOI mean of Horn (1981) 3x3 slope on the block-mean DEM at analysis scale"
+        },
+        "feature_details": {
+          "local_relief_m": {
+            "stats": {
+              "max": -686.156,
+              "mean": -1833.013,
+              "median": -1850.375,
+              "min": -2941.312,
+              "n": 289,
+              "p10": -2552.575,
+              "p90": -1147.438,
+              "sd": 496.372
+            },
+            "vertical_datum": "Moon reference sphere R=1737.4 km (LOLA LDEM HEIGHT = DN x 0.5 m)"
+          },
+          "roughness_m": {
+            "interior_cells": 225,
+            "stats": {
+              "max": 592.9295,
+              "mean": 206.5547,
+              "median": 189.1133,
+              "min": 25.1034,
+              "n": 225,
+              "p10": 73.875,
+              "p90": 345.952,
+              "sd": 112.4378
+            },
+            "valid_cells": 225
+          },
+          "slope_deg": {
+            "interior_cells": 225,
+            "stats": {
+              "max": 21.1471,
+              "mean": 6.9852,
+              "median": 6.3203,
+              "min": 0.1277,
+              "n": 225,
+              "p10": 1.7982,
+              "p90": 12.3071,
+              "sd": 4.2694
+            },
+            "valid_cells": 225
+          }
+        },
+        "granule": {
+          "catalog_evidence": {
+            "catalog": "PDS Geosciences Node lola_gdr/cylindrical/img",
+            "tile": "ldem_64"
+          },
+          "footprint": [
+            0.0,
+            -90.0,
+            360.0,
+            90.0
+          ],
+          "granule_id": "LDEM_64.IMG"
+        },
+        "horizontal_datum": "IAU2000 Moon planetocentric (mean Earth/polar axis)",
+        "native_resolution_m": 473.802,
+        "radius_model": "Moon sphere R=1737400 m (label A_AXIS_RADIUS)",
+        "sample_calculation": {
+          "block": [
+            4,
+            4
+          ],
+          "cell": {
+            "col": 8,
+            "lat": 20.5625,
+            "lon": 30.78125,
+            "row": 8
+          },
+          "dx_m": 1774.465,
+          "dy_m": 1895.209,
+          "dz_dx": 0.035823,
+          "dz_dy": 0.047754,
+          "formula": "slope = atan(hypot(((c+2f+i)-(a+2d+g))/(8dx), ((a+2b+c)-(g+2h+i))/(8dy))); rows north->south",
+          "horn_slope_deg": 3.4163,
+          "roughness_sd_m": 116.3892,
+          "window_m": [
+            [
+              -1094.781,
+              -946.281,
+              -855.531
+            ],
+            [
+              -961.75,
+              -904.969,
+              -857.812
+            ],
+            [
+              -1157.469,
+              -1156.688,
+              -1096.062
+            ]
+          ]
+        },
+        "site_id": "moon-taurus-littrow",
+        "transformations": [
+          "subset lines 4410..4479, samples 1936..2005 of 11520x23040",
+          "LSB int16 DN -> metres: HEIGHT = DN x 0.5 (label SCALING_FACTOR)",
+          "AOI longitudes normalised to 0..360 east: 30.25..31.35",
+          "lola_flag_interpolated: gridded values retained unchanged and flagged as partly interpolated",
+          "aggregate: block mean 4x4 native samples -> 1774.6 m (E-W) x 1895.2 m (N-S) at lat 20.5469; block valid only if all members valid",
+          "metric spacing from Moon sphere R=1737400 m (label A_AXIS_RADIUS)",
+          "terrain/1.0.0 (block-mean, Horn-1981 slope, 3x3 SD roughness)"
+        ],
+        "validation": {
+          "issues": [
+            {
+              "code": "LOLA_GRIDDED_SURFACE_INTERPOLATION",
+              "evidence": [
+                "LDEM_64 is a GMT 'surface' gridding of LOLA shots; cells without shots are interpolated and no per-cell count exists at 64 ppd (label)"
+              ],
+              "rule_id": "lola_flag_interpolated",
+              "severity": "info"
+            },
+            {
+              "code": "LATITUDE_BAND_EDGE_ARTIFACTS_POSSIBLE",
+              "evidence": [
+                "grids built in 45-degree latitude bands; edge artifacts possible (label)"
+              ],
+              "rule_id": null,
+              "severity": "info"
+            }
+          ],
+          "metrics": {
+            "cells": 4900,
+            "max_m": -224.0,
+            "min_m": -2965.5
+          },
+          "verdict": "ACCEPT"
+        },
+        "vertical_datum": "Moon reference sphere R=1737.4 km (LOLA LDEM HEIGHT = DN x 0.5 m)"
+      },
+      "provenance_id": "prov-moon-taurus-littrow-59cd3632dc1c3426",
+      "provenance_object_key": "derived/59cd3632dc1c3426931f424507fade8165bdc0aa51a60161fc528e2f4d54c337.json",
+      "quality_verdict": {
+        "asset_id": "lola-ldem_64.img-sub-9d2d7dac1470",
+        "attempt_count": 0,
+        "cleaned_checksum": "e29ad6797e695e01eca4f9b7da8a8a114d4892abf9dc3b45b7eba5f9d68deee2",
+        "issues": [
+          {
+            "code": "LOLA_GRIDDED_SURFACE_INTERPOLATION",
+            "evidence": [
+              "LDEM_64 is a GMT 'surface' gridding of LOLA shots; cells without shots are interpolated and no per-cell count exists at 64 ppd (label)"
+            ],
+            "rule_id": "lola_flag_interpolated",
+            "severity": "info"
+          },
+          {
+            "code": "LATITUDE_BAND_EDGE_ARTIFACTS_POSSIBLE",
+            "evidence": [
+              "grids built in 45-degree latitude bands; edge artifacts possible (label)"
+            ],
+            "rule_id": null,
+            "severity": "info"
+          }
+        ],
+        "method_version": "c1-qa/1.0.0",
+        "raw_checksum": "9d2d7dac1470b8518b6773f804f7832bf1d56e2665f63642af237c32db9693b2",
+        "source_product_id": "LRO-L-LOLA-4-GDR-V1.0:LDEM_64.V3.1",
+        "verdict": "ACCEPT"
+      },
+      "site_id": "moon-taurus-littrow"
+    }
+  ],
+  "source_snapshot_id": "c1-moon-bffa5b09c88d10d4",
+  "source_snapshot_sha256": "bffa5b09c88d10d4ca211cf13c4b3eaa2a3a0445ccd4b079a2211a65b3a37eb6"
+}

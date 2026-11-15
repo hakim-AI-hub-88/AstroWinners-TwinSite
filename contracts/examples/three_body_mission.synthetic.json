@@ -1,0 +1,312 @@
+{
+  "schema_version": "1.0",
+  "data_status": "synthetic",
+  "mission": {
+    "id": "earth-two-targets-demo",
+    "features": {
+      "slope_deg": {
+        "unit": "degree",
+        "weight": 0.45,
+        "tolerance": 20,
+        "required": true
+      },
+      "roughness_m": {
+        "unit": "m",
+        "weight": 0.35,
+        "tolerance": 6,
+        "required": false
+      },
+      "dry_fraction": {
+        "unit": "1",
+        "weight": 0.2,
+        "tolerance": 0.5,
+        "required": false
+      }
+    },
+    "min_coverage": 0.65,
+    "max_sites": 2,
+    "budget": 900,
+    "max_days": 14,
+    "allow_unknown_access": false,
+    "cost_penalty": 0.1,
+    "redundancy_penalty": 0.05,
+    "exclude_portfolios": [],
+    "mode": "auto",
+    "start_trigger": "user_request",
+    "scope": {
+      "locations": [
+        {
+          "id": "earth-area-A",
+          "body": "Earth",
+          "coordinate_system": "WGS84_lonlat",
+          "bbox": [
+            -6.05,
+            30.95,
+            -5.95,
+            31.05
+          ]
+        },
+        {
+          "id": "synthetic-mars-target",
+          "body": "Mars",
+          "coordinate_system": "Mars_planetocentric_east_180",
+          "bbox": [
+            137.35,
+            -4.6499999999999995,
+            137.45000000000002,
+            -4.55
+          ]
+        },
+        {
+          "id": "synthetic-moon-target",
+          "body": "Moon",
+          "coordinate_system": "Moon_planetocentric_east_180",
+          "bbox": [
+            31.45,
+            -85.55,
+            31.55,
+            -85.45
+          ]
+        }
+      ],
+      "compare_with": [
+        "Moon",
+        "Mars"
+      ]
+    }
+  },
+  "sites": [
+    {
+      "id": "A",
+      "name": "Synthetic terrain A",
+      "longitude": -6,
+      "latitude": 31,
+      "access": "pass",
+      "cost": 400,
+      "days": 4,
+      "observations": {
+        "slope_deg": {
+          "value": 12,
+          "unit": "degree",
+          "source_id": "synthetic-A-slope_deg"
+        },
+        "roughness_m": {
+          "value": 7,
+          "unit": "m",
+          "source_id": "synthetic-A-roughness_m"
+        },
+        "dry_fraction": {
+          "value": 0.6,
+          "unit": "1",
+          "source_id": "synthetic-A-dry_fraction"
+        }
+      },
+      "body": "Earth",
+      "coordinate_system": "WGS84_lonlat"
+    },
+    {
+      "id": "B",
+      "name": "Synthetic terrain B",
+      "longitude": -15,
+      "latitude": 28,
+      "access": "pass",
+      "cost": 450,
+      "days": 5,
+      "observations": {
+        "slope_deg": {
+          "value": 22,
+          "unit": "degree",
+          "source_id": "synthetic-B-slope_deg"
+        },
+        "roughness_m": {
+          "value": 3,
+          "unit": "m",
+          "source_id": "synthetic-B-roughness_m"
+        },
+        "dry_fraction": {
+          "value": 0.9,
+          "unit": "1",
+          "source_id": "synthetic-B-dry_fraction"
+        }
+      },
+      "body": "Earth",
+      "coordinate_system": "WGS84_lonlat"
+    },
+    {
+      "id": "C",
+      "name": "Synthetic terrain C",
+      "longitude": 10,
+      "latitude": 35,
+      "access": "pass",
+      "cost": 300,
+      "days": 3,
+      "observations": {
+        "slope_deg": {
+          "value": 14,
+          "unit": "degree",
+          "source_id": "synthetic-C-slope_deg"
+        },
+        "roughness_m": {
+          "value": 5,
+          "unit": "m",
+          "source_id": "synthetic-C-roughness_m"
+        },
+        "dry_fraction": {
+          "value": 0.8,
+          "unit": "1",
+          "source_id": "synthetic-C-dry_fraction"
+        }
+      },
+      "body": "Earth",
+      "coordinate_system": "WGS84_lonlat"
+    },
+    {
+      "id": "D",
+      "name": "Synthetic missing-data D",
+      "longitude": -70,
+      "latitude": -24,
+      "access": "pass",
+      "cost": 200,
+      "days": 4,
+      "observations": {
+        "slope_deg": {
+          "value": 11,
+          "unit": "degree",
+          "source_id": "synthetic-D-slope_deg"
+        },
+        "roughness_m": {
+          "value": null,
+          "unit": "m",
+          "source_id": "synthetic-D-roughness_m"
+        },
+        "dry_fraction": {
+          "value": null,
+          "unit": "1",
+          "source_id": "synthetic-D-dry_fraction"
+        }
+      },
+      "body": "Earth",
+      "coordinate_system": "WGS84_lonlat"
+    },
+    {
+      "id": "E",
+      "name": "Synthetic restricted E",
+      "longitude": -20,
+      "latitude": 64,
+      "access": "fail",
+      "cost": 250,
+      "days": 3,
+      "observations": {
+        "slope_deg": {
+          "value": 12,
+          "unit": "degree",
+          "source_id": "synthetic-E-slope_deg"
+        },
+        "roughness_m": {
+          "value": 3,
+          "unit": "m",
+          "source_id": "synthetic-E-roughness_m"
+        },
+        "dry_fraction": {
+          "value": 0.9,
+          "unit": "1",
+          "source_id": "synthetic-E-dry_fraction"
+        }
+      },
+      "body": "Earth",
+      "coordinate_system": "WGS84_lonlat"
+    },
+    {
+      "id": "F",
+      "name": "Synthetic unknown-access F",
+      "longitude": 35,
+      "latitude": -10,
+      "access": "unknown",
+      "cost": null,
+      "days": 5,
+      "observations": {
+        "slope_deg": {
+          "value": 13,
+          "unit": "degree",
+          "source_id": "synthetic-F-slope_deg"
+        },
+        "roughness_m": {
+          "value": 4,
+          "unit": "m",
+          "source_id": "synthetic-F-roughness_m"
+        },
+        "dry_fraction": {
+          "value": 0.8,
+          "unit": "1",
+          "source_id": "synthetic-F-dry_fraction"
+        }
+      },
+      "body": "Earth",
+      "coordinate_system": "WGS84_lonlat"
+    }
+  ],
+  "target_profiles": [
+    {
+      "body": "Mars",
+      "location": {
+        "id": "synthetic-mars-target",
+        "body": "Mars",
+        "coordinate_system": "Mars_planetocentric_east_180",
+        "bbox": [
+          137.35,
+          -4.6499999999999995,
+          137.45000000000002,
+          -4.55
+        ]
+      },
+      "observations": {
+        "slope_deg": {
+          "value": 12,
+          "unit": "degree",
+          "source_id": "synthetic-Mars-slope_deg"
+        },
+        "roughness_m": {
+          "value": 3,
+          "unit": "m",
+          "source_id": "synthetic-Mars-roughness_m"
+        },
+        "dry_fraction": {
+          "value": 0.9,
+          "unit": "1",
+          "source_id": "synthetic-Mars-dry_fraction"
+        }
+      }
+    },
+    {
+      "body": "Moon",
+      "location": {
+        "id": "synthetic-moon-target",
+        "body": "Moon",
+        "coordinate_system": "Moon_planetocentric_east_180",
+        "bbox": [
+          31.45,
+          -85.55,
+          31.55,
+          -85.45
+        ]
+      },
+      "observations": {
+        "slope_deg": {
+          "value": 8,
+          "unit": "degree",
+          "source_id": "synthetic-Moon-slope_deg"
+        },
+        "roughness_m": {
+          "value": 2,
+          "unit": "m",
+          "source_id": "synthetic-Moon-roughness_m"
+        },
+        "dry_fraction": {
+          "value": 0.7,
+          "unit": "1",
+          "source_id": "synthetic-Moon-dry_fraction"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+# PROMPT — Claude account B / Opus 5.5: TWIN-API
+
+Own `/backend/twinsite/api`, `/backend/twinsite/jobs`, `/backend/twinsite/storage`, `/backend/twinsite/ai`; do not rewrite science/data/frontend. Read `contracts/SHARED_CONTRACT.md`, ARES `contracts/api_contract.md`, and TwinSite agent/API handoffs.
+
+Implement FastAPI mission endpoints with one Python worker process on the same VM, a persistent job queue, idempotent POST, bounded concurrent calls, phase events P00–P90, retries only for transient failures, worker lease/heartbeat, cancellation, status and results/report endpoints. Store source binaries in filesystem/object storage and store relationships/features/jobs in PostgreSQL+PostGIS (SQLite demo fallback accepted only if durable and one worker). Include source snapshot ID in every result. Initial server must run with zero AI keys and without signup/login.
+
+Required read-only evidence APIs: catalog, dataset metadata, raw/cleaned/derived record previews, side-by-side data comparison across approved dataset IDs/columns, pagination/filtering/exports, provenance lineages. No arbitrary public SQL or raw database credentials. Only public agency data are openly browsable. If user uploads exist, require explicit external-processing consent and unguessable per-mission capability tokens; if not secured by QA, disable private uploads in deployed demo.
+
+Optional AI router: 13 agent roles remain in registry but most use deterministic implementations. Cloudflare free Workers AI can be primary, then allowed free Groq/Gemini/OpenRouter/Mistral only when current entitlement, modality, data-egress policy and quota are verified. No paid fallback. Quota ledger grouped by actual account/project/org, 60% untouchable demo budget until demo gate, bounded requests and retries, provider health. Default report templates and validation never require inference. Preserve source/AI usage separation and immutable logs.
+
+Publish OpenAPI schema, `.env.example` without values, `API_STATUS.md`, fixtures and integration test instructions. At G1 deliver running mission + worker + status/events/results; at G3 complete evidence browsing, reports and alternative portfolio endpoint. Check API contract with integrator before changing any route.

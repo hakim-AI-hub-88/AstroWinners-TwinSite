@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "data_compare_request",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "left_dataset_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "right_dataset_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "left_record_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1,
+      "maxItems": 100
+    },
+    "right_record_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1,
+      "maxItems": 100
+    },
+    "columns": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1,
+      "maxItems": 12
+    },
+    "stage": {
+      "enum": [
+        "raw",
+        "cleaned",
+        "derived"
+      ]
+    }
+  },
+  "required": [
+    "schema_version",
+    "left_dataset_id",
+    "right_dataset_id",
+    "left_record_ids",
+    "right_record_ids",
+    "columns",
+    "stage"
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,17 @@
+[
+  {
+    "schema_version": "1.0",
+    "mission_id": "run-fixture-001",
+    "task_id": "register",
+    "attempt_id": "attempt-0",
+    "sequence": 1,
+    "timestamp": "2026-11-15T01:45:00Z",
+    "phase": "P00",
+    "state": "queued",
+    "completed_units": 0,
+    "total_units": null,
+    "summary": "Synthetic fixture queued; not NASA measurements.",
+    "trace_id": "trace-fixture-001",
+    "artifact_ids": []
+  }
+]

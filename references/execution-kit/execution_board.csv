@@ -1,0 +1,15 @@
+task_id,owner_lane,start_local,end_local,priority,deliverable,gate
+T00,C0,02:00,02:45,P0,"Freeze repo contracts, branches, smoke commands",G0
+T01,C1,02:45,05:00,P0,NASA CMR/SRTM Earth and MOLA or LOLA acquisition/QA,G1-G2
+T02,C2,02:45,05:00,P0,No-AI feature and portfolio logic from existing reference,G1
+T03,C3,02:45,05:00,P0,FastAPI mission worker + progress + result/report,G1
+T04,C4,02:45,05:00,P0,"Mission workspace, result route, science design system",G1
+T05,C5,02:45,05:00,P0,Smoke test and data provenance assertions,G1
+T06,C1,05:00,09:00,P0,"Real NASA feature acquisition, source-aware cleaning",G2
+T07,C2,05:00,09:00,P0,"Earth/planet comparable descriptors, unknown strict gates",G2
+T08,C3,09:00,13:00,P0,Read-only data catalog/records/compare and cached alternatives,G3
+T09,C4,09:00,13:00,P0,"Maps, portfolios, Data Explorer side-by-side UI",G3
+T10,C5,13:00,16:00,P1,"Mission history, docs, reports and no-AI tests",G4
+T11,ALL,16:00,19:30,P0,"Scientific cross-review, quality, accessibility, deployment",G5
+T12,C0,19:30,21:30,P0,"Freeze release, record judge demo and docs",G6
+T13,OWNER,21:30,22:30,P0,Complete submission and capture receipt,G7
