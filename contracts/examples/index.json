@@ -1,0 +1,72 @@
+{
+  "examples": [
+    {
+      "file": "examples/alternatives_request.json",
+      "schema": "v1/alternatives_request.schema.json"
+    },
+    {
+      "file": "examples/data_compare_request.json",
+      "schema": "v1/data_compare_request.schema.json"
+    },
+    {
+      "file": "examples/error.json",
+      "schema": "v1/error.schema.json"
+    },
+    {
+      "file": "examples/events.json",
+      "schema": "v1/events.schema.json"
+    },
+    {
+      "file": "examples/mission.result.synthetic.json",
+      "schema": "v1/mission_result.schema.json"
+    },
+    {
+      "file": "examples/mission.synthetic.json",
+      "schema": "v1/mission_request.schema.json"
+    },
+    {
+      "file": "examples/mission_accepted.json",
+      "schema": "v1/mission_accepted.schema.json"
+    },
+    {
+      "file": "examples/mission_status.json",
+      "schema": "v1/mission_status.schema.json"
+    },
+    {
+      "file": "examples/moon_mission.result.synthetic.json",
+      "schema": "v1/mission_result.schema.json"
+    },
+    {
+      "file": "examples/moon_mission.synthetic.json",
+      "schema": "v1/mission_request.schema.json"
+    },
+    {
+      "file": "examples/progress_event.json",
+      "schema": "v1/progress_event.schema.json"
+    },
+    {
+      "file": "examples/release_evidence.synthetic.json",
+      "schema": "v1/release_evidence.schema.json"
+    },
+    {
+      "file": "examples/three_body_mission.result.synthetic.json",
+      "schema": "v1/mission_result.schema.json"
+    },
+    {
+      "file": "examples/three_body_mission.synthetic.json",
+      "schema": "v1/mission_request.schema.json"
+    },
+    {
+      "file": "examples/zone_mission.result.synthetic.json",
+      "schema": "v1/mission_result.schema.json"
+    },
+    {
+      "file": "examples/zone_mission.synthetic.json",
+      "schema": "v1/mission_request.schema.json"
+    },
+    {
+      "file": "examples/health.json",
+      "schema": "v1/health.schema.json"
+    }
+  ]
+}

@@ -1,0 +1,514 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "data_status": {
+      "enum": [
+        "synthetic",
+        "measured"
+      ]
+    },
+    "mission": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "features": {
+          "type": "object",
+          "minProperties": 1,
+          "maxProperties": 12,
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "unit": {
+                "type": "string",
+                "minLength": 1
+              },
+              "weight": {
+                "type": "number",
+                "minimum": 0
+              },
+              "tolerance": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "required": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "unit",
+              "weight",
+              "tolerance"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "min_coverage": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "max_sites": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3
+        },
+        "budget": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "max_days": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "allow_unknown_access": {
+          "type": "boolean"
+        },
+        "cost_penalty": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "redundancy_penalty": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "exclude_portfolios": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true
+          }
+        },
+        "scope": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "locations"
+          ],
+          "properties": {
+            "locations": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "id",
+                  "body",
+                  "coordinate_system",
+                  "bbox"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "body": {
+                    "enum": [
+                      "Earth",
+                      "Moon",
+                      "Mars"
+                    ]
+                  },
+                  "coordinate_system": {
+                    "enum": [
+                      "WGS84_lonlat",
+                      "Moon_planetocentric_east_180",
+                      "Mars_planetocentric_east_180"
+                    ]
+                  },
+                  "bbox": {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    },
+                    "minItems": 4,
+                    "maxItems": 4
+                  },
+                  "kind": {
+                    "enum": [
+                      "site",
+                      "zone"
+                    ],
+                    "default": "site"
+                  }
+                }
+              },
+              "minItems": 1,
+              "maxItems": 3
+            },
+            "compare_with": {
+              "type": "array",
+              "uniqueItems": true,
+              "maxItems": 2,
+              "items": {
+                "enum": [
+                  "Earth",
+                  "Moon",
+                  "Mars"
+                ]
+              }
+            }
+          },
+          "description": "One selected site or zone per body. A zone contains multiple candidate/reference locations. Earth-centered comparison rules apply.",
+          "allOf": [
+            {
+              "properties": {
+                "locations": {
+                  "contains": {
+                    "properties": {
+                      "body": {
+                        "const": "Earth"
+                      }
+                    },
+                    "required": [
+                      "body"
+                    ]
+                  },
+                  "minContains": 0,
+                  "maxContains": 1
+                }
+              }
+            },
+            {
+              "properties": {
+                "locations": {
+                  "contains": {
+                    "properties": {
+                      "body": {
+                        "const": "Moon"
+                      }
+                    },
+                    "required": [
+                      "body"
+                    ]
+                  },
+                  "minContains": 0,
+                  "maxContains": 1
+                }
+              }
+            },
+            {
+              "properties": {
+                "locations": {
+                  "contains": {
+                    "properties": {
+                      "body": {
+                        "const": "Mars"
+                      }
+                    },
+                    "required": [
+                      "body"
+                    ]
+                  },
+                  "minContains": 0,
+                  "maxContains": 1
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "locations": {
+                    "contains": {
+                      "properties": {
+                        "body": {
+                          "const": "Earth"
+                        }
+                      },
+                      "required": [
+                        "body"
+                      ]
+                    }
+                  }
+                }
+              },
+              "then": {
+                "required": [
+                  "compare_with"
+                ],
+                "properties": {
+                  "compare_with": {
+                    "minItems": 1,
+                    "items": {
+                      "enum": [
+                        "Moon",
+                        "Mars"
+                      ]
+                    }
+                  }
+                }
+              },
+              "else": {
+                "properties": {
+                  "compare_with": {
+                    "maxItems": 1,
+                    "items": {
+                      "const": "Earth"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "mode": {
+          "enum": [
+            "auto",
+            "custom"
+          ]
+        },
+        "start_trigger": {
+          "const": "user_request"
+        },
+        "portfolio_mode": {
+          "enum": [
+            "standalone",
+            "combined",
+            "both"
+          ],
+          "default": "both"
+        }
+      },
+      "required": [
+        "id",
+        "features",
+        "min_coverage",
+        "max_sites",
+        "scope",
+        "mode",
+        "start_trigger"
+      ],
+      "additionalProperties": false
+    },
+    "sites": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "name": {
+            "type": "string"
+          },
+          "longitude": {
+            "type": "number",
+            "minimum": -180,
+            "maximum": 180
+          },
+          "latitude": {
+            "type": "number",
+            "minimum": -90,
+            "maximum": 90
+          },
+          "access": {
+            "enum": [
+              "pass",
+              "fail",
+              "unknown"
+            ]
+          },
+          "cost": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "days": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "observations": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "unit": {
+                  "type": "string"
+                },
+                "source_id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "missing_sentinel": {
+                  "type": "number"
+                },
+                "missing_reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "value",
+                "unit",
+                "source_id"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "body": {
+            "enum": [
+              "Earth",
+              "Moon",
+              "Mars"
+            ]
+          },
+          "coordinate_system": {
+            "enum": [
+              "WGS84_lonlat",
+              "Moon_planetocentric_east_180",
+              "Mars_planetocentric_east_180"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "longitude",
+          "latitude",
+          "access",
+          "observations",
+          "body",
+          "coordinate_system"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1,
+      "maxItems": 12
+    },
+    "target_profiles": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 12,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "body",
+          "location",
+          "observations"
+        ],
+        "properties": {
+          "body": {
+            "enum": [
+              "Moon",
+              "Mars"
+            ]
+          },
+          "location": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "body",
+              "coordinate_system",
+              "bbox"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "body": {
+                "enum": [
+                  "Earth",
+                  "Moon",
+                  "Mars"
+                ]
+              },
+              "coordinate_system": {
+                "enum": [
+                  "WGS84_lonlat",
+                  "Moon_planetocentric_east_180",
+                  "Mars_planetocentric_east_180"
+                ]
+              },
+              "bbox": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 4,
+                "maxItems": 4
+              },
+              "kind": {
+                "enum": [
+                  "site",
+                  "zone"
+                ],
+                "default": "site"
+              }
+            }
+          },
+          "observations": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "value": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "unit": {
+                  "type": "string"
+                },
+                "source_id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "missing_sentinel": {
+                  "type": "number"
+                },
+                "missing_reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "value",
+                "unit",
+                "source_id"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "schema_version",
+    "data_status",
+    "mission",
+    "sites",
+    "target_profiles"
+  ],
+  "additionalProperties": false
+}

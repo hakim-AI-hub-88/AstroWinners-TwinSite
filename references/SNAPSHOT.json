@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0",
+  "scientific_validation": "NOT_VALIDATED",
+  "packages": [
+    {
+      "path": "references/ARES_NASA_Feasibility_Architecture.zip",
+      "sha256": "7b992c576e821c988515c1e44da4f1d8706fe120a85b9f56c58275d049488236",
+      "bytes": 1939267
+    },
+    {
+      "path": "references/TwinSite_Engineering_Handoff.zip",
+      "sha256": "062d046b561bbc99855d5a36b351f6fa9e42d90143c04a3f28aee150f194cf43",
+      "bytes": 412607
+    },
+    {
+      "path": "references/TwinSite_Execution_Kit_2026-11-15.zip",
+      "sha256": "ef1217ea6bad08e0287a1f333bfbb40b09b468e12b1c0e69e8ad6a01c48a6a14",
+      "bytes": 125393
+    }
+  ]
+}

@@ -1,0 +1,648 @@
+{
+  "schema_version": "1.0",
+  "algorithm_version": "0.4.0",
+  "input_sha256": "8e3cb6c5186fba5574474a5d0b9d9820b0cc675356789f256911b70dc9681396",
+  "cleaned_sha256": "8e3cb6c5186fba5574474a5d0b9d9820b0cc675356789f256911b70dc9681396",
+  "data_status": "synthetic",
+  "mission_id": "mobility-demo",
+  "weights": {
+    "Moon/slope_deg": 0.45,
+    "Moon/roughness_m": 0.35,
+    "Moon/dry_fraction": 0.2
+  },
+  "transformations": [],
+  "scope": {
+    "locations": [
+      {
+        "id": "synthetic-moon-target",
+        "body": "Moon",
+        "coordinate_system": "Moon_planetocentric_east_180",
+        "bbox": [
+          31.45,
+          -85.55,
+          31.55,
+          -85.45
+        ]
+      }
+    ],
+    "compare_with": [
+      "Earth"
+    ]
+  },
+  "mode": "auto",
+  "start_trigger": "user_request",
+  "comparison_pairs": [
+    [
+      "Earth",
+      "Moon"
+    ]
+  ],
+  "target_profiles": [
+    {
+      "body": "Moon",
+      "location": {
+        "id": "synthetic-moon-target",
+        "body": "Moon",
+        "coordinate_system": "Moon_planetocentric_east_180",
+        "bbox": [
+          31.45,
+          -85.55,
+          31.55,
+          -85.45
+        ]
+      },
+      "observations": {
+        "slope_deg": {
+          "value": 8,
+          "unit": "degree",
+          "source_id": "synthetic-Moon-slope_deg"
+        },
+        "roughness_m": {
+          "value": 2,
+          "unit": "m",
+          "source_id": "synthetic-Moon-roughness_m"
+        },
+        "dry_fraction": {
+          "value": 0.7,
+          "unit": "1",
+          "source_id": "synthetic-Moon-dry_fraction"
+        }
+      }
+    }
+  ],
+  "portfolio_mode": "both",
+  "standalone_portfolios": [
+    {
+      "site_ids": [
+        "C"
+      ],
+      "kind": "standalone",
+      "objective": 0.6166666666666666,
+      "test_coverage_utility": 0.6499999999999999,
+      "dimension_coverage": {
+        "Moon/slope_deg": 0.7,
+        "Moon/roughness_m": 0.5,
+        "Moon/dry_fraction": 0.7999999999999998
+      },
+      "redundancy": 0.0,
+      "cost": 300.0,
+      "days": 3.0,
+      "operational_status": "pass",
+      "minimum_evidence_coverage": 1.0
+    },
+    {
+      "site_ids": [
+        "A"
+      ],
+      "kind": "standalone",
+      "objective": 0.533888888888889,
+      "test_coverage_utility": 0.5783333333333334,
+      "dimension_coverage": {
+        "Moon/slope_deg": 0.8,
+        "Moon/roughness_m": 0.16666666666666663,
+        "Moon/dry_fraction": 0.8
+      },
+      "redundancy": 0.0,
+      "cost": 400.0,
+      "days": 4.0,
+      "operational_status": "pass",
+      "minimum_evidence_coverage": 1.0
+    },
+    {
+      "site_ids": [
+        "B"
+      ],
+      "kind": "standalone",
+      "objective": 0.49666666666666676,
+      "test_coverage_utility": 0.5466666666666667,
+      "dimension_coverage": {
+        "Moon/slope_deg": 0.30000000000000004,
+        "Moon/roughness_m": 0.8333333333333334,
+        "Moon/dry_fraction": 0.5999999999999999
+      },
+      "redundancy": 0.0,
+      "cost": 450.0,
+      "days": 5.0,
+      "operational_status": "pass",
+      "minimum_evidence_coverage": 1.0
+    }
+  ],
+  "combined_portfolios": [
+    {
+      "site_ids": [
+        "A",
+        "B"
+      ],
+      "kind": "combined",
+      "objective": 0.7015555555555556,
+      "test_coverage_utility": 0.8116666666666668,
+      "dimension_coverage": {
+        "Moon/slope_deg": 0.8,
+        "Moon/roughness_m": 0.8333333333333334,
+        "Moon/dry_fraction": 0.8
+      },
+      "redundancy": 0.31333333333333335,
+      "cost": 850.0,
+      "days": 9.0,
+      "operational_status": "pass",
+      "minimum_evidence_coverage": 1.0
+    },
+    {
+      "site_ids": [
+        "B",
+        "C"
+      ],
+      "kind": "combined",
+      "objective": 0.6618333333333333,
+      "test_coverage_utility": 0.7666666666666666,
+      "dimension_coverage": {
+        "Moon/slope_deg": 0.7,
+        "Moon/roughness_m": 0.8333333333333334,
+        "Moon/dry_fraction": 0.7999999999999998
+      },
+      "redundancy": 0.43,
+      "cost": 750.0,
+      "days": 8.0,
+      "operational_status": "pass",
+      "minimum_evidence_coverage": 1.0
+    },
+    {
+      "site_ids": [
+        "A",
+        "C"
+      ],
+      "kind": "combined",
+      "objective": 0.5905555555555557,
+      "test_coverage_utility": 0.6950000000000001,
+      "dimension_coverage": {
+        "Moon/slope_deg": 0.8,
+        "Moon/roughness_m": 0.5,
+        "Moon/dry_fraction": 0.8
+      },
+      "redundancy": 0.5333333333333333,
+      "cost": 700.0,
+      "days": 7.0,
+      "operational_status": "pass",
+      "minimum_evidence_coverage": 1.0
+    }
+  ],
+  "excluded_outside_scope": [],
+  "sites": [
+    {
+      "id": "E",
+      "name": "Synthetic restricted E",
+      "eligible": false,
+      "body": "Earth",
+      "coordinate_system": "WGS84_lonlat",
+      "failures": [
+        "access constraint failed"
+      ],
+      "coverage": 1.0,
+      "observed_similarity": 0.7716666666666667,
+      "lower_utility": 0.7716666666666667,
+      "upper_utility": 0.7716666666666667,
+      "contributions": {
+        "Moon/slope_deg": {
+          "similarity": 0.8,
+          "weighted_contribution": 0.36000000000000004,
+          "value": 12,
+          "unit": "degree",
+          "source_id": "synthetic-E-slope_deg",
+          "target_source_id": "synthetic-Moon-slope_deg",
+          "target_value": 8,
+          "target_body": "Moon",
+          "target_location_id": "synthetic-moon-target",
+          "feature_id": "slope_deg"
+        },
+        "Moon/roughness_m": {
+          "similarity": 0.8333333333333334,
+          "weighted_contribution": 0.2916666666666667,
+          "value": 3,
+          "unit": "m",
+          "source_id": "synthetic-E-roughness_m",
+          "target_source_id": "synthetic-Moon-roughness_m",
+          "target_value": 2,
+          "target_body": "Moon",
+          "target_location_id": "synthetic-moon-target",
+          "feature_id": "roughness_m"
+        },
+        "Moon/dry_fraction": {
+          "similarity": 0.5999999999999999,
+          "weighted_contribution": 0.11999999999999998,
+          "value": 0.9,
+          "unit": "1",
+          "source_id": "synthetic-E-dry_fraction",
+          "target_source_id": "synthetic-Moon-dry_fraction",
+          "target_value": 0.7,
+          "target_body": "Moon",
+          "target_location_id": "synthetic-moon-target",
+          "feature_id": "dry_fraction"
+        }
+      },
+      "missing": [],
+      "access": "fail",
+      "cost": 250,
+      "days": 3,
+      "longitude": -20,
+      "latitude": 64
+    },
+    {
+      "id": "F",
+      "name": "Synthetic unknown-access F",
+      "eligible": false,
+      "body": "Earth",
+      "coordinate_system": "WGS84_lonlat",
+      "failures": [
+        "access status unknown"
+      ],
+      "coverage": 1.0,
+      "observed_similarity": 0.7308333333333332,
+      "lower_utility": 0.7308333333333332,
+      "upper_utility": 0.7308333333333332,
+      "contributions": {
+        "Moon/slope_deg": {
+          "similarity": 0.75,
+          "weighted_contribution": 0.3375,
+          "value": 13,
+          "unit": "degree",
+          "source_id": "synthetic-F-slope_deg",
+          "target_source_id": "synthetic-Moon-slope_deg",
+          "target_value": 8,
+          "target_body": "Moon",
+          "target_location_id": "synthetic-moon-target",
+          "feature_id": "slope_deg"
+        },
+        "Moon/roughness_m": {
+          "similarity": 0.6666666666666667,
+          "weighted_contribution": 0.23333333333333334,
+          "value": 4,
+          "unit": "m",
+          "source_id": "synthetic-F-roughness_m",
+          "target_source_id": "synthetic-Moon-roughness_m",
+          "target_value": 2,
+          "target_body": "Moon",
+          "target_location_id": "synthetic-moon-target",
+          "feature_id": "roughness_m"
+        },
+        "Moon/dry_fraction": {
+          "similarity": 0.7999999999999998,
+          "weighted_contribution": 0.15999999999999998,
+          "value": 0.8,
+          "unit": "1",
+          "source_id": "synthetic-F-dry_fraction",
+          "target_source_id": "synthetic-Moon-dry_fraction",
+          "target_value": 0.7,
+          "target_body": "Moon",
+          "target_location_id": "synthetic-moon-target",
+          "feature_id": "dry_fraction"
+        }
+      },
+      "missing": [],
+      "access": "unknown",
+      "cost": null,
+      "days": 5,
+      "longitude": 35,
+      "latitude": -10
+    },
+    {
+      "id": "C",
+      "name": "Synthetic terrain C",
+      "eligible": true,
+      "body": "Earth",
+      "coordinate_system": "WGS84_lonlat",
+      "failures": [],
+      "coverage": 1.0,
+      "observed_similarity": 0.6499999999999999,
+      "lower_utility": 0.6499999999999999,
+      "upper_utility": 0.6499999999999999,
+      "contributions": {
+        "Moon/slope_deg": {
+          "similarity": 0.7,
+          "weighted_contribution": 0.315,
+          "value": 14,
+          "unit": "degree",
+          "source_id": "synthetic-C-slope_deg",
+          "target_source_id": "synthetic-Moon-slope_deg",
+          "target_value": 8,
+          "target_body": "Moon",
+          "target_location_id": "synthetic-moon-target",
+          "feature_id": "slope_deg"
+        },
+        "Moon/roughness_m": {
+          "similarity": 0.5,
+          "weighted_contribution": 0.175,
+          "value": 5,
+          "unit": "m",
+          "source_id": "synthetic-C-roughness_m",
+          "target_source_id": "synthetic-Moon-roughness_m",
+          "target_value": 2,
+          "target_body": "Moon",
+          "target_location_id": "synthetic-moon-target",
+          "feature_id": "roughness_m"
+        },
+        "Moon/dry_fraction": {
+          "similarity": 0.7999999999999998,
+          "weighted_contribution": 0.15999999999999998,
+          "value": 0.8,
+          "unit": "1",
+          "source_id": "synthetic-C-dry_fraction",
+          "target_source_id": "synthetic-Moon-dry_fraction",
+          "target_value": 0.7,
+          "target_body": "Moon",
+          "target_location_id": "synthetic-moon-target",
+          "feature_id": "dry_fraction"
+        }
+      },
+      "missing": [],
+      "access": "pass",
+      "cost": 300,
+      "days": 3,
+      "longitude": 10,
+      "latitude": 35
+    },
+    {
+      "id": "A",
+      "name": "Synthetic terrain A",
+      "eligible": true,
+      "body": "Earth",
+      "coordinate_system": "WGS84_lonlat",
+      "failures": [],
+      "coverage": 1.0,
+      "observed_similarity": 0.5783333333333334,
+      "lower_utility": 0.5783333333333334,
+      "upper_utility": 0.5783333333333334,
+      "contributions": {
+        "Moon/slope_deg": {
+          "similarity": 0.8,
+          "weighted_contribution": 0.36000000000000004,
+          "value": 12,
+          "unit": "degree",
+          "source_id": "synthetic-A-slope_deg",
+          "target_source_id": "synthetic-Moon-slope_deg",
+          "target_value": 8,
+          "target_body": "Moon",
+          "target_location_id": "synthetic-moon-target",
+          "feature_id": "slope_deg"
+        },
+        "Moon/roughness_m": {
+          "similarity": 0.16666666666666663,
+          "weighted_contribution": 0.05833333333333331,
+          "value": 7,
+          "unit": "m",
+          "source_id": "synthetic-A-roughness_m",
+          "target_source_id": "synthetic-Moon-roughness_m",
+          "target_value": 2,
+          "target_body": "Moon",
+          "target_location_id": "synthetic-moon-target",
+          "feature_id": "roughness_m"
+        },
+        "Moon/dry_fraction": {
+          "similarity": 0.8,
+          "weighted_contribution": 0.16000000000000003,
+          "value": 0.6,
+          "unit": "1",
+          "source_id": "synthetic-A-dry_fraction",
+          "target_source_id": "synthetic-Moon-dry_fraction",
+          "target_value": 0.7,
+          "target_body": "Moon",
+          "target_location_id": "synthetic-moon-target",
+          "feature_id": "dry_fraction"
+        }
+      },
+      "missing": [],
+      "access": "pass",
+      "cost": 400,
+      "days": 4,
+      "longitude": -6,
+      "latitude": 31
+    },
+    {
+      "id": "B",
+      "name": "Synthetic terrain B",
+      "eligible": true,
+      "body": "Earth",
+      "coordinate_system": "WGS84_lonlat",
+      "failures": [],
+      "coverage": 1.0,
+      "observed_similarity": 0.5466666666666667,
+      "lower_utility": 0.5466666666666667,
+      "upper_utility": 0.5466666666666669,
+      "contributions": {
+        "Moon/slope_deg": {
+          "similarity": 0.30000000000000004,
+          "weighted_contribution": 0.13500000000000004,
+          "value": 22,
+          "unit": "degree",
+          "source_id": "synthetic-B-slope_deg",
+          "target_source_id": "synthetic-Moon-slope_deg",
+          "target_value": 8,
+          "target_body": "Moon",
+          "target_location_id": "synthetic-moon-target",
+          "feature_id": "slope_deg"
+        },
+        "Moon/roughness_m": {
+          "similarity": 0.8333333333333334,
+          "weighted_contribution": 0.2916666666666667,
+          "value": 3,
+          "unit": "m",
+          "source_id": "synthetic-B-roughness_m",
+          "target_source_id": "synthetic-Moon-roughness_m",
+          "target_value": 2,
+          "target_body": "Moon",
+          "target_location_id": "synthetic-moon-target",
+          "feature_id": "roughness_m"
+        },
+        "Moon/dry_fraction": {
+          "similarity": 0.5999999999999999,
+          "weighted_contribution": 0.11999999999999998,
+          "value": 0.9,
+          "unit": "1",
+          "source_id": "synthetic-B-dry_fraction",
+          "target_source_id": "synthetic-Moon-dry_fraction",
+          "target_value": 0.7,
+          "target_body": "Moon",
+          "target_location_id": "synthetic-moon-target",
+          "feature_id": "dry_fraction"
+        }
+      },
+      "missing": [],
+      "access": "pass",
+      "cost": 450,
+      "days": 5,
+      "longitude": -15,
+      "latitude": 28
+    },
+    {
+      "id": "D",
+      "name": "Synthetic missing-data D",
+      "eligible": false,
+      "body": "Earth",
+      "coordinate_system": "WGS84_lonlat",
+      "failures": [
+        "insufficient weighted data coverage"
+      ],
+      "coverage": 0.45,
+      "observed_similarity": 0.85,
+      "lower_utility": 0.3825,
+      "upper_utility": 0.9325000000000001,
+      "contributions": {
+        "Moon/slope_deg": {
+          "similarity": 0.85,
+          "weighted_contribution": 0.3825,
+          "value": 11,
+          "unit": "degree",
+          "source_id": "synthetic-D-slope_deg",
+          "target_source_id": "synthetic-Moon-slope_deg",
+          "target_value": 8,
+          "target_body": "Moon",
+          "target_location_id": "synthetic-moon-target",
+          "feature_id": "slope_deg"
+        }
+      },
+      "missing": [
+        "Moon/roughness_m",
+        "Moon/dry_fraction"
+      ],
+      "access": "pass",
+      "cost": 200,
+      "days": 4,
+      "longitude": -70,
+      "latitude": -24
+    }
+  ],
+  "portfolios": [
+    {
+      "site_ids": [
+        "A",
+        "B"
+      ],
+      "kind": "combined",
+      "objective": 0.7015555555555556,
+      "test_coverage_utility": 0.8116666666666668,
+      "dimension_coverage": {
+        "Moon/slope_deg": 0.8,
+        "Moon/roughness_m": 0.8333333333333334,
+        "Moon/dry_fraction": 0.8
+      },
+      "redundancy": 0.31333333333333335,
+      "cost": 850.0,
+      "days": 9.0,
+      "operational_status": "pass",
+      "minimum_evidence_coverage": 1.0
+    },
+    {
+      "site_ids": [
+        "B",
+        "C"
+      ],
+      "kind": "combined",
+      "objective": 0.6618333333333333,
+      "test_coverage_utility": 0.7666666666666666,
+      "dimension_coverage": {
+        "Moon/slope_deg": 0.7,
+        "Moon/roughness_m": 0.8333333333333334,
+        "Moon/dry_fraction": 0.7999999999999998
+      },
+      "redundancy": 0.43,
+      "cost": 750.0,
+      "days": 8.0,
+      "operational_status": "pass",
+      "minimum_evidence_coverage": 1.0
+    },
+    {
+      "site_ids": [
+        "C"
+      ],
+      "kind": "standalone",
+      "objective": 0.6166666666666666,
+      "test_coverage_utility": 0.6499999999999999,
+      "dimension_coverage": {
+        "Moon/slope_deg": 0.7,
+        "Moon/roughness_m": 0.5,
+        "Moon/dry_fraction": 0.7999999999999998
+      },
+      "redundancy": 0.0,
+      "cost": 300.0,
+      "days": 3.0,
+      "operational_status": "pass",
+      "minimum_evidence_coverage": 1.0
+    },
+    {
+      "site_ids": [
+        "A",
+        "C"
+      ],
+      "kind": "combined",
+      "objective": 0.5905555555555557,
+      "test_coverage_utility": 0.6950000000000001,
+      "dimension_coverage": {
+        "Moon/slope_deg": 0.8,
+        "Moon/roughness_m": 0.5,
+        "Moon/dry_fraction": 0.8
+      },
+      "redundancy": 0.5333333333333333,
+      "cost": 700.0,
+      "days": 7.0,
+      "operational_status": "pass",
+      "minimum_evidence_coverage": 1.0
+    },
+    {
+      "site_ids": [
+        "A"
+      ],
+      "kind": "standalone",
+      "objective": 0.533888888888889,
+      "test_coverage_utility": 0.5783333333333334,
+      "dimension_coverage": {
+        "Moon/slope_deg": 0.8,
+        "Moon/roughness_m": 0.16666666666666663,
+        "Moon/dry_fraction": 0.8
+      },
+      "redundancy": 0.0,
+      "cost": 400.0,
+      "days": 4.0,
+      "operational_status": "pass",
+      "minimum_evidence_coverage": 1.0
+    },
+    {
+      "site_ids": [
+        "B"
+      ],
+      "kind": "standalone",
+      "objective": 0.49666666666666676,
+      "test_coverage_utility": 0.5466666666666667,
+      "dimension_coverage": {
+        "Moon/slope_deg": 0.30000000000000004,
+        "Moon/roughness_m": 0.8333333333333334,
+        "Moon/dry_fraction": 0.5999999999999999
+      },
+      "redundancy": 0.0,
+      "cost": 450.0,
+      "days": 5.0,
+      "operational_status": "pass",
+      "minimum_evidence_coverage": 1.0
+    }
+  ],
+  "feasible_portfolio_count": 6,
+  "status": "completed",
+  "sensitivity": {
+    "seed": 20261114,
+    "scenarios": 50,
+    "weight_factor_range": [
+      0.8,
+      1.2
+    ],
+    "top_portfolio_counts": {
+      "A|B": 50
+    },
+    "infeasible_scenarios": 0
+  },
+  "limitations": [
+    "Feature tolerances and objective coefficients are scenario assumptions.",
+    "Target bodies receive equal total weight, split equally across their reference locations; portfolios contain Earth analog candidates.",
+    "Earth candidate discovery is represented by a supplied shortlist in this sample.",
+    "Cost and duration use additive input scenarios.",
+    "Missingness bounds and scenario frequency are descriptive indices.",
+    "Full sensor processing, field validation and calibrated uncertainty require integration."
+  ]
+}

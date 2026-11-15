@@ -1,0 +1,23 @@
+.DS_Store
+.venv/
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*credentials*
+node_modules/
+dist/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.worktrees/
+.runtime/
+*.sqlite*
+*.log
+ARES 2/
+ARES_Data_Source_Update/
+/*.pdf
+/*.png
+/*.jpeg
+references/extracted/

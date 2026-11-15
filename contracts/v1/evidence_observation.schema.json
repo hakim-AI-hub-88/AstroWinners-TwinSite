@@ -1,0 +1,283 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "evidence_observation",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "evidence_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "feature_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "site_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "body": {
+      "enum": [
+        "Earth",
+        "Moon",
+        "Mars"
+      ]
+    },
+    "geometry": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "bbox"
+        },
+        "coordinates": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 4,
+          "maxItems": 4
+        },
+        "crs": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "type",
+        "coordinates",
+        "crs"
+      ],
+      "additionalProperties": false
+    },
+    "value": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "unit": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_product": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_granule_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_url": {
+      "type": "string",
+      "format": "uri"
+    },
+    "source_checksum": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "source_asset_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "observation_period": {
+      "type": "object",
+      "properties": {
+        "start": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "end": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "start",
+        "end"
+      ],
+      "additionalProperties": false
+    },
+    "spatial_resolution_m": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "exclusiveMinimum": 0
+    },
+    "analysis_scale_m": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "exclusiveMinimum": 0
+    },
+    "quality_flags": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "valid_coverage_fraction": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "uncertainty": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "enum": [
+            "unknown",
+            "interval",
+            "standard_deviation"
+          ]
+        },
+        "low": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "high": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "standard_deviation": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "basis": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "kind",
+        "low",
+        "high",
+        "standard_deviation",
+        "basis"
+      ],
+      "additionalProperties": false
+    },
+    "processing_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "provenance_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "evidence_kind": {
+      "enum": [
+        "direct_measurement",
+        "derived_measurement",
+        "user_assumption",
+        "model_estimate",
+        "unavailable"
+      ]
+    },
+    "data_status": {
+      "enum": [
+        "synthetic",
+        "measured"
+      ]
+    },
+    "missing_reason": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "qa_status": {
+      "enum": [
+        "ACCEPT",
+        "REPAIR_ALLOWED",
+        "QUARANTINE",
+        "INSUFFICIENT",
+        "FAILED"
+      ]
+    }
+  },
+  "required": [
+    "schema_version",
+    "evidence_id",
+    "feature_id",
+    "site_id",
+    "body",
+    "geometry",
+    "value",
+    "unit",
+    "source_product",
+    "source_granule_id",
+    "source_url",
+    "source_checksum",
+    "source_asset_ids",
+    "observation_period",
+    "spatial_resolution_m",
+    "analysis_scale_m",
+    "quality_flags",
+    "valid_coverage_fraction",
+    "uncertainty",
+    "processing_version",
+    "provenance_id",
+    "evidence_kind",
+    "data_status",
+    "missing_reason",
+    "qa_status"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "value": {
+            "type": "null"
+          }
+        },
+        "required": [
+          "value"
+        ]
+      },
+      "then": {
+        "properties": {
+          "missing_reason": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "evidence_kind": {
+            "const": "unavailable"
+          }
+        },
+        "required": [
+          "evidence_kind"
+        ]
+      },
+      "then": {
+        "properties": {
+          "value": {
+            "type": "null"
+          }
+        }
+      }
+    }
+  ]
+}

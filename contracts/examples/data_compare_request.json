@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0",
+  "left_dataset_id": "fixture-raw",
+  "right_dataset_id": "fixture-cleaned",
+  "left_record_ids": [
+    "one"
+  ],
+  "right_record_ids": [
+    "one"
+  ],
+  "columns": [
+    "value",
+    "unit"
+  ],
+  "stage": "cleaned"
+}

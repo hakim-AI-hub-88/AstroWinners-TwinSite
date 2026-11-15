@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "TwinSite Quality Verdict",
+  "type": "object",
+  "properties": {
+    "asset_id": {
+      "type": "string"
+    },
+    "source_product_id": {
+      "type": "string"
+    },
+    "verdict": {
+      "enum": [
+        "ACCEPT",
+        "REPAIR_ALLOWED",
+        "QUARANTINE",
+        "INSUFFICIENT"
+      ]
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "severity": {
+            "enum": [
+              "info",
+              "warning",
+              "critical"
+            ]
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "rule_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "code",
+          "severity",
+          "evidence"
+        ]
+      }
+    },
+    "attempt_count": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 2
+    },
+    "raw_checksum": {
+      "type": "string"
+    },
+    "cleaned_checksum": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "method_version": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "asset_id",
+    "source_product_id",
+    "verdict",
+    "issues",
+    "attempt_count",
+    "raw_checksum",
+    "method_version"
+  ]
+}

@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "TwinSite OptionalAIRequest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "run_id": {
+      "type": "string"
+    },
+    "agent_id": {
+      "type": "string"
+    },
+    "capability": {
+      "enum": [
+        "text_json",
+        "vision_annotation",
+        "narrative"
+      ]
+    },
+    "data_class": {
+      "enum": [
+        "PUBLIC_AGENCY",
+        "USER_UPLOAD_WITH_PROVIDER_CONSENT",
+        "PRIVATE_OPERATIONS_NEVER_EGRESS"
+      ]
+    },
+    "provider_allowlist": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "consent_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "priority": {
+      "enum": [
+        "dev",
+        "demo",
+        "emergency"
+      ]
+    },
+    "input_artifact_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "estimated_input_tokens": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "idempotency_key": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "run_id",
+    "agent_id",
+    "capability",
+    "data_class",
+    "provider_allowlist",
+    "priority",
+    "input_artifact_ids",
+    "estimated_input_tokens",
+    "idempotency_key"
+  ]
+}
