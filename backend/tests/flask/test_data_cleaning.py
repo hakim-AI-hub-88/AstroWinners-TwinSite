@@ -5,7 +5,7 @@ import hashlib
 import json
 import unittest
 
-from tests.flask import _support as S
+from tests.flask import test_data_support as S
 
 # Digest of analysis.run("mars", CUSTOM, rover, 15, zone) captured BEFORE the cleaning code existed
 # (Merzouga frames standing in for Mars). cleaning="standard" must reproduce it exactly.

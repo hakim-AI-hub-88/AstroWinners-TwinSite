@@ -763,6 +763,9 @@ if (els.dataMode) {
 }
 
 function renderMissionData() {
+  try { renderMissionDataUnsafe(); } catch (err) { console.warn("mission data panel:", err); }  // never block the dashboard
+}
+function renderMissionDataUnsafe() {
   const box = $("mission-data");
   if (!box || !result) return;
   const opts = result.options || {};

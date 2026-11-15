@@ -25,7 +25,6 @@ import math
 import re
 
 from services import analysis
-from services import cleaning as cleaning_mod
 from utils import config
 
 log = logging.getLogger(__name__)
@@ -54,6 +53,7 @@ def _region_facts(reg: dict) -> dict:
 def build_facts(planet: str, location: str, rover_mode: bool, max_slope: float,
                 cleaning: str = "standard") -> tuple[dict, dict]:
     """Return (facts for the LLM, raw results per zone). Zones whose analysis fails are skipped with a reason."""
+    from services import cleaning as cleaning_mod
     results, skipped = {}, {}
     for zone in config.EARTH_ZONES:
         try:
@@ -267,6 +267,7 @@ def zone_map_png(res: dict, width: int = 640) -> str:
 #############################################
 def build(planet: str, location: str, rover_mode: bool, max_slope: float, use_ai: bool = True,
           cleaning: str = "standard", data_mode: str = "bundled") -> dict:
+    from services import cleaning as cleaning_mod
     planet, location, rover_mode, max_slope = analysis.validate(planet, location, rover_mode, max_slope)
     cleaning, data_mode = analysis.validate_options(cleaning, data_mode)
     facts, results = build_facts(planet, location, rover_mode, max_slope, cleaning)

@@ -1,0 +1,158 @@
+{
+ "site_id": "mars-m4_590p137_440",
+ "name": "Gale crater (Curiosity)",
+ "body": "Mars",
+ "longitude": 137.44,
+ "latitude": -4.59,
+ "aoi": [
+  137.16019,
+  -4.86891,
+  137.71981,
+  -4.31109
+ ],
+ "analysis_scale_m": 1900.0,
+ "observations": [
+  {
+   "analysis_scale_m": 1900.0,
+   "body": "Mars",
+   "data_status": "measured",
+   "evidence_id": "ev-mars-m4_590p137_440-slope_deg-ccbe81a76e1ea1f9",
+   "evidence_kind": "derived_measurement",
+   "feature_id": "slope_deg",
+   "geometry": {
+    "coordinates": [
+     137.16019,
+     -4.86891,
+     137.71981,
+     -4.31109
+    ],
+    "crs": "IAU_2000:49900",
+    "type": "bbox"
+   },
+   "missing_reason": null,
+   "observation_period": {
+    "end": "2001-06-30T11:10:40Z",
+    "start": "1997-09-15T19:10:00Z"
+   },
+   "processing_version": "twinsite-data/1.0.0; terrain/1.0.0 (block-mean, Horn-1981 slope, 3x3 SD roughness)",
+   "provenance_id": "prov-mars-m4_590p137_440-275e12b829c74294",
+   "qa_status": "ACCEPT",
+   "quality_flags": [
+    "MOLA_INTERPOLATED_CELLS_RETAINED",
+    "MOLA_SHOT_SUPPORTED_FRACTION=0.290",
+    "OBSERVATION_SUPPORTED_BLOCK_FRACTION=0.747"
+   ],
+   "schema_version": "1.0",
+   "site_id": "mars-m4_590p137_440",
+   "source_asset_ids": [
+    "mola-megc00n090hb.img-sub-a0449a94c47f",
+    "mola-megc00n090hb.lbl-7c373fcff18e",
+    "mola-megt00n090hb.img-sub-4c159a743040",
+    "mola-megt00n090hb.lbl-c85891df3c11"
+   ],
+   "source_checksum": "4c159a743040c3fd544b0b0c88a973e939060a5550fb86355609599882a3d2c5",
+   "source_granule_id": "MEGT00N090HB.IMG",
+   "source_product": "MGS-M-MOLA-5-MEGDR-L3-V1.0",
+   "source_url": "https://pds-geosciences.wustl.edu/mgs/mgs-m-mola-5-megdr-l3-v1/mgsl_300x/meg128/megt00n090hb.img",
+   "spatial_resolution_m": 463.058,
+   "unit": "degree",
+   "valid_coverage_fraction": 0.747405,
+   "value": 4.3591
+  },
+  {
+   "analysis_scale_m": 1900.0,
+   "body": "Mars",
+   "data_status": "measured",
+   "evidence_id": "ev-mars-m4_590p137_440-roughness_m-64632ca011606ba5",
+   "evidence_kind": "derived_measurement",
+   "feature_id": "roughness_m",
+   "geometry": {
+    "coordinates": [
+     137.16019,
+     -4.86891,
+     137.71981,
+     -4.31109
+    ],
+    "crs": "IAU_2000:49900",
+    "type": "bbox"
+   },
+   "missing_reason": null,
+   "observation_period": {
+    "end": "2001-06-30T11:10:40Z",
+    "start": "1997-09-15T19:10:00Z"
+   },
+   "processing_version": "twinsite-data/1.0.0; terrain/1.0.0 (block-mean, Horn-1981 slope, 3x3 SD roughness)",
+   "provenance_id": "prov-mars-m4_590p137_440-275e12b829c74294",
+   "qa_status": "ACCEPT",
+   "quality_flags": [
+    "MOLA_INTERPOLATED_CELLS_RETAINED",
+    "MOLA_SHOT_SUPPORTED_FRACTION=0.290",
+    "OBSERVATION_SUPPORTED_BLOCK_FRACTION=0.747"
+   ],
+   "schema_version": "1.0",
+   "site_id": "mars-m4_590p137_440",
+   "source_asset_ids": [
+    "mola-megc00n090hb.img-sub-a0449a94c47f",
+    "mola-megc00n090hb.lbl-7c373fcff18e",
+    "mola-megt00n090hb.img-sub-4c159a743040",
+    "mola-megt00n090hb.lbl-c85891df3c11"
+   ],
+   "source_checksum": "4c159a743040c3fd544b0b0c88a973e939060a5550fb86355609599882a3d2c5",
+   "source_granule_id": "MEGT00N090HB.IMG",
+   "source_product": "MGS-M-MOLA-5-MEGDR-L3-V1.0",
+   "source_url": "https://pds-geosciences.wustl.edu/mgs/mgs-m-mola-5-megdr-l3-v1/mgsl_300x/meg128/megt00n090hb.img",
+   "spatial_resolution_m": 463.058,
+   "unit": "m",
+   "valid_coverage_fraction": 0.747405,
+   "value": 119.3758
+  },
+  {
+   "analysis_scale_m": 1900.0,
+   "body": "Mars",
+   "data_status": "measured",
+   "evidence_id": "ev-mars-m4_590p137_440-local_relief_m-40184004ab0aeb47",
+   "evidence_kind": "derived_measurement",
+   "feature_id": "local_relief_m",
+   "geometry": {
+    "coordinates": [
+     137.16019,
+     -4.86891,
+     137.71981,
+     -4.31109
+    ],
+    "crs": "IAU_2000:49900",
+    "type": "bbox"
+   },
+   "missing_reason": null,
+   "observation_period": {
+    "end": "2001-06-30T11:10:40Z",
+    "start": "1997-09-15T19:10:00Z"
+   },
+   "processing_version": "twinsite-data/1.0.0; terrain/1.0.0 (block-mean, Horn-1981 slope, 3x3 SD roughness)",
+   "provenance_id": "prov-mars-m4_590p137_440-275e12b829c74294",
+   "qa_status": "ACCEPT",
+   "quality_flags": [
+    "MOLA_INTERPOLATED_CELLS_RETAINED",
+    "MOLA_SHOT_SUPPORTED_FRACTION=0.290",
+    "OBSERVATION_SUPPORTED_BLOCK_FRACTION=0.747"
+   ],
+   "schema_version": "1.0",
+   "site_id": "mars-m4_590p137_440",
+   "source_asset_ids": [
+    "mola-megc00n090hb.img-sub-a0449a94c47f",
+    "mola-megc00n090hb.lbl-7c373fcff18e",
+    "mola-megt00n090hb.img-sub-4c159a743040",
+    "mola-megt00n090hb.lbl-c85891df3c11"
+   ],
+   "source_checksum": "4c159a743040c3fd544b0b0c88a973e939060a5550fb86355609599882a3d2c5",
+   "source_granule_id": "MEGT00N090HB.IMG",
+   "source_product": "MGS-M-MOLA-5-MEGDR-L3-V1.0",
+   "source_url": "https://pds-geosciences.wustl.edu/mgs/mgs-m-mola-5-megdr-l3-v1/mgsl_300x/meg128/megt00n090hb.img",
+   "spatial_resolution_m": 463.058,
+   "unit": "m",
+   "valid_coverage_fraction": 0.747405,
+   "value": 4296.5
+  }
+ ],
+ "acquisition_errors": []
+}

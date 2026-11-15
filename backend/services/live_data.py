@@ -17,7 +17,8 @@
 #
 # Successful answers are cached per point (the dashboard asks once per Earth
 # zone + once for the report); concurrent calls for the same point wait for
-# the first one instead of downloading twice. Failures are not cached.
+# the first one instead of downloading twice. Failures are remembered for
+# FAILURE_TTL_S only (no repeated 60 s timeouts within one mission).
 #############################################################################
 from __future__ import annotations
 
@@ -32,11 +33,13 @@ import urllib.request
 log = logging.getLogger(__name__)
 
 TIMEOUT_S = 60
+FAILURE_TTL_S = 90                      # a failed point is not retried for 90 s (one mission = several calls)
 BODIES = {"mars": "Mars", "moon": "Moon", "earth": "Earth"}
 MAX_ABS_LAT = 88.0                      # platform AOI limit
 SOURCE = "TwinSite platform API · POST /v1/science/characterize"
 
 _cache: dict[tuple, dict] = {}
+_failures: dict[tuple, tuple[float, dict]] = {}
 _locks: dict[tuple, threading.Lock] = {}
 _guard = threading.Lock()
 
@@ -72,14 +75,23 @@ def characterize(planet: str, lon: float, lat: float, name: str | None = None) -
     key = (body, round(lon, 4), round(lat, 4))
     if key in _cache:
         return {**_cache[key], "cached": True}
+    failed = _failures.get(key)
+    if failed and time.time() - failed[0] < FAILURE_TTL_S:
+        return {**failed[1], "cached": True}
     with _guard:
         lock = _locks.setdefault(key, threading.Lock())
     with lock:
         if key in _cache:
             return {**_cache[key], "cached": True}
+        failed = _failures.get(key)
+        if failed and time.time() - failed[0] < FAILURE_TTL_S:
+            return {**failed[1], "cached": True}
         out = _fetch(body, lon, lat, name, point)
         if out["status"] == "ok":
             _cache[key] = out
+            _failures.pop(key, None)
+        else:
+            _failures[key] = (time.time(), out)
         return out
 
 

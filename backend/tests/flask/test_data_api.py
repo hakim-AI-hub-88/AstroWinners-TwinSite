@@ -5,7 +5,7 @@ import csv
 import io
 import unittest
 
-from tests.flask import _support as S
+from tests.flask import test_data_support as S
 
 
 class DataApi(unittest.TestCase):
