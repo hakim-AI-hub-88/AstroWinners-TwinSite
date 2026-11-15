@@ -146,7 +146,7 @@ class Handler(BaseHTTPRequestHandler):
         except ApiError as error:
             self.send_json(error.status, error_body(error.code, error.message, error.field), error.headers)
         except Exception:  # noqa: BLE001 — never leak internals
-            log.error('unhandled HTTP error (%s)', method)
+            log.error('unhandled HTTP error (%s)', method, exc_info=True)
             self.close_connection = True
             self.send_json(500, error_body('INTERNAL_ERROR', 'Internal server error'))
 

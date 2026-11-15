@@ -36,13 +36,14 @@ for name, command in [('frontend_typecheck',['npm','run','typecheck']),('fronten
 try:
     with socket.socket() as probe: probe.bind(('127.0.0.1',0))
 except PermissionError:
-    for name in ('backend_http','c5_http_restart_e2e','browser_smoke'):
+    for name in ('backend_http','c5_http_restart_e2e','measured_http_restart_e2e','browser_smoke'):
         results.append({'check':name,'status':'BLOCKED','reason':'Session prohibits local socket binding'})
         (OUT / (name + '.log')).write_text('BLOCKED: Session prohibits local socket binding; prior results are archived, not current verification.\n')
         print(name + ': BLOCKED (local socket binding prohibited)', flush=True)
 else:
     run('backend_http',[py,'-m','unittest','backend.tests.api.test_backend.HttpTests','-v'])
     run('c5_http_restart_e2e',[py,'tests/e2e/run_stack.py','--tree',str(ROOT),'--python',py,'--json',str(OUT/'e2e.json')])
+    run('measured_http_restart_e2e',[py,'tests/e2e/measured_live.py','--json',str(OUT/'measured-e2e.json')])
     results.append({'check':'browser_smoke','status':'BLOCKED','reason':'Requires separate browser verification'})
 # Scan the distributable source and built browser assets, not ignored local secrets/caches.
 with tempfile.TemporaryDirectory(prefix='twinsite-scan-') as tmp:

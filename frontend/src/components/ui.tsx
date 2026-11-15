@@ -79,3 +79,8 @@ export function Meter({ value, label }: { value: number | null; label?: string }
     </div>
   )
 }
+
+export function QueryError({ error, what }: { error: unknown; what: string }) {
+  const e = error as { code?: string; message?: string; status?: number }
+  return <Notice tone="bad" title={`Could not load ${what}`}>{e?.code ? `${e.code}: ` : ''}{e?.message ?? String(error)}. No demo data is substituted for real API errors.</Notice>
+}

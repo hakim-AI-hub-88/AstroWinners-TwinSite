@@ -30,12 +30,18 @@ PERMANENT_INPUT = (ValueError, KeyError, TypeError, ContractError)
 
 # Engine stage -> list of (phase, public status, event state, summary). Stage
 # names follow the ARES engine callback; C2's engine is expected to reuse them.
+# The C2 engine cleans, checks, characterizes, compares and optimizes inside one
+# deterministic call, so phases P30-P70 are recorded as running before the call and
+# succeeded after it returns. Run status only moves forward.
 ENGINE_STAGES = {
-    'P30_CLEAN': [('P30', 'cleaning', 'running', 'Engine: normalizing and cleaning input observations.')],
-    'P40_QUALITY': [('P40', 'validating', 'running', 'Engine: unit/coverage quality checks.')],
-    'P60_ANALYZE': [('P50', 'characterizing', 'succeeded', 'Engine: Earth candidate sites characterized and scored.'),
-                    ('P60', 'analyzing', 'running', 'Engine: portfolio analysis.')],
-    'P70_PORTFOLIO': [('P70', 'optimizing', 'running', 'Engine: portfolio optimization and weight-sensitivity scenarios.')],
+    'P30_CLEAN': [('P30', 'cleaning', 'running',
+                   'Engine running: cleaning, QA, characterization, comparison and optimization execute in one deterministic call.')],
+    'P40_QUALITY': [],
+    'P60_ANALYZE': [('P30', 'cleaning', 'succeeded', 'Engine: input observations normalized and cleaned.'),
+                    ('P40', 'validating', 'succeeded', 'Engine: unit/coverage quality checks complete.'),
+                    ('P50', 'characterizing', 'succeeded', 'Engine: Earth candidate sites characterized and scored.'),
+                    ('P60', 'analyzing', 'succeeded', 'Engine: analogue comparison complete.')],
+    'P70_PORTFOLIO': [('P70', 'optimizing', 'succeeded', 'Engine: portfolio optimization and weight-sensitivity scenarios complete.')],
     'P80_REVIEW': [('P80', 'reviewing', 'running', 'Engine finished; building release-evidence sidecar.')],
 }
 
@@ -117,15 +123,19 @@ class Worker:
             else:
                 log.warning('run %s: lease lost (%s); another attempt owns it', run['run_id'], error)
         except TRANSIENT as error:
+            log.warning('run %s transient failure', run['run_id'], exc_info=True)
             delay = self.retry_base_seconds * 2 ** (run['attempt'] - 1)
             self._safe(lambda: self.store.retry_or_fail(run, 'TRANSIENT_' + error.__class__.__name__.upper(),
                                                         public_message(error), delay))
         except science_adapter.ScienceUnavailable as error:
+            log.error('run %s: science engine unavailable', run['run_id'], exc_info=True)
             self._safe(lambda: self.store.fail(run, 'SCIENCE_ENGINE_UNAVAILABLE', public_message(error)))
         except PERMANENT_INPUT as error:
+            # Public status stays redacted; full diagnostics go to the protected service log only.
+            log.warning('run %s rejected as invalid mission', run['run_id'], exc_info=True)
             self._safe(lambda: self.store.fail(run, 'INVALID_MISSION', public_message(error)))
         except Exception as error:  # noqa: BLE001 — permanent: never retried
-            log.error('run %s failed (%s)', run['run_id'], error.__class__.__name__)
+            log.error('run %s failed (%s)', run['run_id'], error.__class__.__name__, exc_info=True)
             self._safe(lambda: self.store.fail(run, 'INTERNAL_ERROR', error.__class__.__name__))
 
     @staticmethod
@@ -172,6 +182,8 @@ class Worker:
         validate('mission_result', result)
         sidecar = measured_sidecar(run, output, pair) if pair else evidence_mod.synthetic_evidence(run['run_id'], run['input_sha256'], result, engine)
         validate('release_evidence', sidecar)
+        self._advance(run, 'reviewing', 'P80', 'succeeded', 'Release-evidence sidecar built and validated against the contract.',
+                      'engine-p80', 1, None)
         final_status = 'completed' if sidecar['release_action'] == 'RELEASE' else 'completed_with_limits'
         self._advance(run, 'publishing', 'P90', 'running',
                       f'Release gate: {sidecar["release_action"]} ({", ".join(sidecar["blocking_issues"]) or "no issues"}). '

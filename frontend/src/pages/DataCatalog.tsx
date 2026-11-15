@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { Badge, Btn, DemoBanner, Empty, PageHeader, Scroll, Spinner } from '@/components/ui'
+import { Badge, Btn, DemoBanner, Empty, PageHeader, QueryError, Scroll, Spinner } from '@/components/ui'
 import { getCatalog } from '@/lib/api'
 
 export default function DataCatalog() {
@@ -23,7 +23,7 @@ export default function DataCatalog() {
           <div><label className="fld" htmlFor="d">Domain</label><select id="d" value={domain} onChange={(e) => setDomain(e.target.value)}><option value="all">All</option>{domains.map((d) => <option key={d}>{d}</option>)}</select></div>
           <div className="flex items-end"><Btn variant="primary" disabled={picked.length !== 2} onClick={() => nav(`/data/${picked[0]}?tab=compare&with=${picked[1]}`)}>Compare selected ({picked.length}/2)</Btn></div>
         </div>
-        {q.isLoading ? <Spinner /> : rows.length === 0 ? <Empty>No datasets match these filters.</Empty> : (
+        {q.isLoading ? <Spinner /> : q.isError ? <QueryError error={q.error} what="the dataset catalog" /> : rows.length === 0 ? <Empty>No datasets match these filters.</Empty> : (
           <Scroll><table className="tbl rounded-md border border-line bg-panel">
             <caption className="sr-only">Dataset catalog</caption>
             <thead><tr><th><span className="sr-only">Select</span></th><th>Dataset ID</th><th>Name</th><th>Source</th><th>Body</th><th>Domain</th><th>Records</th><th>Resolution</th><th>Temporal</th><th>Status</th></tr></thead>

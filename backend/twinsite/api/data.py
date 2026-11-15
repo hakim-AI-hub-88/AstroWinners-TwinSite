@@ -9,12 +9,21 @@ def observations(dataset):
         raise KeyError(dataset)
     return rows
 
+def _period(obs):
+    period = obs[0]["observation_period"]
+    return f'{period["start"][:10]} → {period["end"][:10]}' if isinstance(period, dict) else str(period)
+
+def _assets(obs):
+    ids = {i for o in obs for i in o["source_asset_ids"]}
+    return [a for a in load_pair()["assets"] if a["asset_id"] in ids]
+
 def catalog():
     pair = load_pair()
     items = []
     for site in pair["sites"]:
         obs = observations(site["site_id"])
-        items.append({"dataset_id": site["site_id"], "title": site["site_id"], "body": site["body"],
+        title = site.get("provenance", {}).get("description") or site["site_id"]
+        items.append({"dataset_id": site["site_id"], "title": title, "body": site["body"], "temporal_coverage": _period(obs),
                       "source": obs[0]["source_product"], "domain": "terrain", "data_status": "measured",
                       "resolution": str(pair["analysis_scale_m"]) + " m analysis scale", "records": len(obs),
                       "qa_status": "RELEASE BLOCKED — independent review pending"})
@@ -25,8 +34,7 @@ def records(dataset, stage, limit=100):
     if stage not in ("raw", "cleaned", "derived"):
         raise ValueError("Unknown stage")
     if stage == "raw":
-        ids = {i for o in obs for i in o["source_asset_ids"]}
-        rows = [{"record_id": a["asset_id"], "product_id": a["product_id"], "byte_size": a["byte_size"], "sha256": a["sha256"], "source_url": a["source_url"]} for a in load_pair()["assets"] if a["asset_id"] in ids]
+        rows = [{"record_id": a["asset_id"], "product_id": a["product_id"], "byte_size": a["byte_size"], "sha256": a["sha256"], "source_url": a["source_url"]} for a in _assets(obs)]
         columns = ["record_id", "product_id", "byte_size", "sha256", "source_url"]
     else:
         rows = [{**{c: o.get(c) for c in COLUMNS}, "record_id": o["evidence_id"], "quality_flags": "; ".join(o["quality_flags"])} for o in obs]
@@ -38,9 +46,14 @@ def metadata(dataset):
     obs = observations(dataset)
     site = next(s for s in load_pair()["sites"] if s["site_id"] == dataset)
     p = site["provenance"]
+    assets = _assets(obs)
+    versions = sorted({a["product_id"] + " " + a["product_version"] for a in assets})
+    licenses = sorted({a["license_url"] for a in assets if a.get("license_url")})
     return {"dataset_id": dataset, "source": obs[0]["source_product"], "product": obs[0]["source_product"],
+            "version": "; ".join(versions) or None,
+            "license": ("Provider data policy: " + "; ".join(licenses)) if licenses else None,
             "data_status": "measured", "crs": obs[0]["geometry"]["crs"], "unit_notes": "degree and metre; spatial variability is not measurement uncertainty",
-            "time_basis": str(obs[0]["observation_period"]), "qa": "Scientific release BLOCKED pending independent C5 review; " + "; ".join(sorted({f for o in obs for f in o["quality_flags"]})),
+            "time_basis": _period(obs) + " (source acquisition period)", "qa": "Scientific release BLOCKED pending independent C5 review; " + "; ".join(sorted({f for o in obs for f in o["quality_flags"]})),
             "lineage": [o["evidence_id"] + " | " + o["source_url"] for o in obs],
             "transforms": [str(x) for x in p["transformations"]]}
 

@@ -15,8 +15,11 @@ async function http<T>(path: string, init?: RequestInit, as: 'json' | 'text' = '
   let res: Response
   try { res = await fetch(`${BASE}${path}`, init) } catch { throw new ApiError(0, 'network', 'API unreachable') }
   if (!res.ok) {
-    let code = `http_${res.status}`, msg = res.statusText, field: string | null = null
-    try { const b = await res.json(); code = b.error?.code ?? code; msg = b.error?.message ?? msg; field = b.error?.field ?? null } catch { /* non-JSON */ }
+    let code = `http_${res.status}`, msg = res.statusText, field: string | null = null, envelope = false
+    try { const b = await res.json(); envelope = !!b.error?.code; code = b.error?.code ?? code; msg = b.error?.message ?? msg; field = b.error?.field ?? null } catch { /* non-JSON */ }
+    // The TwinSite API always answers errors with a JSON envelope. A bare 5xx comes from the
+    // dev/reverse proxy when the backend is down, so it is reported as unreachable.
+    if (!envelope && res.status >= 500) throw new ApiError(0, 'network', `API unreachable (proxy returned ${res.status})`)
     throw new ApiError(res.status, code, msg, field)
   }
   return (as === 'json' ? res.json() : res.text()) as Promise<T>
@@ -45,6 +48,9 @@ async function withDemo<T>(live: () => Promise<T>, fallback: () => T): Promise<S
   if (FORCE_DEMO) return { data: fallback(), demo: true, note: 'Demo mode forced (VITE_FORCE_DEMO=1).' }
   try { return { data: await live(), demo: false } } catch (e) {
     const err = e as ApiError
+    // Only an unreachable API or an unimplemented endpoint may fall back to labelled demo data.
+    // Real 4xx/5xx responses are errors and must never be masked by synthetic tables.
+    if (!(err instanceof ApiError) || (err.status !== 0 && err.status !== 501)) throw e
     const why = err.status === 501 ? 'endpoint returned 501 (not implemented)' : err.status === 0 ? 'API unreachable' : `endpoint returned ${err.status}`
     return { data: fallback(), demo: true, note: `Live data endpoint unavailable — ${why}. Showing DEMO tables derived from synthetic fixtures.` }
   }

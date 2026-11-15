@@ -37,8 +37,11 @@ export default function Portfolios() {
       {(demo || r.data_status === 'synthetic') && <DemoBanner>Portfolio objectives, costs and days are synthetic scenario inputs.</DemoBanner>}
       <div className="mx-auto max-w-7xl px-4 py-8">
         <PageHeader eyebrow="Portfolios" title="Individual and complementary candidates"
-          sub={`Standalone portfolios rank sites on their own; combined portfolios add complementary sites under max ${list[0]?.site_ids.length ?? '—'}-site and cost/effort limits you supplied. ${r.feasible_portfolio_count} feasible portfolios found.`} />
-        {r.status === 'no_feasible_portfolio' ? <Notice title="No feasible portfolio">Relax budget, days, coverage or access constraints in the workspace and re-run.</Notice> : (
+          sub={`Standalone portfolios rank sites on their own; combined portfolios add complementary sites within the site-count and cost/effort limits you supplied. ${r.feasible_portfolio_count} feasible portfolios found.`} />
+        {r.status === 'no_feasible_portfolio' ? <Notice title="No feasible portfolio">
+          No eligible combination satisfies the mission constraints. This is a valid outcome, not an error.
+          {r.sites.some((s) => !s.eligible) && <ul className="mt-2 list-disc pl-5 text-sm">{r.sites.filter((s) => !s.eligible).map((s) => <li key={s.id}><span className="text-ivory">{s.name}</span>: {s.failures.join('; ') || 'not eligible'}</li>)}</ul>}
+        </Notice> : (
           <div className="space-y-5">
             <Tabs<K> label="Portfolio type" value={kind} onChange={(k) => { setKind(k); setSel(0) }} tabs={[{ id: 'combined', label: `Complementary (${r.combined_portfolios.length})` }, { id: 'standalone', label: `Individual (${r.standalone_portfolios.length})` }]} />
             {list.length === 0 ? <Empty>No {kind} portfolios in this run{r.portfolio_mode !== 'both' && r.portfolio_mode !== kind ? ` (portfolio mode was “${r.portfolio_mode}”)` : ''}.</Empty> : (

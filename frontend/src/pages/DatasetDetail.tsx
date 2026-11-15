@@ -1,7 +1,7 @@
 import { Fragment, useMemo, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { Badge, Btn, DemoBanner, Empty, Notice, PageHeader, Panel, Scroll, Spinner, Tabs } from '@/components/ui'
+import { Badge, Btn, DemoBanner, Empty, Notice, PageHeader, Panel, QueryError, Scroll, Spinner, Tabs } from '@/components/ui'
 import { getCatalog, getMetadata, getRecords, postCompare } from '@/lib/api'
 import { download, toCsv } from '@/lib/format'
 import type { Stage } from '@/lib/types'
@@ -32,7 +32,8 @@ export default function DatasetDetail() {
 function Records({ id, stage }: { id: string; stage: Stage }) {
   const q = useQuery({ queryKey: ['records', id, stage], queryFn: () => getRecords(id, stage, MAX_ROWS) })
   if (q.isLoading) return <Spinner />
-  const d = q.data!.data
+  if (q.isError || !q.data) return <QueryError error={q.error} what={`${stage} records`} />
+  const d = q.data.data
   const blurb = { raw: 'Source asset metadata (raster bytes are not rendered).', cleaned: 'Published terrain summaries after documented cleaning.', derived: 'Derived terrain features with evidence lineage.' }[stage]
   return (
     <Panel eyebrow={`${stage} stage`} title={blurb} action={<Btn disabled={!d.rows.length} onClick={() => download(`${id}-${stage}-sample.csv`, toCsv(d.columns, d.rows), 'text/csv')}>Download sample CSV (≤ {MAX_ROWS} rows)</Btn>}>
@@ -48,7 +49,8 @@ function Records({ id, stage }: { id: string; stage: Stage }) {
 function Meta({ id }: { id: string }) {
   const q = useQuery({ queryKey: ['meta', id], queryFn: () => getMetadata(id) })
   if (q.isLoading) return <Spinner />
-  const m = q.data!.data
+  if (q.isError || !q.data) return <QueryError error={q.error} what="dataset metadata" />
+  const m = q.data.data
   const kv: Array<[string, string | undefined]> = [['Source', m.source], ['Product', m.product], ['Version', m.version], ['License', m.license], ['CRS', m.crs], ['Time basis', m.time_basis], ['QA', m.qa], ['Units', m.unit_notes]]
   return (
     <div className="grid gap-5 md:grid-cols-2">
@@ -85,7 +87,7 @@ function Compare({ id, with0 }: { id: string; with0: string | null }) {
           <div><span className="fld">Columns ({use.length})</span><div className="flex flex-wrap gap-1">{common.map((c) => <button key={c} aria-pressed={use.includes(c)} onClick={() => setCols(use.includes(c) ? use.filter((x) => x !== c) : [...use, c])} className={`rounded-full border px-2 py-0.5 text-xs ${use.includes(c) ? 'border-ember text-ember' : 'border-line text-mute'}`}>{c}</button>)}</div></div>
         </div>
       </Panel>
-      {!other ? <Empty>Pick a second dataset to compare approved records. Comparison is server-controlled — no expressions or SQL.</Empty> : cmp.isLoading ? <Spinner /> : cmp.data && (
+      {!other ? <Empty>Pick a second dataset to compare approved records. Comparison is server-controlled — no expressions or SQL.</Empty> : cmp.isLoading ? <Spinner /> : cmp.isError ? <QueryError error={cmp.error} what="the comparison" /> : cmp.data && (
         <Panel eyebrow={`${stage} stage`} title={`${id} ↔ ${other}`}>
           {cmp.data.demo && <p className="mb-2 text-xs text-warn">{cmp.data.note}</p>}
           {stage !== 'raw' && <div className="mb-5 space-y-3" aria-label="Measured feature differences">
@@ -94,7 +96,7 @@ function Compare({ id, with0 }: { id: string; with0: string | null }) {
               if (typeof a !== 'number' || typeof b !== 'number' || r.left?.unit !== r.right?.unit || r.left?.analysis_scale_m !== r.right?.analysis_scale_m) return null
               const max = Math.max(Math.abs(a), Math.abs(b), 0.00001)
               return <div key={r.key}>
-                <p className="text-xs">{r.key}: left {a}, right {b} {String(r.left?.unit)} · right − left = {(b-a).toFixed(4)}. Each feature uses its own scale.</p>
+                <p className="text-xs">{r.key}: left {a}, right {b} {String(r.left?.unit)} · right − left = {(b-a).toFixed(4)}. Bars are normalised per feature.</p>
                 <svg viewBox="0 0 400 32" className="h-8 w-full" role="img" aria-label={`${r.key}: left ${a}, right ${b}`}>
                   <rect x="0" y="2" width={Math.abs(a)/max*390} height="10" fill="#e79d61" />
                   <rect x="0" y="18" width={Math.abs(b)/max*390} height="10" fill="#70b5b2" />
