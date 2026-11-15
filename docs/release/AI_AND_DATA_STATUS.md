@@ -53,31 +53,25 @@ In that run, the deterministic A09 numeric cross-check flagged 3 claims, includi
 The release gate stays **BLOCK**, by the deterministic gate: AOI extent mismatch, independent C5 review required, no qualified candidate.
 
 ## Scientific data status
-| Source | Discovery | Auth | Real retrieval | Decoded / QA | Evidence persisted | Used by analysis | Data Explorer |
+| Source | Body | Real retrieval | Decode / QA | Persisted (lineage, SHA-256) | Used by engine | AI agents | Data Explorer |
 |---|---|---|---|---|---|---|---|
-| SRTMGL1 (LP DAAC) | yes | Earthdata (old token compromised, not reused) | cached verified tile | yes | G2 pair | Simple + AI | yes |
-| MOLA MEGDR (PDS) | yes | none | cached | yes | G2 pair | Simple + AI | yes |
-| NASA POWER climatology | yes | none | **live** | fill mask, unit check | science.sqlite + asset SHA-256 | AI agents (context evidence) | yes, any Earth point, side by side |
-| NASA GIBS WMS | yes | none | **live** | JPEG check; visualization only | yes | A02 (qualitative) | yes (image) |
-| MODIS MOD11A2 (CMR) | **discovery only** | needs a new Earthdata token | no | – | metadata row | no | yes (as missing) |
-| NSSDCA constants | – | none | transcribed | – | yes | AI context | yes |
-| LOLA, Diviner, LROC, LEND, MEDA/REMS, MCS, THEMIS, CRISM, HLS, EMIT, OSM, SPICE | not implemented | – | no | – | – | – | listed as gaps in the coverage matrix |
+| LP DAAC SRTMGL1 (cached; old Earthdata token not reused) | Earth | cached verified tile | yes | published pairs | yes (slope, roughness, relief) | yes | yes |
+| AWS Terrain Tiles terrarium z11 / skadi (keyless) | Earth | **live, any point** | PNG CRC, terrarium decode, void/range QA | sites + science.sqlite | yes (match missions) | yes | yes |
+| NASA POWER climatology (MERRA-2/CERES) | Earth | **live, any point** | fill mask, unit check | science.sqlite | context only (model data) | yes | yes |
+| NASA GIBS true colour | Earth | **live** | JPEG check | science.sqlite | no (visual) | A02 qualitative | yes (image) |
+| OpenStreetMap Overpass (mapped roads/tracks) | Earth | **live** | count parse; completeness flagged | science.sqlite | no (context) | yes | yes |
+| MODIS MOD11A2 LST (CMR) | Earth | discovery only | – | metadata row | no | no | listed as gap |
+| MGS MOLA MEGDR 128 ppd | Mars | **live, any point** (byte ranges) | shot-support QA | pairs + sites | yes | yes | yes |
+| LRO LOLA LDEM_64 | Moon | **live, any point** (byte ranges) | label-driven decode, range QA, interpolation flagged | pairs + sites | yes | yes | yes |
+| LRO Diviner GCP (bolometric T) | Moon | **live, any point** (row ranges, every row bin-verified) | fill/negative masked, day max / night min | pairs + sites | not weighted (no comparable Earth LST) | yes | yes |
+| NSSDCA planetary constants | all | reference | – | science.sqlite | no | yes | yes |
+| Diviner rock abundance, LEND/LP-NS hydrogen, CRISM, EMIT, THEMIS, MEDA/REMS, MCS, HLS, SPICE | – | **not implemented** | – | – | – | – | gaps in coverage matrix |
 
-Coverage across the 42 domain × body cells:
+Seeded real sites: 36 Earth analog sites, 15 Moon targets, 14 Mars targets (`ops/seed_sites.py`), each characterised from real data at a common 1900 m scale over a metric-matched ~33 km area. Any other point can be characterised on demand (`POST /v1/science/characterize`) or matched (`POST /v1/missions/match`: target characterised live, all stored Earth sites pre-ranked, extent-incompatible sites excluded by the gate's own rule, full mission on the top 12).
 
-| Status | Cells |
-|---|---|
-| real_data | 6 |
-| implemented (contract-level) | 6 |
-| reference_constant | 2 |
-| visualization_only | 1 |
-| user_input | 3 |
-| user_input_only | 3 |
-| missing | 21 |
-
-**Not all 14 domains are covered.**
+Coverage: `docs/release/COVERAGE_MATRIX.json` (generated from persisted evidence). **Not all 14 domains are covered**: geology/mineralogy, resources/volatiles and mechanics have no real source yet; Mars thermal/atmosphere and Earth calibrated LST are missing.
 
 ## Verification and deployment
-- `make verify` (`ops/verify_current.py`): all automated checks pass and it exits 0, including the new `ai_router_agents_gateway` suite (offline, AI-free, no network).
+- `make verify` (`ops/verify_current.py`): all 17 automated checks PASS, including the `ai_router_agents_gateway` suite (offline, AI-free, no network). The command still exits 1 because the script always records `browser_smoke` as BLOCKED ("requires separate browser verification"), exactly as in the original baseline; browser checks were done manually (below).
 - Browser: verified manually in the in-app browser against an AI-enabled stack: Workspace AI/Simple toggle, a measured AI-mode run with live agent events and the agent panel, and the Data Explorer multi-site comparison with a live NASA POWER retrieval (Atacama).
 - Deployment: VM systemd units read AI keys from `/etc/twinsite/ai-providers.env` (owner twinsite, 0600). **Not deployed.** No VM access has been provided, so no deployed URL exists.

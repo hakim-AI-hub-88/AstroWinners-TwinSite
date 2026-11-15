@@ -61,7 +61,23 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--workers', type=int, default=6)
     ap.add_argument('--body')
+    ap.add_argument('--backfill-osm', action='store_true', help='add OSM accessibility to stored Earth sites (sequential, polite)')
     args = ap.parse_args()
+    if args.backfill_osm:
+        from twinsite.sources import gateway, sites
+        from twinsite.storage.science_db import science_db
+        data_dir = load_settings().data_dir
+        db = science_db(data_dir)
+        for d in sites.load_sites(data_dir, 'Earth'):
+            if db.observations([d['site_id']], domain='accessibility_environment')[0]:
+                continue
+            try:
+                rows = gateway.acquire_osm_access(data_dir, d['site_id'], d['aoi'])
+                print(json.dumps({'site': d['name'], 'osm': [(r['quantity'], r['value']) for r in rows]}), flush=True)
+            except Exception as error:  # noqa: BLE001
+                print(json.dumps({'site': d['name'], 'error': type(error).__name__}), flush=True)
+            time.sleep(2)
+        return
     data_dir = load_settings().data_dir
     todo = [s for s in SITES if not args.body or s[0] == args.body]
 

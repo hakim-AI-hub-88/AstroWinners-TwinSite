@@ -308,3 +308,54 @@ def search_places(data_dir, q, count=10):
         _PLACE_CACHE.clear()
     _PLACE_CACHE[key] = out
     return out
+
+
+OVERPASS = 'https://overpass-api.de/api/interpreter'
+OVERPASS_MIRRORS = (OVERPASS, 'https://overpass.kumi.systems/api/interpreter', 'https://overpass.private.coffee/api/interpreter')
+
+
+def acquire_osm_access(data_dir, site_id, bbox, timeout=40):
+    """OpenStreetMap (ODbL) mapped access within the AOI: counts of highway ways by class via Overpass.
+    Context evidence for the accessibility domain; OSM completeness varies by region (flagged)."""
+    w, s, e, n = bbox
+    q = (f'[out:json][timeout:{timeout}];('
+         f'way["highway"~"^(motorway|trunk|primary|secondary|tertiary)$"]({s},{w},{n},{e});'
+         f')->.major;(way["highway"~"^(unclassified|residential|service|track|path)$"]({s},{w},{n},{e}););'
+         '.major out count;out count;')
+    raw, last, used = None, None, None
+    for endpoint in OVERPASS_MIRRORS:
+        try:
+            req = urllib.request.Request(endpoint, data=urllib.parse.urlencode({'data': q}).encode(), headers={'User-Agent': UA})
+            with urllib.request.urlopen(req, timeout=timeout + 15) as resp:
+                raw, used = resp.read(2_000_000), endpoint
+            break
+        except (urllib.error.URLError, TimeoutError, OSError) as error:
+            last = error
+    if raw is None:
+        raise last
+    doc = json.loads(raw)
+    counts = [int(el.get('tags', {}).get('ways', 0)) for el in doc.get('elements', []) if el.get('type') == 'count']
+    if len(counts) != 2:
+        raise ValueError('unexpected Overpass response')
+    db = science_db(data_dir)
+    db.upsert_source(source_id='osm-overpass', name='OpenStreetMap via Overpass API', provider='OpenStreetMap contributors (ODbL)',
+                     bodies=['Earth'], domains=['accessibility_environment'], access='public API', auth='none',
+                     documentation_url='https://wiki.openstreetmap.org/wiki/Overpass_API', status='integrated_live',
+                     notes='Mapped roads/tracks counts within the AOI; completeness varies by region.')
+    sha, key = _store_asset(data_dir, 'osm-overpass', raw, 'json')
+    asset_id = f'osm-{sha[:16]}'
+    db.upsert_asset(asset_id=asset_id, source_id='osm-overpass', product_id='OSM highway ways (Overpass count)',
+                    granule_id=f'bbox {bbox}', source_url=used, sha256=sha, byte_size=len(raw),
+                    media_type='application/json', object_key=key)
+    out = []
+    for q_name, value in (('mapped_major_roads_ways', counts[0]), ('mapped_minor_roads_tracks_ways', counts[1])):
+        row = dict(evidence_id=f'osm-{site_id}-{q_name}-{sha[:8]}', site_id=site_id, body='Earth',
+                   domain='accessibility_environment', quantity=q_name, value=float(value), unit='count',
+                   kind='derived_measurement', statistic='count of OSM ways intersecting the AOI',
+                   temporal_support='OSM snapshot at retrieval', spatial_support='~33 km AOI', crs='EPSG:4326',
+                   qa_status='ACCEPT', quality_flags=['OSM_COMPLETENESS_VARIES_BY_REGION'], missing_reason=None,
+                   source_id='osm-overpass', product_id='OSM highway ways', asset_id=asset_id,
+                   processing='Overpass count query', comparability='Earth-only operational context; not used in scoring.')
+        db.upsert_observation(**row)
+        out.append(row)
+    return out

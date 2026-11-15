@@ -164,6 +164,10 @@ def characterize(data_dir, body, lon, lat, name=None, refresh=False):
             gateway.acquire_power(data_dir, sid, lon, lat, timeout=30)
         except Exception as error:  # noqa: BLE001
             errors.append(f"NASA POWER: {type(error).__name__}")
+        try:
+            gateway.acquire_osm_access(data_dir, sid, list(aoi.bbox))
+        except Exception as error:  # noqa: BLE001
+            errors.append(f"OSM Overpass: {type(error).__name__}")
         db.upsert_site(site_id=sid, name=name or sid, body=body, crs=aoi.crs, lon=lon, lat=lat, bbox=list(aoi.bbox))
     gateway.store_constants(data_dir, [body])
     path.parent.mkdir(parents=True, exist_ok=True)
