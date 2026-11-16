@@ -48,6 +48,28 @@ def get_targets():
 # Output: {"datasets": {body: {loaded, rows, available_features, ...}},
 #          "features": [...], "engine": "ready"}
 #############################################
+def _memory_mb() -> dict:
+    """Resident memory of this web process and of the whole container (Linux cgroup), in MB.
+    Lets operators of small hosts (e.g. 512 MB) see their headroom; empty where not available."""
+    out = {}
+    try:
+        with open("/proc/self/status") as fh:
+            for line in fh:
+                if line.startswith(("VmRSS:", "VmHWM:")):
+                    out["web_rss" if line.startswith("VmRSS") else "web_peak"] = round(int(line.split()[1]) / 1024)
+    except OSError:
+        pass
+    for path, key in (("/sys/fs/cgroup/memory.current", "container"), ("/sys/fs/cgroup/memory.peak", "container_peak"),
+                      ("/sys/fs/cgroup/memory/memory.usage_in_bytes", "container"),
+                      ("/sys/fs/cgroup/memory/memory.max_usage_in_bytes", "container_peak")):
+        try:
+            with open(path) as fh:
+                out.setdefault(key, round(int(fh.read().strip()) / 2**20))
+        except (OSError, ValueError):
+            pass
+    return out
+
+
 @bp.get("/status")
 def get_status():
     return jsonify({
@@ -55,6 +77,7 @@ def get_status():
         "features": config.FEATURES,
         "data_dir": str(config.HARMONIZED_DATA_DIR),
         "engine": similarity_engine.ENGINE_STATUS,
+        "memory_mb": _memory_mb(),
     })
 
 

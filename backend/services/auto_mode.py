@@ -437,10 +437,21 @@ def _clean(m: dict, s: dict) -> str:
                         "(quality flags lower weights, incomplete cells excluded).") from None
         raise _Skip(f"Cleaning profile '{o['cleaning']}' requested but the cleaning module is not available in this build; "
                     "the standard engine behaviour is used instead.") from None
-    from services import data_loader
+    from services import analysis, data_loader
     reports = {}
     features = [f for f in config.FEATURES if f not in config.SIMILARITY["excluded"]]
-    for key, loader in [(o["target"]["planet"], lambda: data_loader.LOADERS[o["target"]["planet"]]())] + \
+    # Clean exactly what the scoring cleans: the target window (not the whole 1.8M-cell planet grid,
+    # which would need a full in-memory copy) and every selected Earth zone.
+    planet = o["target"]["planet"]
+    t = analysis.target_def(planet, o["target"]["location"])
+    if t is None:
+        raise RuntimeError(f"Unknown target location {o['target']['location']!r}")
+
+    def target_window():
+        return data_loader.extract_target_window(data_loader.LOADERS[planet](), t["lat"], t["lon"], t["window_km"],
+                                                 config.BODY_RADIUS_M[planet])
+
+    for key, loader in [(f"{planet} target window ({t['window_km']:g} km)", target_window)] + \
             [(z, (lambda z=z: data_loader.load_zone(z, "normalized"))) for z in o["zones"]]:
         try:
             _, rep = cleaning.apply(loader(), o["cleaning"], features)

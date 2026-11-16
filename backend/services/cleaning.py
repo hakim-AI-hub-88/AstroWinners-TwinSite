@@ -228,13 +228,15 @@ def apply(df: pd.DataFrame, profile: str = DEFAULT_PROFILE, features=None,
                                              "and every cell must have all of them"}})
         return out, _report(profile, df, out, feats, valid_before, steps, scale)
 
-    # ---- strict / robust: work on a copy (never touch the shared cache) ----
-    out = df.copy()
-    keep = np.ones(len(out), bool)
+    # ---- strict / robust ----
+    # Steps 1-2 decide which rows survive using df itself; the working copy is made once, of the kept
+    # rows only (one copy instead of copy + filter: ~90 MB less peak for the 1.8M-row Mars grid).
+    # Later steps only ever touch kept rows, so the output and every count are unchanged.
+    keep = np.ones(len(df), bool)
 
     # 1. invalid coordinates
-    lat = pd.to_numeric(out.get("latitude"), errors="coerce").to_numpy(dtype=float)
-    lon = pd.to_numeric(out.get("longitude"), errors="coerce").to_numpy(dtype=float)
+    lat = pd.to_numeric(df.get("latitude"), errors="coerce").to_numpy(dtype=float)
+    lon = pd.to_numeric(df.get("longitude"), errors="coerce").to_numpy(dtype=float)
     bad = ~(np.isfinite(lat) & np.isfinite(lon) & (np.abs(lat) <= 90) & (np.abs(lon) <= 180))
     steps.append({"step": "invalid_coordinates", "label": "Drop invalid coordinates",
                   "removed": int((bad & keep).sum()), "masked": 0, "detail": {}})
@@ -248,6 +250,11 @@ def apply(df: pd.DataFrame, profile: str = DEFAULT_PROFILE, features=None,
         keep &= ~hit
     steps.append({"step": "row_flags", "label": "Drop water and gap-filled cells",
                   "removed": sum(per_flag.values()), "masked": 0, "detail": {"rows_by_flag": per_flag}})
+
+    out = df.loc[keep].copy() if not keep.all() else df.copy()   # never touch the shared cache
+    flags = flags[keep]
+    keep = np.ones(len(out), bool)
+    del lat, lon, bad
 
     # 3. feature-level flags (estimated / proxy values)
     masked_by_flag = {}
@@ -296,9 +303,8 @@ def apply(df: pd.DataFrame, profile: str = DEFAULT_PROFILE, features=None,
                 skipped[f] = "MAD = 0 (too few distinct values, e.g. 1 deg climatology)"
                 masked_mad[f] = 0
                 continue
-            z = np.zeros(len(x))
-            z[sel] = 0.6745 * (vals - med) / mad
-            m = sel & (np.abs(z) > MAD_Z_THRESHOLD)
+            m = sel.copy()                         # z computed on the selected values only (no full-size z array)
+            m[sel] = np.abs(0.6745 * (vals - med) / mad) > MAD_Z_THRESHOLD
             if m.any():
                 out.loc[m, f] = np.nan
             masked_mad[f] = int(m.sum())
@@ -307,8 +313,6 @@ def apply(df: pd.DataFrame, profile: str = DEFAULT_PROFILE, features=None,
                       "detail": {"values_by_feature": masked_mad, "skipped": skipped,
                                  "threshold": MAD_Z_THRESHOLD}})
 
-    if not keep.all():
-        out = out.loc[keep]
     return out, _report(profile, df, out, feats, valid_before, steps, scale)
 
 

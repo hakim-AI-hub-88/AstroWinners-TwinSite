@@ -24,6 +24,7 @@ import gzip
 import json
 import logging
 import re
+import os
 from functools import lru_cache
 from pathlib import Path
 
@@ -289,11 +290,24 @@ def _bbox_filter(df: pd.DataFrame, bbox) -> pd.DataFrame:
     return df.loc[(lon >= w) & (lon <= e) & (lat >= s) & (lat <= n)]
 
 
-@lru_cache(maxsize=6)
+# Cleaned frames kept in memory. A cleaned full Mars grid is ~90 MB, so small hosts (512 MB) set
+# TWINSITE_DATAHUB_CACHE=1 (or 0: recompute every request); default 6.
+_SELECT_CACHE = max(0, int(os.environ.get("TWINSITE_DATAHUB_CACHE", "6") or 6))
+# Strict / robust cleaning works on a full copy of the selection. On small hosts set
+# TWINSITE_CLEAN_MAX_ROWS (e.g. 500000 on 512 MB): larger selections then need a bbox. 0/unset = no limit.
+_CLEAN_MAX_ROWS = max(0, int(os.environ.get("TWINSITE_CLEAN_MAX_ROWS", "0") or 0))
+
+
+@lru_cache(maxsize=_SELECT_CACHE)
 def select(dataset_id: str, profile: str = cleaning.DEFAULT_PROFILE, bbox: tuple | None = None):
     """(clean_df, cleaning report) for a dataset, bbox and profile. Cached (results are read-only)."""
     _, stage = parse_id(dataset_id)
     df = _bbox_filter(load(dataset_id), bbox)
+    if _CLEAN_MAX_ROWS and profile in ("strict", "robust") and len(df) > _CLEAN_MAX_ROWS:
+        raise DatasetError(
+            f"'{profile}' cleaning of {len(df):,} rows needs more memory than this server has. Add a bbox "
+            f"(west,south,east,north) covering at most {_CLEAN_MAX_ROWS:,} rows, or use the 'raw' or 'standard' "
+            "profile for the full dataset (the original file is also downloadable).")
     return cleaning.apply(df, profile, config.FEATURES, STAGES[stage]["scale"])
 
 
