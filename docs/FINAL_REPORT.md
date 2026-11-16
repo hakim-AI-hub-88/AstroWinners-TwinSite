@@ -3,6 +3,7 @@
 ![NASA Space Apps 2026](https://img.shields.io/badge/NASA%20Space%20Apps-2026-0b3d91) ![Team](https://img.shields.io/badge/Team-AstroWinners-f0c27a) ![License](https://img.shields.io/badge/License-MIT-green) ![Python](https://img.shields.io/badge/Python-Flask%203-blue) ![Frontend](https://img.shields.io/badge/Console-React%2018%20%2B%20Vite%206-61dafb) ![Tests](https://img.shields.io/badge/tests-Flask%2039%2F39%20%C2%B7%20console%2055%2F55%20%C2%B7%20smoke%2027%2F27-brightgreen)
 
 **Live production app (master):** <https://astrowinners-twinsite-1.onrender.com/>
+**Live visionary platform (platform-integration):** <https://twinsite-visionary.onrender.com/> — Render free web service, Docker, 512 MB
 **Repository:** `hakim-AI-hub-88/AstroWinners-TwinSite` — branches `master` (production hackathon app) and `platform-integration` (visionary prototype).
 
 ## Table of contents

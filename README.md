@@ -14,7 +14,7 @@
     <th>🚀 Production hackathon build · <code>master</code></th>
   </tr>
   <tr>
-    <td>Standard mode <strong>+ Expedition Mode</strong>: live NASA data, Robust cleaning, 13 agents, Data Hub, 7-provider AI router, Mission Console, open APIs.</td>
+    <td>Standard mode <strong>+ Expedition Mode</strong>: live NASA data, Robust cleaning, 13 agents, Data Hub, 7-provider AI router, Mission Console, open APIs. Live at <a href="https://twinsite-visionary.onrender.com/"><strong>twinsite-visionary.onrender.com</strong></a> (free instance: first request after idle takes ~1 min).</td>
     <td>The submitted NASA Space Apps app, live at <a href="https://astrowinners-twinsite-1.onrender.com/"><strong>astrowinners-twinsite-1.onrender.com</strong></a>. <a href="https://github.com/hakim-AI-hub-88/AstroWinners-TwinSite/tree/master">Browse master →</a></td>
   </tr>
   <tr>

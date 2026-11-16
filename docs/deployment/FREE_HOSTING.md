@@ -9,28 +9,48 @@ The bundled datasets in `data_ready/` are copied into the image.
 It is a **separate deployment**. The `master` service on Render
 (https://astrowinners-twinsite-1.onrender.com/) is not affected: different branch, different service.
 
-## Fastest path today
+## What is live (Render free, $0)
 
-1. **Render Blueprint (no upload from your machine).** Render builds straight from GitHub: New → Blueprint →
-   repo `hakim-AI-hub-88/AstroWinners-TwinSite`, branch `platform-integration` → it reads `render.yaml` and
-   creates the separate `twinsite-visionary` service. Paste the AI keys in the dashboard. Watch the first build
-   log (it is the first build of this image). If the free 512 MB instance restarts with out-of-memory, switch the
-   service to a larger instance type or use option 2.
-2. **Hugging Face Spaces (16 GB RAM, free) — no data upload.** Create a Docker Space and add only
-   `ops/container/hf/Dockerfile` and `ops/container/hf/README.md`. The build clones this branch from GitHub on
-   Hugging Face's network, so `data_ready/` is never uploaded and no LFS is needed. Add AI keys as Space secrets — either one per key, or **one secret named `TWINSITE_AI_ENV`** whose value is the
-   whole `ai-providers.env` file (`KEY=value` lines); the container writes it to a 0600 file for the AI router.
-   New commits: Settings → Factory rebuild. (Pushing the whole repo instead needs LFS, see below.)
-3. **Hugging Face Spaces, full-repo push.** Best free fit for the full Mars data, but six files in `data_ready/`
-   are 20–48 MB, so they must be pushed with Git LFS/Xet from a **full** clone on a fast connection (see below).
-   A blob-less or slow clone would download ~260 MB before it can push.
+The visionary build runs at **https://twinsite-visionary.onrender.com/** as a Render **free web service**
+(Docker, 512 MB RAM, 0.1 CPU), built from branch `platform-integration` of the public repo. Set up via
+*New → Web Service → Public Git Repository* (Blueprints need a card on file):
+
+| Setting | Value |
+|---|---|
+| Language / branch | Docker · `platform-integration` (auto-deploys on push) |
+| Instance type | Free ($0/month) — sleeps after 15 min idle, ~1 min cold start |
+| Health check path | `/v1/health` |
+| `WEB_THREADS` | `4` |
+| `TWINSITE_SEED_WORKERS` | `1` |
+| `TWINSITE_DATAHUB_CACHE` | `1` (cleaned Data Hub frames kept in memory) |
+| `TWINSITE_CLEAN_MAX_ROWS` | `500000` (strict/robust on larger selections needs a bbox) |
+| AI keys | pasted with *Add from .env* (one variable per key; never committed) |
+
+New Render accounts must verify a card even for the free plan (temporary $1 authorization, no charge).
+
+**How it fits in 512 MB** (measured on Render, `GET /api/status` → `memory_mb`): the container runs at about
+390 MB after start-up. What makes that possible:
+- PCA/K-means are trained during the Docker build and applied with NumPy at runtime, so the web process never
+  imports scikit-learn (startup peak 786 → 412 MB; outputs verified identical).
+- The Expedition clean step cleans the scored target window, not a full copy of the 1.8M-cell Mars grid.
+- Strict/robust cleaning copies only kept rows; freed heap is returned to the OS after heavy requests.
+- The real analog sites are characterized during the build and baked into the image, and the published pair's
+  source bytes (17.6 MB, SHA-256 pinned) ship in `ops/source-cache/`, so a fresh container needs no seeding
+  before agents and measured missions work.
+
+## Hugging Face Spaces (what we found, Nov 2026)
+
+- Docker Spaces require billing on the account (credits or PRO); free CPU Basic is not selectable without PRO.
+- Free accounts can create Gradio Spaces, but only on **ZeroGPU** hardware, which refuses apps without a
+  `@spaces.GPU` function, so a Flask platform cannot run there for free.
+- With PRO (~$9/month) the wrapper in `ops/container/hf/` works as described below (CPU Basic, 16 GB, free hardware).
 
 ## Options compared
 
 | Host | Free resources | Fit for TwinSite |
 |---|---|---|
-| **Hugging Face Spaces (Docker SDK)** - recommended | CPU basic: 2 vCPU, 16 GB RAM; sleeps after ~48 h without traffic; disk is **not persistent** (resets on restart) | Best free fit. The Mars dataset is ~1.84M rows and pandas needs the RAM. Runtime state (jobs, Auto Mode missions, seeded sites) is rebuilt after each restart; sites re-seed in the background at boot. |
-| Render free web service | 512 MB RAM, 0.1 CPU, sleeps after 15 min idle (cold start ~1 min), no persistent disk | Works for the pages, but 512 MB **may be too small** for the full Mars data plus API and worker; expect out-of-memory restarts. Blueprint: `render.yaml`. |
+| **Render free web service** - in use | 512 MB RAM, 0.1 CPU, sleeps after 15 min idle (cold start ~1 min), no persistent disk | **Runs the full platform** with the memory work above (container ~390 MB idle, ~460 MB during an Expedition run). Strict/robust cleaning of selections over 500k rows needs a bbox. Missions and uploads made at runtime are lost when the instance restarts. |
+| Hugging Face Spaces (Docker SDK) | CPU basic: 2 vCPU, 16 GB RAM, but requires PRO/billing as of Nov 2026; disk not persistent | Roomiest option if PRO is available; no row limit needed. Wrapper: `ops/container/hf/`. |
 | Oracle Cloud Always Free (Ampere ARM VM) | Up to 4 OCPU / 24 GB RAM, persistent block storage | Most capable free option and persistent; needs a VM you administer. Use `ops/vm/` (systemd units, nginx, `install.sh`) rather than this container, or run the container with Docker. Account sign-up needs a card for verification. |
 | Google Cloud free tier e2-micro | 2 shared vCPU (burst), 1 GB RAM | Too small for the datasets. |
 | Vercel | - | **Not needed.** Flask serves all pages and the console. `vercel.json` is only an optional edge proxy in front of a Python host. |
@@ -74,7 +94,7 @@ bytes from an existing cache and never downloads, so it only applies on a VM tha
 (see `ops/vm/README.md`). Without it, measured runs that need the pinned source cache report the
 source as unavailable instead of guessing.
 
-## Step by step: Hugging Face Spaces (recommended)
+## Step by step: Hugging Face Spaces (needs PRO or billing)
 
 1. Sign in at huggingface.co, then **New Space**: choose a name, **SDK: Docker** (Blank template),
    hardware **CPU basic (free)**, visibility Public.

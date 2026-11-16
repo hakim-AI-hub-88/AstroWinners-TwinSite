@@ -211,16 +211,29 @@ def _v_recheck(known, indexes):
     return check
 
 
-_CITE = re.compile(r'\[([A-Za-z0-9_.:\-]{3,120})\]')
+# A citation bracket may hold several IDs: "[ev-a, ev-b; ctx-c]". Models commonly group them, and
+# reading only single-ID brackets rejected otherwise valid narratives (and the hash digits left in
+# the text then looked like invented numbers). Same rules otherwise: IDs must still be known.
+_CITE_GROUP = re.compile(r'\[\s*([A-Za-z0-9_.:\-]{3,120}(?:\s*[,;]\s*[A-Za-z0-9_.:\-]{3,120})*)\s*\]')
+_ID_SPLIT = re.compile(r'\s*[,;]\s*')
+
+
+def _cites(text):
+    """Every evidence ID cited in [brackets], single or grouped."""
+    return {i for g in _CITE_GROUP.findall(text) for i in _ID_SPLIT.split(g) if i}
+
+
+def _strip_cites(text):
+    return _CITE_GROUP.sub(' ', text)
 
 
 def _v_narrative(known, allowed_numbers=()):
     def check(text):
-        cited = set(_CITE.findall(text))
+        cited = _cites(text)
         if not cited & known:
             return ['narrative must cite at least one evidence ID in [brackets]']
         if allowed_numbers:
-            plain = _CITE.sub(' ', text)
+            plain = _strip_cites(text)
             bad = [t for t in _NUM.findall(plain) if not (float(t) <= 12 and float(t).is_integer())
                    and not any(abs(float(t) - a) <= max(0.02 * abs(a), 0.051 if '.' in t else 0.51) for a in allowed_numbers)]
             if bad:
@@ -561,7 +574,7 @@ class Orchestrator:
                           max_output_tokens=900))
         if o and o.ok:
             self._record('A13', 'ai_cached' if o.cached else 'ai', 'Evidence-cited narrative written.', {'narrative': o.output},
-                         o, set(_CITE.findall(o.output)) & known, run_id=run_id)
+                         o, _cites(o.output) & known, run_id=run_id)
         else:
             self._record('A13', 'failed', 'Narrative unavailable: ' + (o.error if o else 'budget') +
                          '; deterministic report template used alone.', outcome=o, run_id=run_id)
