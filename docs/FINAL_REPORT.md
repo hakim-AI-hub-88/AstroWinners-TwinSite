@@ -3,8 +3,8 @@
 ![NASA Space Apps 2026](https://img.shields.io/badge/NASA%20Space%20Apps-2026-0b3d91) ![Team](https://img.shields.io/badge/Team-AstroWinners-f0c27a) ![License](https://img.shields.io/badge/License-MIT-green) ![Python](https://img.shields.io/badge/Python-Flask%203-blue) ![Frontend](https://img.shields.io/badge/Console-React%2018%20%2B%20Vite%206-61dafb) ![Tests](https://img.shields.io/badge/tests-Flask%2039%2F39%20%C2%B7%20console%2055%2F55%20%C2%B7%20smoke%2027%2F27-brightgreen)
 
 **Live production app (master):** <https://astrowinners-twinsite-1.onrender.com/>
-**Live visionary platform (platform-integration):** <https://twinsite-visionary.onrender.com/> — Render free web service, Docker, 512 MB
-**Repository:** `hakim-AI-hub-88/AstroWinners-TwinSite` — branches `master` (production hackathon app) and `platform-integration` (visionary prototype).
+**Live TwinSite Platform (platform-integration):** <https://twinsite-visionary.onrender.com/> — ✅ live production deployment (Render free web service, Docker, 512 MB)
+**Repository:** `hakim-AI-hub-88/AstroWinners-TwinSite` — branches `master` (submitted hackathon release, live) and `platform-integration` (TwinSite Platform, live production deployment).
 
 ## Table of contents
 
@@ -36,7 +36,7 @@ TwinSite finds **Earth analog sites for Mars and Moon targets**. Given a planeta
 Two versions exist:
 
 - **`master` — production hackathon app.** Flask + Jinja + CesiumJS/Leaflet, harmonized `data_ready/` datasets (Mars/Moon grid of roughly 2.3 M cells, Earth zones Atacama + Merzouga), weighted quality-aware similarity engine, PCA / K-means views, a Groq AI assistant with nine tools, and mission dossier reports. Deployed on Render.
-- **`platform-integration` — visionary prototype.** Everything in master plus the full TwinSite platform: **Agentic Auto Mode** (plan → acquire data → clean → analyze every Earth zone → 13 agents → AI-written report), a **Data Hub** with 16 catalogued datasets and downloads, **four cleaning profiles**, per-mission data-source and cleaning choices, a **7-provider free AI router** (keys server-side only), a stdlib **platform API** (`/v1`, proxied by Flask) plus **job worker**, a **React/Vite Mission Console** at `/console/`, an expanded landing page, `/resources`, `/sitemap`, `/policy`, LICENSE, VM ops (`ops/vm`), `vercel.json`, Makefile and GitHub CI.
+- **`platform-integration` — TwinSite Platform (live, production).** Everything in master plus the full TwinSite platform: **Agentic Auto Mode** (plan → acquire data → clean → analyze every Earth zone → 13 agents → AI-written report), a **Data Hub** with 16 catalogued datasets and downloads, **four cleaning profiles**, per-mission data-source and cleaning choices, a **7-provider free AI router** (keys server-side only), a stdlib **platform API** (`/v1`, proxied by Flask) plus **job worker**, a **React/Vite Mission Console** at `/console/`, an expanded landing page, `/resources`, `/sitemap`, `/policy`, LICENSE, VM ops (`ops/vm`), `vercel.json`, Makefile and GitHub CI.
 
 **Two modes on platform-integration.** The branch is organised so that all new platform features live under one opt-in **Expedition Mode**, with its own landing page `/expedition` and its own header (Overview `/expedition`, Launch `/auto`, Data Hub `/data`, Mission Console `/console/`, Resources, and a link back to Standard mode). The main site navigation is Home, Mission Control, Expedition Mode, Resources. **Standard mode** is the original master app (bundled data, standard cleaning, no agents). **Expedition Mode** defaults: live NASA data + bundled, Robust cleaning, agentic run with AI on.
 
@@ -346,6 +346,21 @@ The router (`backend/twinsite/ai/router.py`) walks providers in order, skipping 
 | VM smoke (`ops/vm/smoke.py`) | 27 / 27 pass, including a real mission through the worker |
 | Live Auto Mode — Mars, Jezero, Robust cleaning | Atacama 98.3, Merzouga 87.0; 13 agents reported; report written by Groq |
 
+### Production verification on the live deployment (2026-11-16, <https://twinsite-visionary.onrender.com/>)
+
+All checks below ran against the public URL on the Render free instance (512 MB), not a local copy.
+
+| Check | Result |
+|---|---|
+| Smoke test `ops/vm/smoke.py --base-url https://twinsite-visionary.onrender.com` | **27 / 27 pass** on a freshly started instance (pages, APIs, console, `/v1` health, live catalog, cleaned grid, measured mission through the worker with P00–P90 events, release gate BLOCK, rendered report) |
+| Expedition mission — Mars Jezero, rover test, live NASA data, Robust cleaning, AI on | All 6 steps completed: live NASA acquisition (3 measurements at the target), Robust cleaning (target window 65 rows; Atacama 1,200 → 790; Merzouga 400 → 387), Atacama **98.3**, Merzouga **87.0**; **13 agents: 6 AI (Google Gemini, Groq, Cloudflare), 6 deterministic, A12 skipped because the evidence reviewer supported 6/6 claims**; A13 evidence-cited narrative in the published report; release gate BLOCK (C5 independent review required) |
+| Live characterization of new points (`POST /v1/science/characterize`) | Wadi Rum, Jordan: 8 NASA POWER climate values + 3 AWS terrain values, all QA ACCEPT (OSM Overpass timed out and is reported as such). Hadley Rille area, Moon: slope, roughness, relief and Diviner day/night temperatures (379.6 K / 91.4 K) |
+| Data Hub | 16/16 datasets available; Robust/Strict cleaning on Atacama, the 1 km processed grid (112,654 rows), the full Moon grid (460,800 rows) and Mars bounding boxes; full Mars (1,843,200 rows) with Standard; CSV export and original-file download; Strict/Robust on more than 500,000 rows without a bbox answers 400 with guidance (memory limit of the free host) |
+| Analog sites | 66 characterized sites present at boot (baked into the image at build time; build-time seeding: 63 seeded, 2 retried at runtime) |
+| Memory (`GET /api/status` → `memory_mb`) | Container ~380 MB idle, peak 466–479 MB during a full Expedition mission, under the 512 MB limit |
+
+Fixes made during this verification (all pushed to `platform-integration`): PCA/K-means trained at build time and applied with NumPy (no scikit-learn in the web process; outputs verified identical over 1,835,520 Mars cells), Expedition clean step scoped to the scored target window, strict/robust cleaning copies only kept rows (identical output on 14 dataset/profile pairs), freed heap returned to the OS after heavy requests, the published pair's SHA-256-pinned source bytes bundled (17.6 MB), analog sites seeded at build time, and A13 accepting grouped citations `[ev-a, ev-b]` under the same validation rules.
+
 Supporting docs: `docs/release/QA_STATUS.md`, `LIVE_ACCEPTANCE.md`, `SCIENTIFIC_REVIEW.md`, `COVERAGE_MATRIX.json`, `docs/status/*`, `docs/readme/VERIFICATION.md`. Make targets: `test`, `test-backend`, `test-acceptance`, `test-frontend`, `test-all`, `schemas`, `smoke`, `types`, `check`.
 
 ## 13. Tech stack and dependencies
@@ -381,7 +396,7 @@ twinsite-platform/
 ## 15. Deployment options
 
 1. **Render (master, live):** gunicorn serving the Flask app — <https://astrowinners-twinsite-1.onrender.com/>.
-2. **Single container (visionary branch):** `Dockerfile` (Node 20 stage builds the console; `python:3.12-slim` runtime, non-root uid 1000, `$PORT` default 7860) and `ops/container/start.sh` (platform API + worker in the background, gunicorn in the foreground; the container exits if any process dies; sites seed in the background, `TWINSITE_SEED_ON_START=0` disables it).
+2. **Single container (`platform-integration`, live on Render):** `Dockerfile` (Node 20 stage builds the console; `python:3.12-slim` runtime, non-root uid 1000, `$PORT` default 7860) and `ops/container/start.sh` (platform API + worker in the background, gunicorn in the foreground; the container exits if any process dies; sites seed in the background, `TWINSITE_SEED_ON_START=0` disables it).
    - **Render Blueprint:** `render.yaml` creates a separate free service `twinsite-visionary` from branch `platform-integration` (health check `/v1/health`, AI keys as dashboard secrets). The master service is untouched.
    - **Hugging Face Spaces:** prepend `ops/container/hf_space_header.md` (`sdk: docker`, `app_port: 7860`); push the six 20–48 MB data files with Git LFS/Xet.
    - Full comparison (HF Spaces, Render, Oracle Cloud Always Free, GCP e2-micro) and NASA cloud note: `docs/deployment/FREE_HOSTING.md`.

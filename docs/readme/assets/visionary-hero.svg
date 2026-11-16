@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 360" role="img" aria-labelledby="t d">
-  <title id="t">TwinSite Visionary Platform</title>
+  <title id="t">TwinSite Platform</title>
   <desc id="d">Animated banner: Earth, the Moon and Mars on orbits around the TwinSite wordmark, with the line Agentic Auto Mode, Data Hub, 13 agents, 7 free AI providers.</desc>
   <style>
     .bg{fill:#07060a}
@@ -41,7 +41,7 @@
   <ellipse class="orbit" cx="600" cy="180" rx="530" ry="150"/>
   <circle r="13" fill="url(#mars)"><animateMotion dur="60s" repeatCount="indefinite" path="M 70 180 A 530 150 0 1 1 1130 180 A 530 150 0 1 1 70 180 Z"/></circle>
   <rect class="scan" x="0" y="0" width="260" height="360" fill="url(#beam)"/>
-  <text class="tag reveal" x="600" y="104" text-anchor="middle">NASA SPACE APPS 2026 · TEAM ASTROWINNERS · VISIONARY BRANCH</text>
+  <text class="tag reveal" x="600" y="104" text-anchor="middle">NASA SPACE APPS 2026 · TEAM ASTROWINNERS · PLATFORM EDITION · LIVE</text>
   <text class="title reveal r2" x="600" y="186" text-anchor="middle">TWINSITE</text>
   <text class="sub reveal r3" x="600" y="232" text-anchor="middle">AGENTIC AUTO MODE · DATA HUB · 13 AGENTS · 7 FREE AI PROVIDERS</text>
   <text class="sub reveal r3" x="600" y="262" text-anchor="middle" style="font-size:14px;fill:#bfae92">Find the Earth twin of any Mars or Moon site — from raw NASA data to a cited mission report</text>

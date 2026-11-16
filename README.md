@@ -8,19 +8,14 @@
   <a href="https://readme-typing-svg.demolab.com"><img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=20&duration=2800&pause=700&color=FF8F4A&center=true&vCenter=true&width=860&lines=Pick+a+crater+on+Mars+or+a+site+on+the+Moon.;Expedition+Mode+pulls+live+NASA+data+and+cleans+it.;13+agents+rank+every+Earth+zone+and+cite+the+evidence.;A+checked+AI+report+says+where+to+rehearse+on+Earth." alt="Typing animation: Pick a crater on Mars or a site on the Moon. Expedition Mode pulls live NASA data and cleans it. 13 agents rank every Earth zone and cite the evidence. A checked AI report says where to rehearse on Earth."></a>
 </p>
 
-<table align="center">
-  <tr>
-    <th>🌍 You are on the <code>platform-integration</code> branch · <strong>Visionary platform</strong></th>
-    <th>🚀 Production hackathon build · <code>master</code></th>
-  </tr>
-  <tr>
-    <td>Standard mode <strong>+ Expedition Mode</strong>: live NASA data, Robust cleaning, 13 agents, Data Hub, 7-provider AI router, Mission Console, open APIs. Live at <a href="https://twinsite-visionary.onrender.com/"><strong>twinsite-visionary.onrender.com</strong></a> (free instance: first request after idle takes ~1 min).</td>
-    <td>The submitted NASA Space Apps app, live at <a href="https://astrowinners-twinsite-1.onrender.com/"><strong>astrowinners-twinsite-1.onrender.com</strong></a>. <a href="https://github.com/hakim-AI-hub-88/AstroWinners-TwinSite/tree/master">Browse master →</a></td>
-  </tr>
-  <tr>
-    <td colspan="2" align="center">📘 <a href="docs/FINAL_REPORT.md"><strong>Full final report — both versions, every detail</strong></a> &nbsp;·&nbsp; ☁️ <a href="docs/deployment/FREE_HOSTING.md"><strong>Free hosting guide</strong></a> &nbsp;·&nbsp; 🧭 <a href="#expedition"><strong>Expedition Mode</strong></a> &nbsp;·&nbsp; 🤝 <a href="#contribute"><strong>Contribute</strong></a></td>
-  </tr>
-</table>
+<h3 align="center">Two live versions · same repository</h3>
+
+| Version | Branch (source) | Live app | Status |
+| :--- | :--- | :--- | :--- |
+| **TwinSite Platform** · Standard mode **+ Expedition Mode** (live NASA data, Robust cleaning, 13 agents, Data Hub, 7-provider AI router, Mission Console, open APIs) — *this branch* | [`platform-integration`](https://github.com/hakim-AI-hub-88/AstroWinners-TwinSite/tree/platform-integration) | **[twinsite-visionary.onrender.com](https://twinsite-visionary.onrender.com/)** | ✅ **Live — production deployment.** Verified on the live URL: smoke test 27/27, full Expedition missions end to end with live NASA data, Data Hub retrieval/cleaning/downloads, live characterization. Render free (512 MB): first request after 15 min idle takes ~1 min. |
+| **TwinSite Hackathon release** · Standard mode (the version submitted to NASA Space Apps 2026) | [`master`](https://github.com/hakim-AI-hub-88/AstroWinners-TwinSite/tree/master) | **[astrowinners-twinsite-1.onrender.com](https://astrowinners-twinsite-1.onrender.com/)** | ✅ **Live — submitted release.** Unchanged since submission. |
+
+<p align="center">📘 <a href="docs/FINAL_REPORT.md"><strong>Full final report — both versions, every detail</strong></a> &nbsp;·&nbsp; ☁️ <a href="docs/deployment/FREE_HOSTING.md"><strong>Hosting guide</strong></a> &nbsp;·&nbsp; 🧭 <a href="#expedition"><strong>Expedition Mode</strong></a> &nbsp;·&nbsp; 🤝 <a href="#contribute"><strong>Contribute</strong></a></p>
 
 <a id="expedition"></a>
 
@@ -68,7 +63,7 @@ ranks the closest twins, explains every difference feature by feature, and turns
 <p align="center">
   <img src="https://img.shields.io/badge/NASA_Space_Apps-2026-ff8f4a?style=for-the-badge&labelColor=0e0a08" alt="NASA Space Apps 2026">
   <img src="https://img.shields.io/badge/Team-AstroWinners-f0c27a?style=for-the-badge&labelColor=0e0a08" alt="Team AstroWinners">
-  <img src="https://img.shields.io/badge/Status-Research_prototype-e7a58c?style=for-the-badge&labelColor=0e0a08" alt="Status: research prototype"><br>
+  <img src="https://img.shields.io/badge/Status-Live_·_production-3fb950?style=for-the-badge&labelColor=0e0a08" alt="Status: live, production deployment"><br>
   <img src="https://img.shields.io/badge/Python-3.11+-d9c39a?style=flat-square&logo=python&logoColor=white&labelColor=1a120d" alt="Python 3.11+">
   <img src="https://img.shields.io/badge/Flask-API-d9c39a?style=flat-square&logo=flask&logoColor=white&labelColor=1a120d" alt="Flask">
   <img src="https://img.shields.io/badge/scikit--learn-PCA_·_K--means-d9c39a?style=flat-square&logo=scikitlearn&logoColor=white&labelColor=1a120d" alt="scikit-learn">
@@ -106,7 +101,7 @@ ranks the closest twins, explains every difference feature by feature, and turns
 </sub></p>
 
 > [!NOTE]
-> **Scope, plainly.** Implemented today: two Earth study zones, four preset targets plus custom globe regions, deterministic similarity scoring and refinement, PCA and K-means views, five published reference sites, an AI assistant and printable reports — plus the TwinSite platform: [Agentic Auto Mode, the Data Hub, a multi-provider free-tier AI router, 13 agent roles, live NASA connectors and the Mission Console](#what-ships-now). AI is optional and never changes a number; the scientific release gate for the measured Zagora–Gale pair is **BLOCK**, and worldwide search remains a [future ambition](#horizon). TwinSite is a research prototype, not a NASA-endorsed mission-planning system.
+> **Scope, plainly.** Implemented today: two Earth study zones, four preset targets plus custom globe regions, deterministic similarity scoring and refinement, PCA and K-means views, five published reference sites, an AI assistant and printable reports — plus the TwinSite platform: [Agentic Auto Mode, the Data Hub, a multi-provider free-tier AI router, 13 agent roles, live NASA connectors and the Mission Console](#what-ships-now). AI is optional and never changes a number; the scientific release gate for the measured Zagora–Gale pair is **BLOCK**, and worldwide search remains a [future ambition](#horizon). TwinSite is an open research platform, live in production, and not a NASA-endorsed mission-planning system.
 
 <a id="what-ships-now"></a>
 

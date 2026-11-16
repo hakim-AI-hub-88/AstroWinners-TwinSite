@@ -11,7 +11,7 @@ It is a **separate deployment**. The `master` service on Render
 
 ## What is live (Render free, $0)
 
-The visionary build runs at **https://twinsite-visionary.onrender.com/** as a Render **free web service**
+The TwinSite Platform (`platform-integration`) runs in production at **https://twinsite-visionary.onrender.com/** as a Render **free web service**
 (Docker, 512 MB RAM, 0.1 CPU), built from branch `platform-integration` of the public repo. Set up via
 *New → Web Service → Public Git Repository* (Blueprints need a card on file):
 
