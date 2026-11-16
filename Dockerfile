@@ -40,6 +40,16 @@ RUN cd /app/backend && DATA_READY_DIR=/app/data_ready PYTHONPATH=/app/backend:/a
     python -m services.ml_models export /app/ml_models.npz
 ENV TWINSITE_ML_MODELS=/app/ml_models.npz
 
+# Characterize the real analog sites (Earth) and targets (Moon, Mars) once at build time, from the live
+# NASA/USGS sources, and bake them into the image. Hosts with an ephemeral disk (Render free, Hugging Face)
+# then start with every site present instead of re-seeding for ~30 min after each restart. Sites a source
+# could not serve during the build are retried by the idempotent runtime seeding in start.sh.
+RUN cd /app && TWINSITE_DATA_DIR=/data/twinsite TWINSITE_SOURCE_DATA_DIR=/data/twinsite/source-cache \
+    TWINSITE_SECRET_ENV_FILE=/nonexistent PYTHONPATH=/app/backend:/app DATA_READY_DIR=/app/data_ready \
+    timeout 1800 python ops/seed_sites.py --workers 4 | tail -3 \
+    || echo "build-time seeding incomplete; runtime seeding will finish it"; \
+    chown -R twinsite:twinsite /data
+
 USER twinsite
 EXPOSE 7860
 CMD ["/app/ops/container/start.sh"]
