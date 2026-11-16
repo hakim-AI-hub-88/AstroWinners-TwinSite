@@ -60,6 +60,14 @@ cleanup() {
 }
 trap 'cleanup; exit 143' TERM INT
 
+# Install the bundled, SHA-256-pinned source bytes of the published measured pair (17.6 MB) so measured
+# missions and the cleaned-grid view work on a fresh disk. Verifies every hash; never downloads.
+if [ -d "$APP_DIR/ops/source-cache" ]; then
+  "$PYTHON" "$APP_DIR/ops/provision_source_cache.py" --to "$TWINSITE_SOURCE_DATA_DIR" \
+      --from "$APP_DIR/ops/source-cache" | tail -1 \
+    || echo "[start] source cache provisioning failed; measured missions will be rejected"
+fi
+
 echo "[start] data_ready=$DATA_READY_DIR runtime=$TWINSITE_DATA_DIR port=$PORT api=$TWINSITE_API_URL"
 
 "$PYTHON" -m twinsite.api & API_PID=$!; PIDS+=("$API_PID")
