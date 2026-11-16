@@ -48,6 +48,18 @@ from utils import config
 # preload=True reads the three datasets now (~10-20 s for Mars) so the first
 # user request is fast; tests can pass preload=False.
 #############################################
+def _release_freed_memory() -> None:
+    """Hand heap pages freed after CSV parsing back to the OS (glibc only; no-op elsewhere).
+    Keeps the resident size of a 512 MB host well under its limit once the datasets are loaded."""
+    import gc
+    gc.collect()
+    try:
+        import ctypes
+        ctypes.CDLL("libc.so.6").malloc_trim(0)
+    except (OSError, AttributeError):
+        pass
+
+
 def create_app(preload: bool = True) -> Flask:
     app = Flask(__name__, template_folder=str(config.TEMPLATE_DIR), static_folder=str(config.STATIC_DIR))
     app.json.sort_keys = False
@@ -87,6 +99,7 @@ def create_app(preload: bool = True) -> Flask:
         try:
             data_loader.load_all()
             ml_models.models()                 # train the unsupervised models once (~5 s)
+            _release_freed_memory()
         except ImportError:
             app.logger.warning("scikit-learn missing: the machine-learning section is disabled")
         except (FileNotFoundError, ValueError) as exc:

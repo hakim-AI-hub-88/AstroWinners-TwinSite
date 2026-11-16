@@ -30,6 +30,9 @@ RUN useradd -m -u 1000 twinsite && mkdir -p /data/twinsite && chown -R twinsite:
 COPY --from=src --chown=twinsite:twinsite /src /app
 COPY --from=console --chown=twinsite:twinsite /build/frontend/dist /app/frontend/dist
 RUN chmod +x /app/ops/container/start.sh
+RUN cd /app/backend && DATA_READY_DIR=/app/data_ready PYTHONPATH=/app/backend:/app \
+    python -m services.ml_models export /app/ml_models.npz
+ENV TWINSITE_ML_MODELS=/app/ml_models.npz
 USER twinsite
 EXPOSE 7860
 CMD ["/app/ops/container/start.sh"]

@@ -80,7 +80,13 @@ done
 WEB_PID=$!; PIDS+=("$WEB_PID")
 
 if [ "$SEED_ON_START" = "1" ]; then
-  ( "$PYTHON" ops/seed_sites.py --workers "$SEED_WORKERS" > "$TWINSITE_DATA_DIR/seed.log" 2>&1 \
+  # Seed only after the site answers, so seeding never overlaps the dataset load (memory peak).
+  ( for _ in $(seq 1 180); do
+      "$PYTHON" -c "import urllib.request,sys; urllib.request.urlopen('http://127.0.0.1:${PORT}/api/status', timeout=5)" \
+        2>/dev/null && break
+      sleep 5
+    done
+    "$PYTHON" ops/seed_sites.py --workers "$SEED_WORKERS" > "$TWINSITE_DATA_DIR/seed.log" 2>&1 \
       && echo "[start] site seeding finished (see $TWINSITE_DATA_DIR/seed.log)" \
       || echo "[start] site seeding reported errors (see $TWINSITE_DATA_DIR/seed.log)" ) &
 fi

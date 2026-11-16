@@ -34,6 +34,11 @@ RUN useradd -m -u 1000 twinsite \
 COPY --chown=twinsite:twinsite . /app
 COPY --from=console --chown=twinsite:twinsite /build/frontend/dist /app/frontend/dist
 RUN chmod +x /app/ops/container/start.sh
+# Train the PCA / K-means models once at build time (same data + seed = same models); at runtime the
+# web process applies them with NumPy and never imports scikit-learn (~100 MB less RAM on 512 MB hosts).
+RUN cd /app/backend && DATA_READY_DIR=/app/data_ready PYTHONPATH=/app/backend:/app \
+    python -m services.ml_models export /app/ml_models.npz
+ENV TWINSITE_ML_MODELS=/app/ml_models.npz
 
 USER twinsite
 EXPOSE 7860
