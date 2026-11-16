@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "status": {
+      "enum": [
+        "ready",
+        "unavailable"
+      ]
+    },
+    "ai_enabled": {
+      "type": "boolean"
+    },
+    "uploads_enabled": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "schema_version",
+    "status",
+    "ai_enabled",
+    "uploads_enabled"
+  ],
+  "additionalProperties": false
+}

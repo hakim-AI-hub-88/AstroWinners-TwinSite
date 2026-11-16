@@ -48,6 +48,28 @@ def get_targets():
 # Output: {"datasets": {body: {loaded, rows, available_features, ...}},
 #          "features": [...], "engine": "ready"}
 #############################################
+def _memory_mb() -> dict:
+    """Resident memory of this web process and of the whole container (Linux cgroup), in MB.
+    Lets operators of small hosts (e.g. 512 MB) see their headroom; empty where not available."""
+    out = {}
+    try:
+        with open("/proc/self/status") as fh:
+            for line in fh:
+                if line.startswith(("VmRSS:", "VmHWM:")):
+                    out["web_rss" if line.startswith("VmRSS") else "web_peak"] = round(int(line.split()[1]) / 1024)
+    except OSError:
+        pass
+    for path, key in (("/sys/fs/cgroup/memory.current", "container"), ("/sys/fs/cgroup/memory.peak", "container_peak"),
+                      ("/sys/fs/cgroup/memory/memory.usage_in_bytes", "container"),
+                      ("/sys/fs/cgroup/memory/memory.max_usage_in_bytes", "container_peak")):
+        try:
+            with open(path) as fh:
+                out.setdefault(key, round(int(fh.read().strip()) / 2**20))
+        except (OSError, ValueError):
+            pass
+    return out
+
+
 @bp.get("/status")
 def get_status():
     return jsonify({
@@ -55,6 +77,7 @@ def get_status():
         "features": config.FEATURES,
         "data_dir": str(config.HARMONIZED_DATA_DIR),
         "engine": similarity_engine.ENGINE_STATUS,
+        "memory_mb": _memory_mb(),
     })
 
 
@@ -62,7 +85,11 @@ def get_status():
 # POST /api/similarity
 # Input : JSON {"planet": "mars" | "moon", "location": "<target name>",
 #               "rover_mode": true|false (optional, default false),
-#               "max_slope": 5-30 degrees (optional, default 15)}
+#               "max_slope": 5-30 degrees (optional, default 15),
+#               "cleaning": raw|standard|strict|robust (optional, default standard),
+#               "data_mode": bundled|auto (optional, default bundled)}
+# Output adds options {data_mode, cleaning}, cleaning_report and, for auto,
+# live_evidence (live NASA characterization of the target, or "unavailable" + reason).
 # Output: similarity result (score, ranking, explanation, map, method) + target info.
 # Errors: 400 for invalid input, 503 if data is not available.
 # The computation lives in services/analysis.py (shared with the AI assistant).
@@ -74,10 +101,20 @@ def post_similarity():
         planet, location, rover_mode, max_slope = analysis.validate(
             payload.get("planet"), payload.get("location"), payload.get("rover_mode", False), payload.get("max_slope"))
         zone = analysis.validate_zone(payload.get("zone"))          # optional, default: Atacama
+        cleaning, data_mode = analysis.validate_options(payload.get("cleaning"), payload.get("data_mode"))
     except analysis.AnalysisInputError as exc:
         return jsonify({"status": "error", "message": str(exc)}), 400
     try:
-        result = analysis.run(planet, location, rover_mode, max_slope, zone)
+        result = analysis.run(planet, location, rover_mode, max_slope, zone, cleaning)
     except (FileNotFoundError, ValueError) as exc:
         return jsonify({"status": "error", "message": str(exc)}), 503
-    return jsonify(result)
+    # The cached result is shared: build the response as a new dict, never mutate it.
+    out = {**result, "options": {"data_mode": data_mode, "cleaning": cleaning}}
+    if data_mode == "auto":
+        from services import live_data
+        out["live_evidence"] = live_data.for_target(planet, location)
+    if result.get("status") == "error" and cleaning != "standard":
+        # the chosen profile left too few comparable features: explain instead of failing silently
+        return jsonify({**out, "message": f"{result.get('message')} The '{cleaning}' cleaning profile removed "
+                        "too much data for this target; try 'standard'."}), 422
+    return jsonify(out)

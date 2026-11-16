@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 400" role="img" aria-labelledby="t d">
+  <title id="t">Target deployment topology (prepared)</title>
+  <desc id="d">Prepared target topology: an optional Vercel edge in front of one virtual machine. On the VM, nginx terminates TLS, sends /v1 to the platform API on 127.0.0.1:8080 and everything else to gunicorn running the Flask app on 127.0.0.1:5050. One mission worker shares a persistent disk with the API for SQLite and the blob store.</desc>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#ff8a3d"/></marker>
+    <style>
+      text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;fill:#ece6df}
+      .h{font-size:15px;font-weight:700}.s{font-size:12.5px;fill:#c9c0b7}.m{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;fill:#ffb36b}
+      .k{font-size:11px;letter-spacing:.14em;fill:#9b9188;font-weight:600}
+      .box{fill:#16110e;stroke:rgba(255,140,60,.45);stroke-width:1.4}.edge{fill:#0e1424;stroke:rgba(143,179,255,.45);stroke-width:1.4}
+      .vm{fill:none;stroke:rgba(255,255,255,.18);stroke-dasharray:6 5}.store{fill:#121016;stroke:rgba(196,181,253,.45);stroke-width:1.4}
+      .ln{stroke:#ff8a3d;stroke-width:1.6;fill:none}
+    </style>
+  </defs>
+  <rect width="1120" height="400" fill="#0b0a0c"/>
+  <rect class="edge" x="24" y="120" width="150" height="90" rx="14"/>
+  <text class="h" x="42" y="152">Visitors</text><text class="s" x="42" y="176">browser, curl,</text><text class="s" x="42" y="194">API clients</text>
+  <rect class="edge" x="214" y="120" width="170" height="90" rx="14"/>
+  <text class="h" x="232" y="152">Vercel edge</text><text class="s" x="232" y="176">optional front door,</text><text class="s" x="232" y="194">rewrites to the VM</text>
+
+  <rect class="vm" x="424" y="30" width="672" height="320" rx="18"/>
+  <text class="k" x="444" y="56">ONE VM · PERSISTENT DISK · SYSTEMD</text>
+  <rect class="box" x="444" y="120" width="170" height="90" rx="14"/>
+  <text class="h" x="462" y="152">nginx</text><text class="s" x="462" y="176">TLS, security</text><text class="s" x="462" y="194">headers, routing</text>
+
+  <rect class="box" x="664" y="74" width="200" height="80" rx="14"/>
+  <text class="h" x="682" y="104">gunicorn · Flask</text><text class="m" x="682" y="128">127.0.0.1:5050</text><text class="s" x="682" y="146">everything except /v1</text>
+  <rect class="box" x="664" y="176" width="200" height="80" rx="14"/>
+  <text class="h" x="682" y="206">Platform API</text><text class="m" x="682" y="230">127.0.0.1:8080</text><text class="s" x="682" y="248">/v1/*</text>
+  <rect class="box" x="904" y="176" width="172" height="80" rx="14"/>
+  <text class="h" x="922" y="206">Mission worker</text><text class="s" x="922" y="230">one instance,</text><text class="s" x="922" y="248">lease + heartbeat</text>
+  <rect class="store" x="664" y="276" width="412" height="56" rx="12"/>
+  <text class="h" x="682" y="300">SQLite + blobs + raw NASA bytes</text><text class="m" x="682" y="320">/srv/twinsite/data</text>
+
+  <path class="ln" d="M174 165 H210" marker-end="url(#a)"/>
+  <path class="ln" d="M384 165 H440" marker-end="url(#a)"/>
+  <path class="ln" d="M614 150 H636 V114 H660" marker-end="url(#a)"/>
+  <path class="ln" d="M614 180 H636 V216 H660" marker-end="url(#a)"/>
+  <path class="ln" d="M864 216 H900" marker-end="url(#a)"/>
+  <path class="ln" d="M764 256 V272" marker-end="url(#a)"/>
+  <path class="ln" d="M990 256 V272" marker-end="url(#a)"/>
+  <text class="s" x="24" y="380">Prepared, not a claim of a live deployment. Runbook: ops/vm/README.md. Flask also proxies /v1 itself, so a single process pair works locally.</text>
+</svg>

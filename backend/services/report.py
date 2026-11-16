@@ -50,16 +50,25 @@ def _region_facts(reg: dict) -> dict:
     }
 
 
-def build_facts(planet: str, location: str, rover_mode: bool, max_slope: float) -> tuple[dict, dict]:
-    """Return (facts for the LLM, raw results per zone)."""
-    results = {}
+def build_facts(planet: str, location: str, rover_mode: bool, max_slope: float,
+                cleaning: str = "standard") -> tuple[dict, dict]:
+    """Return (facts for the LLM, raw results per zone). Zones whose analysis fails are skipped with a reason."""
+    from services import cleaning as cleaning_mod
+    results, skipped = {}, {}
     for zone in config.EARTH_ZONES:
         try:
-            results[zone] = analysis.run(planet, location, rover_mode, max_slope, zone)
+            res = analysis.run(planet, location, rover_mode, max_slope, zone, cleaning)
         except Exception as exc:  # noqa: BLE001 - a missing zone must not break the report
             log.warning("report: zone %s unavailable: %s", zone, exc)
+            skipped[zone] = str(exc)
+            continue
+        if res.get("status") == "error":
+            skipped[zone] = res.get("message") or "analysis failed"
+            continue
+        results[zone] = res
     if not results:
-        raise analysis.AnalysisInputError("No Earth zone could be analysed.")
+        raise analysis.AnalysisInputError("No Earth zone could be analysed: "
+                                          + "; ".join(f"{z}: {m}" for z, m in skipped.items()))
     any_res = next(iter(results.values()))
     t = any_res["target"]
     facts = {
@@ -91,6 +100,11 @@ def build_facts(planet: str, location: str, rover_mode: bool, max_slope: float) 
         "Atmosphere, pressure, radiation and gravity are not compared (surface parameters only).",
         "Some target temperatures or albedo values are estimated and down-weighted.",
     ]
+    if cleaning != "standard":                     # only when the user chose a non-default profile
+        prof = cleaning_mod.PROFILES[cleaning]
+        facts["data_cleaning"] = {"profile": prof["name"], "summary": prof["summary"],
+                                  "earth_cells_kept": {z: r["cleaning_report"]["earth"]["rows_out"] for z, r in results.items()},
+                                  "zones_skipped": skipped}
     return facts, results
 
 
@@ -145,30 +159,95 @@ def _parse_json(text: str) -> dict:
 
 
 def narrative(facts: dict, use_ai: bool = True) -> dict:
+    """AI narrative through the free multi-provider router (services.ai_bridge, JSON mode), anchored to the
+    facts: every number it quotes must exist in the facts, otherwise the sentence (list item) is dropped, or
+    the whole AI text is replaced by the deterministic summary when the summary/conclusion is affected."""
     if not use_ai:
         return _fallback(facts)
+    from services import ai_bridge
+
+    keys = ("executive_summary", "key_findings", "recommendations", "risks", "conclusion")
+
+    def shape_ok(obj):
+        if not isinstance(obj, dict) or not isinstance(obj.get("executive_summary"), str) or not obj["executive_summary"].strip():
+            return ["executive_summary (non-empty string) required"]
+        return [f"{k} must be a list" for k in keys[1:4] if not isinstance(obj.get(k, []), list)]
+
     try:
-        from services.assistant import _client  # same Groq client (key read from app/.env)
-        client = _client()
-        resp = client.chat.completions.create(
-            model=config.ASSISTANT["model"], temperature=0.2,
-            response_format={"type": "json_object"},
-            messages=[{"role": "system", "content": SYSTEM},
-                      {"role": "user", "content": json.dumps(facts, ensure_ascii=False)}],
-        )
-        data = _parse_json(resp.choices[0].message.content)
-        out = {k: data.get(k) for k in ("executive_summary", "key_findings", "recommendations", "risks", "conclusion")}
-        if not out["executive_summary"]:
-            raise ValueError("empty narrative")
+        res = ai_bridge.complete_text(SYSTEM, json.dumps(facts, ensure_ascii=False), json_mode=True,
+                                      purpose="report", max_tokens=1400, validate=shape_ok)
+        if res["status"] != "ok":
+            fb = _fallback(facts)
+            fb["note"] = f"AI narrative unavailable ({res['reason']}); deterministic summary used."
+            return fb
+        data = res.get("data") if isinstance(res.get("data"), dict) else _parse_json(res["text"])
+        out = {k: data.get(k) for k in keys}
         for k in ("key_findings", "recommendations", "risks"):
             out[k] = [str(x) for x in (out[k] or [])][:8]
-        out["generated_by"] = f"Groq · {config.ASSISTANT['model']}"
+        out["executive_summary"] = str(out["executive_summary"] or "").strip()
+        out["conclusion"] = str(out["conclusion"] or "").strip()
+        allowed = _fact_numbers(facts)
+        bad_head = _unanchored(out["executive_summary"], allowed) + _unanchored(out["conclusion"], allowed)
+        if not out["executive_summary"] or bad_head:
+            fb = _fallback(facts)
+            fb["note"] = ("AI narrative rejected: it quoted numbers absent from the computed facts ("
+                          + ", ".join(sorted(set(bad_head))[:6]) + "); deterministic summary used.") if bad_head else \
+                "AI narrative was empty; deterministic summary used."
+            return fb
+        removed = []
+        for k in ("key_findings", "recommendations", "risks"):
+            kept = []
+            for item in out[k]:
+                bad = _unanchored(item, allowed)
+                (removed.append({"section": k, "numbers": bad}) if bad else kept.append(item))
+            out[k] = kept
+        out["generated_by"] = ai_bridge.provider_label(res) + (" (cached)" if res.get("cached") else "")
+        out["numeric_check"] = {"policy": "every quoted number must appear in the facts (2 % tolerance)",
+                                "removed_items": removed}
         return out
     except Exception as exc:  # noqa: BLE001 - the report must still be produced
         log.warning("report narrative fallback: %s", exc)
         fb = _fallback(facts)
         fb["note"] = f"AI narrative unavailable ({type(exc).__name__}); deterministic summary used."
         return fb
+
+
+_NUM_RE = re.compile(r"(?<![\w.])-?\d{1,3}(?:,\d{3})+(?:\.\d+)?|(?<![\w.])-?\d+(?:\.\d+)?")
+
+
+def _fact_numbers(facts) -> list[float]:
+    """Every number present in the facts (values and numbers written inside strings), plus 100 (score scale)."""
+    out = [100.0]
+
+    def walk(v):
+        if isinstance(v, bool) or v is None:
+            return
+        if isinstance(v, (int, float)):
+            if math.isfinite(v):
+                out.append(abs(float(v)))
+        elif isinstance(v, str):
+            out.extend(abs(float(t.replace(",", ""))) for t in _NUM_RE.findall(v))
+        elif isinstance(v, dict):
+            for x in v.values():
+                walk(x)
+        elif isinstance(v, (list, tuple)):
+            for x in v:
+                walk(x)
+    walk(facts)
+    return out
+
+
+def _unanchored(text: str, allowed: list[float]) -> list[str]:
+    """Numbers quoted in `text` that are not in the facts (small integers 0-10 are exempt)."""
+    bad = []
+    for token in _NUM_RE.findall(text or ""):
+        x = abs(float(token.replace(",", "")))
+        if x <= 10 and x.is_integer():
+            continue
+        tol = 0.051 if "." in token else 0.51
+        if not any(abs(x - a) <= max(0.02 * a, tol) for a in allowed):
+            bad.append(token)
+    return bad
 
 
 #############################################
@@ -251,13 +330,32 @@ def zone_map_png(res: dict, width: int = 640) -> str:
 #############################################
 # ENTRY POINT
 #############################################
-def build(planet: str, location: str, rover_mode: bool, max_slope: float, use_ai: bool = True) -> dict:
+def build(planet: str, location: str, rover_mode: bool, max_slope: float, use_ai: bool = True,
+          cleaning: str = "standard", data_mode: str = "bundled") -> dict:
+    from services import cleaning as cleaning_mod
     planet, location, rover_mode, max_slope = analysis.validate(planet, location, rover_mode, max_slope)
-    facts, results = build_facts(planet, location, rover_mode, max_slope)
+    cleaning, data_mode = analysis.validate_options(cleaning, data_mode)
+    facts, results = build_facts(planet, location, rover_mode, max_slope, cleaning)
+    live = None
+    if data_mode == "auto":
+        from services import live_data
+        live = live_data.for_target(planet, location)
+        facts["live_evidence"] = ({"status": "ok", "source_products": live["source_products"],
+                                   "analysis_scale_m": live.get("analysis_scale_m"),
+                                   "measured": [{"feature": o.get("feature_id"), "value": o.get("value"), "unit": o.get("unit")}
+                                                for o in live["observations"] if o.get("value") is not None][:12]}
+                                  if live["status"] == "ok" else {"status": "unavailable", "reason": live["reason"]})
     maps = {}
     for zone, res in results.items():
         try:
             maps[zone] = zone_map_png(res)
         except Exception as exc:  # noqa: BLE001
             log.warning("report map %s failed: %s", zone, exc)
-    return {"facts": facts, "narrative": narrative(facts, use_ai), "maps": maps}
+    out = {"facts": facts, "narrative": narrative(facts, use_ai), "maps": maps,
+           "options": {"data_mode": data_mode, "cleaning": cleaning},
+           "cleaning_report": {zone: {"target": cleaning_mod.summary(res["cleaning_report"]["target"]),
+                                      "earth": cleaning_mod.summary(res["cleaning_report"]["earth"])}
+                               for zone, res in results.items()}}
+    if live is not None:
+        out["live_evidence"] = live
+    return out

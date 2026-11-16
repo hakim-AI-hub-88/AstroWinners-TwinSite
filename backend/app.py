@@ -17,11 +17,24 @@
 from __future__ import annotations
 
 import logging
+import os
+import sys
+from pathlib import Path
 
-from flask import Flask, jsonify, render_template
+# The TwinSite platform package (backend/twinsite) imports `contracts` from the repository root.
+_ROOT = Path(__file__).resolve().parents[1]
+for _p in (str(_ROOT / "backend"), str(_ROOT)):
+    if _p not in sys.path:
+        sys.path.insert(0, _p)
+
+from flask import Flask, jsonify, render_template, request
 
 from routes.assistant_routes import bp as assistant_bp
 from routes.ml_routes import bp as ml_bp
+from routes.platform_routes import bp as platform_bp
+from routes.data_routes import bp as data_bp
+from routes.auto_routes import bp as auto_bp
+from routes.ai_routes import bp as ai_bp
 from routes.report_routes import bp as report_bp
 from routes.similarity_routes import bp as similarity_bp
 from routes.twin_routes import bp as twin_bp
@@ -35,14 +48,54 @@ from utils import config
 # preload=True reads the three datasets now (~10-20 s for Mars) so the first
 # user request is fast; tests can pass preload=False.
 #############################################
+def _release_freed_memory() -> None:
+    """Hand heap pages freed after CSV parsing back to the OS (glibc only; no-op elsewhere).
+    Keeps the resident size of a 512 MB host well under its limit once the datasets are loaded."""
+    import gc
+    gc.collect()
+    try:
+        import ctypes
+        ctypes.CDLL("libc.so.6").malloc_trim(0)
+    except (OSError, AttributeError):
+        pass
+
+
+_HEAVY_PREFIXES = ("/api/data", "/api/auto", "/api/similarity", "/api/ml", "/api/report", "/api/twin")
+_LIBC = None
+
+
+def _trim_heap() -> None:
+    """malloc_trim only (no gc pass): cheap enough to run after every data-heavy request."""
+    global _LIBC
+    if _LIBC is None:
+        try:
+            import ctypes
+            _LIBC = ctypes.CDLL("libc.so.6")
+        except OSError:
+            _LIBC = False
+    if _LIBC:
+        try:
+            _LIBC.malloc_trim(0)
+        except AttributeError:
+            pass
+
+
 def create_app(preload: bool = True) -> Flask:
     app = Flask(__name__, template_folder=str(config.TEMPLATE_DIR), static_folder=str(config.STATIC_DIR))
     app.json.sort_keys = False
+    if os.environ.get("TWINSITE_BEHIND_PROXY", "1") == "1":
+        # nginx / Vercel forward the original scheme and host (X-Forwarded-*); trust exactly one hop.
+        from werkzeug.middleware.proxy_fix import ProxyFix
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
     app.register_blueprint(similarity_bp)
     app.register_blueprint(assistant_bp)      # AI Mission Assistant (Groq)
     app.register_blueprint(ml_bp)             # machine-learning models (PCA, K-means)
     app.register_blueprint(report_bp)         # TWINSITE mission report (AI narrative + map images)
     app.register_blueprint(twin_bp)           # TWINSITE interactive globes (data layers, region check)
+    app.register_blueprint(platform_bp)       # pages, sitemap, React console, /v1 platform API proxy
+    app.register_blueprint(data_bp)           # Data Hub API: bundled datasets, cleaning, downloads
+    app.register_blueprint(auto_bp)           # Agentic Auto Mode: autonomous end-to-end missions
+    app.register_blueprint(ai_bp)             # AI provider status (multi-provider free router)
 
     # ----------------------------------------------------------------------
     # PAGE ROUTES
@@ -62,10 +115,19 @@ def create_app(preload: bool = True) -> Flask:
     def not_found(_):
         return jsonify({"status": "error", "message": "Not found"}), 404
 
+    @app.after_request
+    def _return_freed_memory(response):
+        # Large transient frames (cleaning, ranking, CSV export) are freed after the response is built;
+        # hand those pages back to the OS so a 512 MB host keeps its headroom between requests.
+        if request.path.startswith(_HEAVY_PREFIXES):
+            _trim_heap()
+        return response
+
     if preload:
         try:
             data_loader.load_all()
             ml_models.models()                 # train the unsupervised models once (~5 s)
+            _release_freed_memory()
         except ImportError:
             app.logger.warning("scikit-learn missing: the machine-learning section is disabled")
         except (FileNotFoundError, ValueError) as exc:

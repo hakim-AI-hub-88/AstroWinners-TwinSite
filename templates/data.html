@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{#- Data Hub (/data). Data lane. Everything on this page is rendered from the /api/data JSON API
+    (static/js/data.js), so the page always shows the files actually present on the server. -#}
+{% block title %}Data Hub{% endblock %}
+{% block description %}Browse, clean, filter and download every TwinSite dataset (Earth, Mars, Moon) and see the live NASA sources behind the platform.{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/data.css') }}">{% endblock %}
+{% block content %}
+<section class="page-hero dh-hero">
+  <p class="eyebrow">Data &amp; APIs</p>
+  <h1>Data Hub</h1>
+  <p class="lead">Every number TwinSite shows comes from these files: NASA surface data for the Atacama and Merzouga
+    deserts, Mars and the Moon, processed by one pipeline onto a common ~11 km grid and a shared 0–1 scale.
+    Browse them, apply a cleaning profile, filter by area and download exactly what the similarity engine uses.</p>
+  <div class="dh-stats" id="dh-stats" aria-live="polite">
+    <div class="dh-stat"><span class="dh-stat__value" id="st-datasets">—</span><span class="dh-stat__label">datasets</span></div>
+    <div class="dh-stat"><span class="dh-stat__value" id="st-available">—</span><span class="dh-stat__label">available now</span></div>
+    <div class="dh-stat"><span class="dh-stat__value" id="st-rows">—</span><span class="dh-stat__label">rows available</span></div>
+    <div class="dh-stat"><span class="dh-stat__value" id="st-live">—</span><span class="dh-stat__label">live sources</span></div>
+  </div>
+  <nav class="dh-toc" aria-label="On this page">
+    <a href="#catalog">Catalogue</a><a href="#explorer">Explorer</a><a href="#cleaning">Cleaning algorithms</a>
+    <a href="#api">API &amp; downloads</a><a href="#sources">Live NASA sources</a>
+  </nav>
+</section>
+
+<section class="dh-section" id="stages" aria-labelledby="stages-title">
+  <h2 id="stages-title">Data stages and their roles</h2>
+  <div class="grid grid--3 dh-roles">
+    <article class="panel"><span class="tag">scoring</span><h3>Harmonized, normalized</h3>
+      <p>Common ~11 km grid, each feature scaled 0–1 with percentiles shared by Earth, Mars and the Moon. The only data the similarity score is computed on.</p></article>
+    <article class="panel"><span class="tag">explanation</span><h3>Harmonized, physical</h3>
+      <p>The same cells in physical units (m, degrees, K). Used to explain a match in real values, never to score it.</p></article>
+    <article class="panel"><span class="tag">refinement</span><h3>Processed</h3>
+      <p>The body pipeline's native grid (Earth 0.01° ≈ 1 km). On Earth it drives the rover-slope filter and the exact test point.</p></article>
+  </div>
+</section>
+
+<section class="dh-section" id="catalog" aria-labelledby="catalog-title">
+  <div class="dh-head">
+    <h2 id="catalog-title">Dataset catalogue</h2>
+    <div class="dh-filter" role="group" aria-label="Filter by body">
+      <button type="button" class="dh-chip is-on" data-body="">All</button>
+      <button type="button" class="dh-chip" data-body="earth">Earth</button>
+      <button type="button" class="dh-chip" data-body="mars">Mars</button>
+      <button type="button" class="dh-chip" data-body="moon">Moon</button>
+    </div>
+  </div>
+  <p class="dh-note" id="catalog-note">Loading the catalogue…</p>
+  <div class="dh-cards" id="catalog-cards"></div>
+</section>
+
+<section class="dh-section" id="explorer" aria-labelledby="explorer-title">
+  <h2 id="explorer-title">Dataset explorer</h2>
+  <form class="panel dh-form" id="ex-form">
+    <label class="field">Dataset<select id="ex-dataset" required></select></label>
+    <label class="field">Cleaning profile<select id="ex-cleaning"></select></label>
+    <label class="field">Bounding box <span class="dh-hint">minLon, minLat, maxLon, maxLat (optional)</span>
+      <input id="ex-bbox" inputmode="decimal" placeholder="-69, -24, -68, -23" autocomplete="off"></label>
+    <fieldset class="field dh-cols"><legend>Columns</legend><div id="ex-columns" class="dh-colgrid"></div></fieldset>
+    <div class="dh-actions">
+      <button type="submit" class="btn btn--primary">Show data</button>
+      <a class="btn" id="dl-csv" href="#" download>Download CSV</a>
+      <a class="btn" id="dl-json" href="#" download>Download JSON (page)</a>
+      <a class="btn" id="dl-file" href="#" download>Original file</a>
+    </div>
+    <p class="dh-msg" id="ex-msg" role="status" aria-live="polite"></p>
+  </form>
+
+  <div class="dh-explore" id="ex-results" hidden>
+    <div class="grid grid--2">
+      <article class="panel">
+        <h3>Cleaning effect</h3>
+        <div class="dh-before-after" id="ex-ba"></div>
+        <ol class="dh-steps" id="ex-steps"></ol>
+      </article>
+      <article class="panel">
+        <h3>Quality flags</h3>
+        <p class="dh-hint">Bitmask column <code>quality_flags</code>: share of rows carrying each flag (whole dataset).</p>
+        <div id="ex-flags"></div>
+      </article>
+    </div>
+
+    <article class="panel dh-table-panel">
+      <div class="dh-head">
+        <h3>Records <span class="dh-hint" id="ex-total"></span></h3>
+        <div class="dh-pager">
+          <button type="button" class="btn" id="pg-prev">Previous</button>
+          <span id="pg-info" class="dh-hint"></span>
+          <button type="button" class="btn" id="pg-next">Next</button>
+        </div>
+      </div>
+      <div class="table-wrap"><table class="tbl" id="ex-table"></table></div>
+    </article>
+
+    <article class="panel">
+      <h3>Column statistics <span class="dh-hint">(whole dataset, before cleaning)</span></h3>
+      <div class="table-wrap"><table class="tbl" id="ex-stats"></table></div>
+      <details class="dh-prov"><summary>Provenance and processing</summary><div id="ex-prov"></div></details>
+    </article>
+  </div>
+</section>
+
+<section class="dh-section" id="cleaning" aria-labelledby="cleaning-title">
+  <h2 id="cleaning-title">Cleaning algorithms</h2>
+  <p class="lead">Each mission and each download can choose how strictly the data is cleaned. Profiles are
+    deterministic, documented and reported step by step (rows removed, values masked). <strong>Standard</strong>
+    is the default and reproduces the published scores exactly.</p>
+  <div class="grid grid--2" id="cleaning-profiles"><p class="dh-note">Loading profiles…</p></div>
+  <article class="panel dh-flagtable">
+    <h3>Quality flag bits</h3>
+    <div class="table-wrap"><table class="tbl" id="cleaning-flags"></table></div>
+  </article>
+</section>
+
+<section class="dh-section" id="api" aria-labelledby="api-title">
+  <h2 id="api-title">API &amp; downloads</h2>
+  <p class="lead">The same JSON API powers this page. No key needed. Limits: 5,000 rows per JSON page,
+    200,000 rows per CSV download; use <code>/file</code> for the complete original file.</p>
+  <div class="dh-api" id="api-list"></div>
+</section>
+
+<section class="dh-section" id="sources" aria-labelledby="sources-title">
+  <div class="dh-head">
+    <h2 id="sources-title">Live NASA sources</h2>
+    <a class="btn btn--primary" href="/console/">Characterize a point live in the Console</a>
+  </div>
+  <p class="lead">Besides the bundled files, the TwinSite platform acquires NASA data on demand (terrain, thermal,
+    climate) for any point you pick. Choose <em>Auto</em> as data source in Mission Control to attach this live
+    evidence to a mission.</p>
+  <p class="dh-msg" id="sources-status" role="status"></p>
+  <div class="table-wrap"><table class="tbl" id="sources-live"></table></div>
+  <h3 class="dh-sub">Products behind the bundled datasets</h3>
+  <div class="table-wrap"><table class="tbl" id="sources-bundled"></table></div>
+</section>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/data.js') }}" defer></script>{% endblock %}

@@ -20,8 +20,10 @@
 #   - the assistant explains; it never changes scores or rankings
 #
 # Input : question (str), history (list of {role, content}), context (dict)
-# Output: {"answer", "tools_used", "model", "tokens"}
-# Raises: AssistantUnavailable (no key, network or provider error)
+# Output: {"answer", "tools_used", "model", "provider", "tokens", "mode"}
+# Fallback: no Groq key / Groq error -> services.ai_bridge (free multi-provider
+#           router) answers WITHOUT tools from the current analysis facts.
+# Raises: AssistantUnavailable (Groq AND the router unavailable)
 #
 # Future extension: add a tool -> write the function, add it to TOOLS and
 # TOOL_FUNCTIONS. A visual-similarity tool can plug in the same way.
@@ -148,7 +150,11 @@ def _analysis(args: dict, ctx: dict) -> dict:
     slope = args.get("max_slope", ctx.get("max_slope"))
     planet, location, rover, slope = analysis.validate(args.get("planet"), args.get("location"), rover, slope)
     zone = analysis.validate_zone(args.get("zone", ctx.get("zone")))
-    return analysis.run(planet, location, rover, slope, zone)
+    try:   # analyse with the same cleaning profile the dashboard used, so numbers match what the user sees
+        cleaning, _ = analysis.validate_options(ctx.get("cleaning"), None)
+    except Exception:  # noqa: BLE001 - unknown profile from the client: fall back to the default
+        cleaning = "standard"
+    return analysis.run(planet, location, rover, slope, zone, cleaning)
 
 
 def _region(res: dict, rank: int) -> dict:
@@ -362,15 +368,34 @@ def run_tool(name: str, raw_args: str, ctx: dict) -> str:
 #############################################
 # CONVERSATION LOOP
 #############################################
+def _groq_key() -> str:
+    """Groq key from the environment or the platform secret file (any GROQ_API_KEY* name)."""
+    primary = config.ASSISTANT["api_key_env"]
+    key = os.environ.get(primary, "").strip()
+    if key:
+        return key
+    try:
+        from twinsite.ai.secrets import load_ai_secrets
+        secrets = load_ai_secrets()
+    except Exception:  # noqa: BLE001 - unreadable secret file = no key
+        secrets = {}
+    names = sorted((n for n in secrets if n.startswith(primary)), key=lambda n: (n != primary, n))
+    return secrets[names[0]] if names else ""
+
+
+def groq_configured() -> bool:
+    return bool(_groq_key())
+
+
 def _client():
-    key = os.environ.get(config.ASSISTANT["api_key_env"], "").strip()
+    key = _groq_key()
     if not key:
-        raise AssistantUnavailable("Assistant unavailable: GROQ_API_KEY is not set (app/.env).")
+        raise AssistantUnavailable("Groq tool-calling unavailable: no GROQ_API_KEY configured.")
     try:
         from groq import Groq
     except ImportError as exc:
-        raise AssistantUnavailable("Assistant unavailable: install the 'groq' package (pip install -r requirements.txt).") from exc
-    return Groq(api_key=key, timeout=config.ASSISTANT["timeout_s"], max_retries=2)
+        raise AssistantUnavailable("Groq tool-calling unavailable: the 'groq' package is not installed.") from exc
+    return Groq(api_key=key, timeout=config.ASSISTANT["timeout_s"], max_retries=1)
 
 
 def _context_note(ctx: dict) -> str:
@@ -379,7 +404,7 @@ def _context_note(ctx: dict) -> str:
     zone = config.EARTH_ZONES.get(ctx.get("zone") or config.DEFAULT_ZONE, {}).get("full_name", "Atacama Desert (Chile)")
     return (f"[Dashboard state: Earth zone = {zone}, target = {ctx.get('location')} ({ctx.get('planet')}), "
             f"rover filter = {'on' if ctx.get('rover_mode') else 'off'}, max slope = {ctx.get('max_slope')} deg, "
-            f"selected region = #{ctx.get('selected_rank', 1)}.]")
+            f"selected region = #{ctx.get('selected_rank', 1)}, cleaning = {ctx.get('cleaning') or 'standard'}.]")
 
 
 def _clean_history(history) -> list[dict]:
@@ -391,11 +416,52 @@ def _clean_history(history) -> list[dict]:
 
 
 def answer(question: str, history=None, context: dict | None = None) -> dict:
+    """Groq tool-calling first. When Groq is missing or fails, the free multi-provider router
+    (services.ai_bridge) answers WITHOUT tools, from the dashboard state and the current analysis
+    facts. Raises AssistantUnavailable only when both paths fail."""
+    ctx = context or {}
+    try:
+        return _answer_groq(question, history, ctx)
+    except AssistantUnavailable as exc:
+        groq_reason = str(exc)
+    except Exception as exc:  # noqa: BLE001 - any Groq/SDK failure -> router fallback
+        log.warning("assistant: Groq path failed (%s)", exc.__class__.__name__)
+        groq_reason = f"Groq tool-calling failed ({exc.__class__.__name__})."
+    return _answer_router(question, history, ctx, groq_reason)
+
+
+FALLBACK_NOTE = """
+Tools are NOT available in this conversation. The only data you may use is the JSON block "Analysis facts" in the
+user message (computed by this project's own analysis for the current dashboard state). If the facts do not contain
+what is asked, say so and suggest running the analysis in Mission Control. Never invent numbers."""
+
+
+def _answer_router(question: str, history, ctx: dict, groq_reason: str) -> dict:
+    from services import ai_bridge
+
+    facts = None
+    if ctx.get("planet") and ctx.get("location"):
+        try:
+            facts = tool_run_similarity({"planet": ctx["planet"], "location": ctx["location"]}, ctx)
+        except Exception as exc:  # noqa: BLE001 - datasets may be missing; answer without facts
+            facts = {"error": f"analysis unavailable: {exc}"}
+    convo = "\n".join(f"{h['role']}: {h['content']}" for h in _clean_history(history))
+    parts = [f"Conversation so far:\n{convo}" if convo else "", f"Question: {question.strip()}", _context_note(ctx),
+             "Analysis facts:\n" + json.dumps(facts, ensure_ascii=False, default=str)[:config.ASSISTANT["max_tool_result_chars"]]]
+    res = ai_bridge.complete_text(SYSTEM_PROMPT + FALLBACK_NOTE, "\n\n".join(p for p in parts if p),
+                                  json_mode=False, purpose="assistant", max_tokens=900)
+    if res["status"] != "ok" or not res["text"]:
+        raise AssistantUnavailable(f"Assistant unavailable. {groq_reason} Free AI router: {res['reason']}")
+    return {"answer": res["text"], "tools_used": [], "model": ai_bridge.provider_label(res) + " (no tools)",
+            "provider": res["provider"], "tokens": 0, "mode": "router_no_tools", "fallback_reason": groq_reason}
+
+
+def _answer_groq(question: str, history, ctx: dict) -> dict:
+    cfg = config.ASSISTANT
+    client = _client()                 # raises AssistantUnavailable when no key / no SDK
     import groq  # error classes
 
-    cfg = config.ASSISTANT
-    ctx = context or {}
-    client = _client()
+    label = f"Groq · {cfg['model']}"
     messages = [{"role": "system", "content": SYSTEM_PROMPT}, *_clean_history(history),
                 {"role": "user", "content": f"{question.strip()}\n\n{_context_note(ctx)}"}]
     used, tokens = [], 0
@@ -409,8 +475,11 @@ def answer(question: str, history=None, context: dict | None = None) -> dict:
             tokens += getattr(resp.usage, "total_tokens", 0) or 0
             msg = resp.choices[0].message
             if not msg.tool_calls:
-                return {"answer": (msg.content or "").strip() or "I could not produce an answer.",
-                        "tools_used": used, "model": cfg["model"], "tokens": tokens}
+                text = (msg.content or "").strip()
+                if not text:
+                    raise AssistantUnavailable("Groq returned an empty answer.")
+                return {"answer": text, "tools_used": used, "model": label, "provider": "groq",
+                        "tokens": tokens, "mode": "groq_tools"}
             messages.append({"role": "assistant", "content": msg.content or "", "tool_calls": [
                 {"id": t.id, "type": "function", "function": {"name": t.function.name, "arguments": t.function.arguments}}
                 for t in msg.tool_calls]})
@@ -419,12 +488,13 @@ def answer(question: str, history=None, context: dict | None = None) -> dict:
                 messages.append({"role": "tool", "tool_call_id": t.id,
                                  "content": run_tool(t.function.name, t.function.arguments, ctx)})
     except groq.AuthenticationError as exc:
-        raise AssistantUnavailable("Assistant unavailable: the Groq API key was rejected.") from exc
+        raise AssistantUnavailable("Groq rejected the API key.") from exc
     except groq.RateLimitError as exc:
-        raise AssistantUnavailable("Assistant busy: Groq rate limit reached, try again in a few seconds.") from exc
+        raise AssistantUnavailable("Groq rate limit reached.") from exc
     except groq.APIConnectionError as exc:
-        raise AssistantUnavailable("Assistant unavailable: cannot reach Groq (internet connection?).") from exc
+        raise AssistantUnavailable("Cannot reach Groq.") from exc
     except groq.APIStatusError as exc:
-        log.warning("Groq API error %s: %s", exc.status_code, exc)
-        raise AssistantUnavailable(f"Assistant error from Groq (HTTP {exc.status_code}).") from exc
-    return {"answer": "I could not finish within the tool limit.", "tools_used": used, "model": cfg["model"], "tokens": tokens}
+        log.warning("Groq API error %s", exc.status_code)
+        raise AssistantUnavailable(f"Groq error (HTTP {exc.status_code}).") from exc
+    return {"answer": "I could not finish within the tool limit.", "tools_used": used, "model": label,
+            "provider": "groq", "tokens": tokens, "mode": "groq_tools"}

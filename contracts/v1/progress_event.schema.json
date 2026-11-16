@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "progress_event",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "mission_id": {
+      "type": "string"
+    },
+    "task_id": {
+      "type": "string"
+    },
+    "attempt_id": {
+      "type": "string"
+    },
+    "sequence": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "phase": {
+      "enum": [
+        "P00",
+        "P10",
+        "P20",
+        "P30",
+        "P40",
+        "P50",
+        "P60",
+        "P70",
+        "P80",
+        "P90"
+      ]
+    },
+    "state": {
+      "enum": [
+        "queued",
+        "running",
+        "retry_wait",
+        "succeeded",
+        "failed",
+        "cancelled",
+        "quarantined"
+      ]
+    },
+    "completed_units": {
+      "type": "number",
+      "minimum": 0
+    },
+    "total_units": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "summary": {
+      "type": "string"
+    },
+    "trace_id": {
+      "type": "string"
+    },
+    "artifact_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "schema_version",
+    "mission_id",
+    "task_id",
+    "attempt_id",
+    "sequence",
+    "timestamp",
+    "phase",
+    "state",
+    "completed_units",
+    "total_units",
+    "summary",
+    "trace_id",
+    "artifact_ids"
+  ],
+  "additionalProperties": false
+}

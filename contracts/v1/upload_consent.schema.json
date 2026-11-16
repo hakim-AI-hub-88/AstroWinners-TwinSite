@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "TwinSite Per-Provider Upload Consent",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "consent_id": {
+      "type": "string"
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "provider": {
+      "type": "string"
+    },
+    "purpose": {
+      "enum": [
+        "annotation",
+        "narrative_summary",
+        "claim_review"
+      ]
+    },
+    "payload_category": {
+      "enum": [
+        "uploaded_image",
+        "uploaded_document_excerpt",
+        "uploaded_table_excerpt",
+        "uploaded_metadata"
+      ]
+    },
+    "payload_preview_hash": {
+      "type": "string"
+    },
+    "provider_terms_url": {
+      "type": "string",
+      "format": "uri"
+    },
+    "granted": {
+      "type": "boolean"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "consent_id",
+    "run_id",
+    "provider",
+    "purpose",
+    "payload_category",
+    "payload_preview_hash",
+    "provider_terms_url",
+    "granted",
+    "created_at",
+    "expires_at"
+  ]
+}

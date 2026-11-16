@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Expedition Mode{% endblock %}
+{% block description %}TwinSite Expedition Mode: more data (bundled + live NASA), stronger cleaning, 13 autonomous agents and AI-written, evidence-checked mission reports.{% endblock %}
+{% block body_class %}expedition{% endblock %}
+{% block head %}
+<style>
+  .xp-hero{position:relative;overflow:hidden;border-radius:22px;padding:56px 40px;margin:24px 0 28px;
+    background:radial-gradient(1200px 400px at 80% -20%,rgba(255,122,47,.28),transparent 60%),
+               radial-gradient(800px 300px at 0% 120%,rgba(240,194,122,.16),transparent 60%),#0d0a0f;
+    box-shadow:inset 0 0 0 1px rgba(255,140,60,.25)}
+  .xp-hero h1{font-size:clamp(2rem,4.4vw,3.4rem);margin:.2em 0 .3em;line-height:1.08}
+  .xp-hero .lead{max-width:760px}
+  .xp-orbit{position:absolute;right:-120px;top:-120px;width:420px;height:420px;border-radius:50%;
+    border:1px dashed rgba(240,194,122,.25);animation:xpspin 40s linear infinite;pointer-events:none}
+  .xp-orbit::after{content:"";position:absolute;top:50%;left:-9px;width:18px;height:18px;border-radius:50%;
+    background:radial-gradient(circle at 35% 35%,#ffb07a,#b3431e);box-shadow:0 0 18px rgba(255,122,47,.7)}
+  @keyframes xpspin{to{transform:rotate(360deg)}}
+  @media (prefers-reduced-motion:reduce){.xp-orbit{animation:none}}
+  .xp-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:22px}
+  .xp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin:0 0 32px}
+  .xp-card{display:block;padding:22px;border-radius:16px;background:rgba(255,255,255,.03);text-decoration:none;color:inherit;
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);transition:transform .2s,box-shadow .2s}
+  .xp-card:hover{transform:translateY(-3px);box-shadow:inset 0 0 0 1px rgba(255,140,60,.5)}
+  .xp-card b{display:block;font-size:1.08rem;margin:6px 0 6px;color:#fff}
+  .xp-card small{color:#ff9a5c;font-weight:700;letter-spacing:.12em;text-transform:uppercase;font-size:.7rem}
+  .xp-card p{margin:0;color:#cdbfa8;font-size:.93rem;line-height:1.5}
+  .xp-table{width:100%;border-collapse:collapse;margin:8px 0 32px;font-size:.94rem}
+  .xp-table th,.xp-table td{padding:12px 14px;text-align:left;border-bottom:1px solid rgba(255,255,255,.08);vertical-align:top}
+  .xp-table th{color:#f0c27a;font-weight:600}
+  .xp-table td:last-child{color:#fff}
+  .xp-wrap{overflow-x:auto}
+  .xp-status{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+  .xp-h2{font-size:1.5rem;margin:8px 0 14px}
+</style>
+{% endblock %}
+{% block content %}
+<section class="xp-hero">
+  <div class="xp-orbit" aria-hidden="true"></div>
+  <p class="eyebrow">Expedition Mode</p>
+  <h1>The full TwinSite platform<br>for real mission work</h1>
+  <p class="lead">Standard mode is the original TwinSite analysis on the bundled datasets. Expedition Mode adds more data
+    (bundled grids plus live NASA sources), stronger cleaning (Robust by default), the 13 autonomous agents and an AI-written report
+    that is checked against the computed facts. Every step reports what it did, what it skipped and why.</p>
+  <div class="xp-actions">
+    <a class="btn btn--primary" href="/auto">Launch an expedition</a>
+    <a class="btn" href="/data">Open the Data Hub</a>
+    <a class="btn" href="/console/">Mission Console</a>
+  </div>
+  <div class="xp-status" aria-live="polite">
+    <span id="xp-ai" class="tag">AI providers…</span>
+    <span id="xp-api" class="tag">Platform API…</span>
+    <span id="xp-data" class="tag">Datasets…</span>
+  </div>
+</section>
+
+<h2 class="xp-h2">Inside Expedition Mode</h2>
+<div class="xp-grid">
+  <a class="xp-card" href="/auto"><small>01 · Launch</small><b>Agentic Auto Mode</b>
+    <p>Pick a Moon or Mars target and an objective. One click runs plan, acquire, clean, analyze every Earth zone, the 13 agents and the report.</p></a>
+  <a class="xp-card" href="/data"><small>02 · Data</small><b>Data Hub</b>
+    <p>Every dataset with statistics and provenance. Filter by area, apply a cleaning profile, page through rows and download CSV, JSON or the original file.</p></a>
+  <a class="xp-card" href="/console/"><small>03 · Analyze</small><b>Mission Console</b>
+    <p>Live NASA characterization of any point, analog matching, portfolios, evidence, agent activity and reports.</p></a>
+  <a class="xp-card" href="/resources#api"><small>04 · Build</small><b>APIs &amp; docs</b>
+    <p>REST endpoints for data, cleaning, missions and agents, with curl and Python examples, architecture diagrams and the full stack.</p></a>
+</div>
+
+<h2 class="xp-h2">Standard mode vs Expedition Mode</h2>
+<div class="xp-wrap"><table class="xp-table">
+  <thead><tr><th>Capability</th><th>Standard mode (<a href="/app#mission">Mission Control</a>)</th><th>Expedition Mode</th></tr></thead>
+  <tbody>
+    <tr><td>Data</td><td>Bundled harmonized grids</td><td>Bundled grids + live NASA sources (POWER, GIBS, CMR, LOLA, Diviner, MOLA, SRTM, terrain tiles, OpenStreetMap)</td></tr>
+    <tr><td>Cleaning</td><td>Standard profile</td><td>Robust by default (median/MAD outliers); Strict, Standard and Raw available, with a removal report per step</td></tr>
+    <tr><td>Analysis</td><td>One zone at a time, interactive</td><td>Every Earth zone in one autonomous run</td></tr>
+    <tr><td>Agents</td><td>—</td><td>13 roles: 6 deterministic, 7 AI. AI output must cite evidence IDs and never changes a score</td></tr>
+    <tr><td>AI</td><td>Groq assistant</td><td>7-provider free-tier router with fallback (Groq, Cloudflare, Google, OpenRouter, Mistral, NVIDIA, Ollama)</td></tr>
+    <tr><td>Data access</td><td>—</td><td>Data Hub UI and <code>/api/data/*</code> REST API</td></tr>
+    <tr><td>Report</td><td>Printable dossier</td><td>Facts-anchored report with numeric checks, step log and agent findings</td></tr>
+  </tbody>
+</table></div>
+{% endblock %}
+{% block scripts %}
+<script>
+(function () {
+  function set(id, txt, ok) { var el = document.getElementById(id); if (!el) return; el.textContent = txt; el.classList.toggle('tag--ok', !!ok); }
+  fetch('/api/ai/status').then(function (r) { return r.json(); }).then(function (j) {
+    var n = (j.providers || []).filter(function (p) { return p.configured; }).length;
+    set('xp-ai', n ? n + ' AI providers ready' : 'AI not configured (deterministic mode)', n > 0);
+  }).catch(function () { set('xp-ai', 'AI status unavailable'); });
+  fetch('/v1/health').then(function (r) { set('xp-api', r.ok ? 'Platform API online' : 'Platform API unavailable', r.ok); })
+    .catch(function () { set('xp-api', 'Platform API unavailable'); });
+  fetch('/api/data/datasets').then(function (r) { return r.json(); }).then(function (j) {
+    var list = j.datasets || j.items || j; var n = Array.isArray(list) ? list.length : 0;
+    set('xp-data', n ? n + ' datasets catalogued' : 'Datasets', n > 0);
+  }).catch(function () { set('xp-data', 'Data Hub unavailable'); });
+})();
+</script>
+{% endblock %}

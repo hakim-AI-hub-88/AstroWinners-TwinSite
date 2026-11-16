@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main, platform-integration]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend (platform + Flask) and contracts
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      PYTHONPATH: backend:.
+      TWINSITE_UPLOADS_ENABLED: "false"   # no secrets are configured in CI; AI tests use their own fakes
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-integration.txt
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt -r requirements-integration.txt
+      # One process per backend/tests/<dir> (ai, api, science, flask, ...), same as `make test-backend`.
+      # data + integration are skipped until twinsite.sources.credentials is committed: the module is
+      # matched by the `*credentials*` .gitignore rule, so a fresh clone cannot import it.
+      - name: Unit tests (backend/tests/*, incl. backend/tests/flask)
+        run: make test-backend VENV_PYTHON=python SKIP="data integration"
+      - name: Acceptance checks (provenance, terrain reference)
+        run: python -m unittest discover -s tests/acceptance -v
+      - name: Contract schemas and examples
+        run: python scripts/integration/validate_contracts.py
+
+  frontend:
+    name: Mission console (typecheck, test, build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build

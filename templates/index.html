@@ -33,6 +33,19 @@
   <!-- CesiumJS (3D / 2D globes of the Moon, Mars and Earth). Pinned version from jsDelivr. -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cesium@1.140.0/Build/Cesium/Widgets/widgets.css">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+    /* Mission options + mission data (data lane); tokens from style.css */
+    .mopts { display: grid; gap: 12px; margin: 0; padding: 12px 0 0; border: 0; border-top: 1px solid var(--line); min-width: 0; }
+    .mopts legend { padding: 0; margin-bottom: 4px; }
+    .mopts__hint { margin: 2px 0 0; font-size: .74rem; }
+    .mopts__link { margin: 0; color: var(--accent-2, #ffb36b); text-decoration: none; }
+    .mopts__link:hover { color: var(--text); }
+    .mdata__grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); }
+    .mdata__text { margin: 6px 0 0; font-size: .86rem; color: var(--text); }
+    .mdata__list { margin: 8px 0 0; padding-left: 18px; font-size: .8rem; color: var(--muted); }
+    .mdata__list li { margin: 2px 0; overflow-wrap: anywhere; }
+    .mdata .is-unavailable { color: var(--yellow, #facc15); }
+  </style>
 </head>
 <body>
 
@@ -124,6 +137,30 @@
             </label>
             <span class="card__hint rover__hint">A region qualifies when ≥ 50 % of its 1 km cells are below the slope limit.</span>
           </div>
+
+          <!-- Mission options (data lane): sent with every /api/similarity and /api/report request -->
+          <fieldset class="mopts" aria-labelledby="mopts-title">
+            <legend id="mopts-title" class="field__label">Mission options</legend>
+            <label class="field">
+              <span class="field__label">Data source</span>
+              <select id="data-mode" name="data_mode">
+                <option value="bundled" selected>Bundled datasets</option>
+                <option value="auto">Auto: bundled + live NASA acquisition</option>
+              </select>
+              <span class="card__hint mopts__hint" id="data-mode-hint"></span>
+            </label>
+            <label class="field">
+              <span class="field__label">Cleaning</span>
+              <select id="cleaning-profile" name="cleaning">
+                <option value="standard" selected>Standard</option>
+                <option value="strict">Strict</option>
+                <option value="robust">Robust</option>
+                <option value="raw">Raw</option>
+              </select>
+              <span class="card__hint mopts__hint" id="cleaning-hint"></span>
+            </label>
+            <a class="card__hint mopts__link" href="/data#cleaning">How each profile cleans the data →</a>
+          </fieldset>
 
           <button type="submit" id="search-button" class="button button--primary">Find Earth Analogs</button>
         </form>
@@ -253,6 +290,22 @@
             <ul class="why__list" id="brief-evidence"></ul>
             <h3 class="why__title why__title--differ">Limits to plan for</h3>
             <ul class="why__list" id="brief-limits"></ul>
+          </div>
+        </section>
+
+        <!-- Data used for this mission (data lane): cleaning report + live NASA evidence (Auto mode) -->
+        <section class="card mdata" id="mission-data" hidden aria-labelledby="mission-data-title">
+          <h3 id="mission-data-title">Data used for this mission</h3>
+          <div class="mdata__grid">
+            <div>
+              <p class="field__label">Cleaning · <span id="md-profile">Standard</span></p>
+              <p class="mdata__text" id="md-cleaning"></p>
+            </div>
+            <div id="md-live-box" hidden>
+              <p class="field__label">Live NASA evidence · <span id="md-live-status"></span></p>
+              <p class="mdata__text" id="md-live"></p>
+              <ul class="mdata__list" id="md-live-obs"></ul>
+            </div>
           </div>
         </section>
 

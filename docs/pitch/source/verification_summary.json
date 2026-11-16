@@ -1,0 +1,92 @@
+[
+  {
+    "check": "schemas",
+    "status": "PASS",
+    "exit_code": 0
+  },
+  {
+    "check": "types",
+    "status": "PASS",
+    "exit_code": 0
+  },
+  {
+    "check": "integration",
+    "status": "PASS",
+    "exit_code": 0
+  },
+  {
+    "check": "science",
+    "status": "PASS",
+    "exit_code": 0
+  },
+  {
+    "check": "data",
+    "status": "PASS",
+    "exit_code": 0
+  },
+  {
+    "check": "c0",
+    "status": "PASS",
+    "exit_code": 0
+  },
+  {
+    "check": "qa_negative_controls",
+    "status": "PASS",
+    "exit_code": 0
+  },
+  {
+    "check": "ai_router_agents_gateway",
+    "status": "PASS",
+    "exit_code": 0
+  },
+  {
+    "check": "store_worker",
+    "status": "PASS",
+    "exit_code": 0
+  },
+  {
+    "check": "frontend_typecheck",
+    "status": "PASS",
+    "exit_code": 0
+  },
+  {
+    "check": "frontend_build",
+    "status": "PASS",
+    "exit_code": 0
+  },
+  {
+    "check": "frontend_tests",
+    "status": "PASS",
+    "exit_code": 0
+  },
+  {
+    "check": "backend_http",
+    "status": "PASS",
+    "exit_code": 0
+  },
+  {
+    "check": "c5_http_restart_e2e",
+    "status": "PASS",
+    "exit_code": 0
+  },
+  {
+    "check": "measured_http_restart_e2e",
+    "status": "PASS",
+    "exit_code": 0
+  },
+  {
+    "check": "browser_smoke",
+    "status": "BLOCKED",
+    "reason": "Requires separate browser verification"
+  },
+  {
+    "check": "secret_scan",
+    "status": "PASS",
+    "exit_code": 0
+  },
+  {
+    "check": "c5_measured_provenance",
+    "status": "PASS",
+    "exit_code": 0
+  }
+]

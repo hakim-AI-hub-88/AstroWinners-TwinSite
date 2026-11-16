@@ -1,0 +1,59 @@
+{
+  "schema_version": "1.0",
+  "merge_owner": "C0",
+  "lanes": [
+    {
+      "id": "C0",
+      "branch": "main",
+      "owns": [
+        "contracts/",
+        "scripts/integration/",
+        "root workspace configuration"
+      ]
+    },
+    {
+      "id": "C1",
+      "branch": "lane/data",
+      "owns": [
+        "backend/twinsite/sources/",
+        "backend/twinsite/processing/",
+        "backend/twinsite/vision/"
+      ]
+    },
+    {
+      "id": "C2",
+      "branch": "lane/science",
+      "owns": [
+        "backend/twinsite/science/",
+        "backend/twinsite/portfolios/"
+      ]
+    },
+    {
+      "id": "C3",
+      "branch": "lane/backend",
+      "owns": [
+        "backend/twinsite/api/",
+        "backend/twinsite/jobs/",
+        "backend/twinsite/storage/",
+        "backend/twinsite/ai/"
+      ]
+    },
+    {
+      "id": "C4",
+      "branch": "lane/frontend",
+      "owns": [
+        "frontend/"
+      ]
+    },
+    {
+      "id": "C5",
+      "branch": "lane/qa",
+      "owns": [
+        "tests/e2e/",
+        "tests/acceptance/",
+        "ops/",
+        "docs/release/"
+      ]
+    }
+  ]
+}

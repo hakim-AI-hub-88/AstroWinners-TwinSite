@@ -1,6 +1,56 @@
 <a id="top"></a>
 
 <p align="center">
+  <img src="docs/readme/assets/visionary-hero.svg" width="100%" alt="Animated TwinSite banner: Earth, the Moon and Mars orbit the TwinSite wordmark. Agentic Auto Mode, Data Hub, 13 agents, 7 free AI providers.">
+</p>
+
+<p align="center">
+  <a href="https://readme-typing-svg.demolab.com"><img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=20&duration=2800&pause=700&color=FF8F4A&center=true&vCenter=true&width=860&lines=Pick+a+crater+on+Mars+or+a+site+on+the+Moon.;Expedition+Mode+pulls+live+NASA+data+and+cleans+it.;13+agents+rank+every+Earth+zone+and+cite+the+evidence.;A+checked+AI+report+says+where+to+rehearse+on+Earth." alt="Typing animation: Pick a crater on Mars or a site on the Moon. Expedition Mode pulls live NASA data and cleans it. 13 agents rank every Earth zone and cite the evidence. A checked AI report says where to rehearse on Earth."></a>
+</p>
+
+<h3 align="center">Two live versions · same repository</h3>
+
+| Version | Branch (source) | Live app | Status |
+| :--- | :--- | :--- | :--- |
+| **TwinSite Platform** · Standard mode **+ Expedition Mode** (live NASA data, Robust cleaning, 13 agents, Data Hub, 7-provider AI router, Mission Console, open APIs) — *this branch* | [`platform-integration`](https://github.com/hakim-AI-hub-88/AstroWinners-TwinSite/tree/platform-integration) | **[twinsite-visionary.onrender.com](https://twinsite-visionary.onrender.com/)** | ✅ **Live — production deployment.** Verified on the live URL: smoke test 27/27, full Expedition missions end to end with live NASA data, Data Hub retrieval/cleaning/downloads, live characterization. Render free (512 MB): first request after 15 min idle takes ~1 min. |
+| **TwinSite Hackathon release** · Standard mode (the version submitted to NASA Space Apps 2026) | [`master`](https://github.com/hakim-AI-hub-88/AstroWinners-TwinSite/tree/master) | **[astrowinners-twinsite-1.onrender.com](https://astrowinners-twinsite-1.onrender.com/)** | ✅ **Live — submitted release.** Unchanged since submission. |
+
+<p align="center">📘 <a href="docs/FINAL_REPORT.md"><strong>Full final report — both versions, every detail</strong></a> &nbsp;·&nbsp; ☁️ <a href="docs/deployment/FREE_HOSTING.md"><strong>Hosting guide</strong></a> &nbsp;·&nbsp; 🧭 <a href="#expedition"><strong>Expedition Mode</strong></a> &nbsp;·&nbsp; 🤝 <a href="#contribute"><strong>Contribute</strong></a></p>
+
+<a id="expedition"></a>
+
+## 🧭 Expedition Mode — the upgrade in one place
+
+<p align="center"><img src="docs/readme/assets/automode-pipeline.svg" width="100%" alt="Animated Auto Mode pipeline: Plan, Acquire data, Clean, Analyze every Earth zone, 13 agents, AI report — each step lights up in turn."></p>
+
+The original analysis stays as **Standard mode** (`/app`). Every new capability lives behind one door — **[`/expedition`](http://127.0.0.1:5050/expedition)** — with its own header: **Overview · Launch Expedition · Data Hub · Mission Console · Docs & APIs**.
+
+| | Standard mode · `/app` | **Expedition Mode** · `/expedition` |
+| :--- | :--- | :--- |
+| **Data** | Bundled harmonized grids | Bundled grids **+ live NASA** (POWER, GIBS, CMR, LOLA, Diviner, MOLA, SRTM, terrain tiles, OSM) |
+| **Cleaning** | Standard | **Robust** by default (median/MAD) · Strict · Standard · Raw, each with a removal report |
+| **Run** | Interactive, one zone at a time | **Autonomous**: plan → acquire → clean → analyze every zone → agents → report |
+| **Agents** | — | **13 roles** (6 deterministic, 7 AI); AI must cite evidence and never changes a score |
+| **AI** | Groq assistant | **7 free providers** with fallback: Groq, Cloudflare, Google, OpenRouter, Mistral, NVIDIA, Ollama |
+| **Data access** | — | **Data Hub** UI + `/api/data/*` REST: filter, page, clean, download CSV/JSON/original |
+
+<details open>
+<summary><strong>✅ Verified on this branch</strong></summary>
+
+| Check | Result |
+| :--- | :--- |
+| Flask test suite | **39 / 39** pass |
+| Mission Console (React) tests | **55 / 55** pass |
+| Production smoke test (`ops/vm/smoke.py`) | **27 / 27** pass, including a real mission through the worker |
+| Live Expedition run · Mars, Jezero · live data · Robust cleaning · AI on | All 6 steps complete · best Earth twins **Atacama 98.3**, **Merzouga 87.0** · 13 agents reported · report written by Groq |
+
+</details>
+
+---
+
+<!-- Original cover -->
+
+<p align="center">
   <a href="#launch"><img src="docs/readme/assets/twinsite-cover.jpg" width="100%" alt="TwinSite cover artwork: an astronaut on a rocky ridge looks toward Earth, the Moon and Mars beneath the TwinSite wordmark and the words Discover, Compare, Prepare."></a>
   <br><sub><em>Cover artwork is illustrative, not an app screenshot. <a href="#what-ships-today">What ships today</a> is the implemented scope.</em></sub>
 </p>
@@ -22,8 +72,8 @@ ranks the closest twins, explains every difference feature by feature, and turns
 <p align="center">
   <img src="https://img.shields.io/badge/NASA_Space_Apps-2026-ff8f4a?style=for-the-badge&labelColor=0e0a08" alt="NASA Space Apps 2026">
   <img src="https://img.shields.io/badge/Team-AstroWinners-f0c27a?style=for-the-badge&labelColor=0e0a08" alt="Team AstroWinners">
-  <img src="https://img.shields.io/badge/Status-Research_prototype-e7a58c?style=for-the-badge&labelColor=0e0a08" alt="Status: research prototype"><br>
-  <img src="https://img.shields.io/badge/Python-3.10+-d9c39a?style=flat-square&logo=python&logoColor=white&labelColor=1a120d" alt="Python 3.10+">
+  <img src="https://img.shields.io/badge/Status-Live_·_production-3fb950?style=for-the-badge&labelColor=0e0a08" alt="Status: live, production deployment"><br>
+  <img src="https://img.shields.io/badge/Python-3.11+-d9c39a?style=flat-square&logo=python&logoColor=white&labelColor=1a120d" alt="Python 3.11+">
   <img src="https://img.shields.io/badge/Flask-API-d9c39a?style=flat-square&logo=flask&logoColor=white&labelColor=1a120d" alt="Flask">
   <img src="https://img.shields.io/badge/scikit--learn-PCA_·_K--means-d9c39a?style=flat-square&logo=scikitlearn&logoColor=white&labelColor=1a120d" alt="scikit-learn">
   <img src="https://img.shields.io/badge/CesiumJS-1.140-d9c39a?style=flat-square&logo=cesium&logoColor=white&labelColor=1a120d" alt="CesiumJS 1.140">
@@ -60,7 +110,24 @@ ranks the closest twins, explains every difference feature by feature, and turns
 </sub></p>
 
 > [!NOTE]
-> **Scope, plainly.** Implemented today: two Earth study zones, four preset targets plus custom globe regions, deterministic similarity scoring and refinement, PCA and K-means views, five published reference sites, one Groq assistant with nine tools, and printable reports. The proposed **13-agent platform**, live scientific-data ingestion and worldwide search are [future ambitions](#horizon), not shipped features. TwinSite is a research prototype, not a NASA-endorsed mission-planning system.
+> **Scope, plainly.** Implemented today: two Earth study zones, four preset targets plus custom globe regions, deterministic similarity scoring and refinement, PCA and K-means views, five published reference sites, an AI assistant and printable reports — plus the TwinSite platform: [Agentic Auto Mode, the Data Hub, a multi-provider free-tier AI router, 13 agent roles, live NASA connectors and the Mission Console](#what-ships-now). AI is optional and never changes a number; the scientific release gate for the measured Zagora–Gale pair is **BLOCK**, and worldwide search remains a [future ambition](#horizon). TwinSite is an open research platform, live in production, and not a NASA-endorsed mission-planning system.
+
+<a id="what-ships-now"></a>
+
+## What ships now: the platform upgrade
+
+One site, three processes: the Flask app (pages and `/api/*`), the TwinSite platform API (`/v1/*`) and a
+mission worker. Every capability below states its limits; nothing is filled in when a source fails — the
+API answers `status: "unavailable"` with a reason instead.
+
+| Capability | Where | What it does | Limits, plainly |
+| :--- | :--- | :--- | :--- |
+| **Agentic Auto Mode** | [`/auto`](http://127.0.0.1:5050/auto) · `POST /api/auto/missions` | One request runs plan → acquire → clean → analyze (all Earth zones) → agents → report in the background, with every step's state visible | Steps that cannot run are marked `skipped`/`failed` with a reason; the agent step covers Moon/Mars targets with a custom lat/lon |
+| **Data Hub API + cleaning** | [`/data`](http://127.0.0.1:5050/data) · `/api/data/*` | Browse every bundled dataset, per-column statistics and provenance; filter by bounding box; JSON or CSV downloads; cleaning profiles `raw`, `standard` (default, today's scores), `strict`, `robust` (median/MAD outliers) | Bundled `data_ready/` grids; live sources are listed alongside, explicitly unavailable when the platform API is down |
+| **Multi-provider AI** | `/api/ai/status` | One router over free tiers — Groq, Cloudflare Workers AI, Google, Mistral, OpenRouter, NVIDIA NIM, Ollama Cloud — with fallback between them; the assistant keeps Groq tool-calling when a Groq key exists | Free tiers only, no paid inference; zero keys = AI reports "not configured" and deterministic paths still work |
+| **13 agent roles** | `/v1/missions/{id}/agents` | A01–A13 across phases P10–P90: 6 deterministic (sources, cleaning, QA, audit, portfolio, release judge) and 7 AI roles (visual reading, scenarios, domain analysis, synthesis, evidence review, rechecks, report narrative) | AI output must cite existing evidence IDs or it is rejected; AI can never modify the committed result or release it |
+| **Live NASA connectors** | `/v1/science/*` | Any point on Earth, the Moon or Mars characterized end to end: NASA POWER climatology, NASA GIBS imagery, CMR granule discovery, LRO LOLA and Diviner, MGS MOLA, LP DAAC SRTM (cached), AWS Terrain Tiles, NSSDCA constants, OpenStreetMap access (Earth) | Needs network; CMR results are discovery-only (no Earthdata download in the services); GIBS imagery is visual context, never a measurement |
+| **Mission Console** | [`/console/`](http://127.0.0.1:5050/console/) | React console for live characterization, analog matching, portfolios, evidence, agent activity and reports | Scientific release for the measured pair is **BLOCK** ([review](docs/release/SCIENTIFIC_REVIEW.md)); demo fixtures are labelled synthetic |
 
 <a id="flight-plan"></a>
 <img src="docs/readme/assets/section-01.svg" width="100%" alt="01 — Flight plan. The experience.">
@@ -217,38 +284,50 @@ This is a browser print workflow, not a server PDF endpoint. Reports are generat
 
 | Future ambition — not implemented | What exists now | What would justify changing the label |
 | :--- | :--- | :--- |
-| **13 specialized AI agents** | One Groq assistant with nine callable tools; separate report narrative call | Agent roles, orchestration, execution and evaluation committed and demonstrated |
-| **Live scientific API ingestion** for weather, geology and environmental context | Bundled processed datasets; live map tile requests | Reproducible download/refresh code, provenance and checks committed |
+| ~~13 specialized AI agents~~ → **shipped as 13 agent roles** ([details](#what-ships-now)) | 6 deterministic + 7 AI roles with evidence-cited output; AI runs only with free-provider keys | Independent evaluation of AI role quality |
+| ~~Live scientific API ingestion~~ → **shipped for point characterization** | POWER, GIBS, CMR discovery, LOLA, Diviner, MOLA, SRTM, terrain tiles, OSM via `/v1/science/*`, SHA-256-verified and cached | Geology/mineralogy sources and Earthdata-authenticated downloads in the services |
 | **More Earth analog zones / worldwide discovery** | Atacama and Merzouga only | New zone data, configuration, coverage and validation |
 | **Earth thermal inertia and mineral data; lunar H-parameter and iron** | Schema fields and explicit missing-data handling | Comparable datasets populated and scientific assumptions documented |
 | **Finer albedo and 30 m terrain refinement** | Coarse POWER albedo, ~11 km scoring, ~1 km refined points | Higher-resolution sources and a tested method |
 | **User-adjustable feature weights** | Weights live in Python configuration | UI and API controls with constraints and validation |
 | **Stronger scientific validation** | Post-hoc ranking checks at five reference sites; bundled model reports | Independent field evidence, sensitivity analysis and reproducibility benchmarks |
-| **Additional AI providers / visual similarity** | Groq only; feature-distance matching | Provider or image-model integrations and evaluation |
+| **Visual similarity** | Multi-provider free-tier text router shipped; matching is feature-distance only | Image-model integration and evaluation |
 
-No delivery dates or completed agent roles are implied. See the [scope audit](docs/implementation.md#future) before promoting an ambition to an implemented capability.
+No delivery dates are implied for the remaining rows. See the [scope audit](docs/implementation.md#future) before promoting an ambition to an implemented capability.
 
 <a id="launch"></a>
 
 ## Launch locally
 
-Use **Python 3.10+** with a version supported by the dependencies. Run these commands from a normal full clone; the repository already contains `data_ready/`.
+Use **Python 3.11+** and **Node.js 20+** (Node only to build the console). Run from a normal full clone; the repository already contains `data_ready/`.
 
 ```bash
 git clone https://github.com/hakim-AI-hub-88/AstroWinners-TwinSite.git
 cd AstroWinners-TwinSite
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-python backend/app.py
+make setup        # .venv + requirements.txt (Flask, gunicorn, jsonschema, pandas, scikit-learn ...)
+make console      # optional: build the React Mission Console into frontend/dist (served at /console/)
+make dev          # Flask :5050 + platform API :8080 + worker; Ctrl+C stops all three
 ```
 
-Open **[the home page](http://127.0.0.1:5050/)** or **[Mission Control](http://127.0.0.1:5050/app)**. On Windows, activate with `.venv\Scripts\activate`.
+Open **[http://127.0.0.1:5050](http://127.0.0.1:5050/)** — Home, [Mission Control](http://127.0.0.1:5050/app), [Auto Mode](http://127.0.0.1:5050/auto), [Data Hub](http://127.0.0.1:5050/data), [Console](http://127.0.0.1:5050/console/), [Resources](http://127.0.0.1:5050/resources).
+Ports taken? `make dev WEB_PORT=5051 API_PORT=8091`. Flask alone: `make web` (or `python backend/app.py`). Tests: `make test-all`.
 
-**Optional AI:** copy `.env.example` to `.env`, replace its placeholder with your own `GROQ_API_KEY`, and optionally set `GROQ_MODEL`. Leave the key unset for core analysis and deterministic reports. `.env` is ignored by Git. The key stays on the server; assistant conversations/tool results and report facts are sent to Groq when those AI features are used.
+<a id="configuration"></a>
+
+### Configuration
+
+Copy [`.env.example`](.env.example) to `.env` (git-ignored); `make dev` reads it, and shell variables win. **Every key is optional** — with none, deterministic analysis, reports and the platform run and AI features say "not configured". Provider keys stay on the server (`GROQ_API_KEY`, `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID`, `GOOGLE_API_KEY`, `MISTRAL_API_KEY`, `OPENROUTER_API_KEY`, `NVIDIA_NIM_API_KEY`, `OLLAMA_API_KEY`); prompts built from computed facts are sent to the provider when AI features are used. Production keeps keys in a 0600 file named by `TWINSITE_AI_SECRET_ENV_FILE`. Runtime variables: `APP_PORT`, `TWINSITE_API_URL`, `TWINSITE_DATA_DIR` (SQLite, blobs, Auto Mode state; default `.runtime/`), `DATA_READY_DIR`, `TWINSITE_CORS_ORIGINS`.
+
+<a id="deployment"></a>
+
+### Deployment
+
+**Free one-container deploy:** the repo ships a `Dockerfile` and `render.yaml`. Fastest: a Render Blueprint on this branch (builds from GitHub); roomiest free host: Hugging Face Spaces (Docker, 16 GB RAM, data pushed with LFS) — see the [free hosting guide](docs/deployment/FREE_HOSTING.md). **Vercel is not needed**: Flask serves every page and the built console.
+
+A persistent Linux VM also works: nginx → gunicorn Flask (5050) for pages and `/api`, `/v1` → platform API (8080), plus the worker, under systemd — [VM runbook](ops/vm/README.md) (`ops/vm/install.sh`, seeding, smoke test, TLS). [Vercel](docs/deployment/VERCEL.md) can front it as the edge (domain, TLS, CDN for `/static`); the worker, SQLite and ~260 MB of data need the VM.
 
 <details>
-<summary><strong>Configuration, dependencies and first checks</strong></summary>
+<summary><strong>Flask variables, dependencies and first checks</strong></summary>
 
 | Variable | Default / purpose |
 | :--- | :--- |
@@ -269,9 +348,34 @@ curl -X POST http://127.0.0.1:5050/api/similarity \
   -d '{"planet":"mars","location":"Jezero Crater","zone":"atacama","rover_mode":true,"max_slope":15}'
 ```
 
-Startup loads the bundled datasets and fits models; time and memory depend on the machine. Browser libraries, fonts and external map imagery use CDNs/services, so an uncached full interface needs a network connection. Numerical analysis reads local data; live AI also needs a network connection. The Flask development server is the documented local entry point; production hosting is not supplied here.
+Startup loads the bundled datasets and fits models; time and memory depend on the machine. Browser libraries, fonts and external map imagery use CDNs/services, so an uncached full interface needs a network connection. Numerical analysis reads local data; live AI and live NASA characterization also need a network connection. `make dev` uses the Flask development server; production uses gunicorn behind nginx ([VM runbook](ops/vm/README.md)).
 
 </details>
+
+
+<a id="contribute"></a>
+
+## 🤝 Contribute — the next steps are open
+
+TwinSite was built for the NASA Space Apps Challenge and is open source under MIT. Good first contributions, in the order we would take them:
+
+1. **More Earth analog zones** — Iceland, Hawaiʻi, Devon Island, Antarctic Dry Valleys (zone config + data + validation sites).
+2. **Earth thermal inertia and mineralogy** so iron and TI enter Earth–Mars scoring.
+3. **Earthdata-authenticated downloads** in the live connectors (CMR is discovery-only today).
+4. **User-adjustable feature weights** in Expedition Mode, with constraints and a sensitivity report.
+5. **Visual similarity** — image-model comparison of GIBS / HiRISE / LROC imagery, evaluated against field sites.
+6. **Independent scientific validation** of agent outputs and the release gate.
+
+Open an issue, read [CONTRIBUTING.md](CONTRIBUTING.md), and run `make test-all` before a pull request. The full roadmap is in the [final report](docs/FINAL_REPORT.md).
+
+<a id="docs"></a>
+
+## Docs, license, contributing
+
+- **Final report (both versions):** [docs/FINAL_REPORT.md](docs/FINAL_REPORT.md)
+- **Documentation index:** [docs/README.md](docs/README.md) — guides, architecture, [integration spec](docs/INTEGRATION_SPEC.md), deployment, [status](docs/status/INTEGRATION_STATUS.md), contracts.
+- **License:** [MIT](LICENSE). Bundled data keeps its original source terms and attribution ([data credits](docs/catalog.md#credits)).
+- **Contributing:** see [CONTRIBUTING.md](CONTRIBUTING.md) — `make test-all` must pass, and every claim must match what the code does. Security issues: [SECURITY.md](SECURITY.md).
 
 ---
 

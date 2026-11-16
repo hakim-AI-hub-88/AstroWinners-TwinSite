@@ -58,8 +58,70 @@ def _complete(df, cols):
 #############################################
 # TRAINING (once per server start, ~5 s)
 #############################################
+PREDICT_CHUNK = 200_000                     # rows per K-means predict() call (memory bound)
+
+
+#############################################
+# PRE-TRAINED MODELS (small hosts)
+# `python -m services.ml_models export <file.npz>` trains once (e.g. at Docker build time) and saves
+# the fitted parameters. With TWINSITE_ML_MODELS pointing at that file the server applies them with
+# NumPy and never imports scikit-learn, saving ~100 MB of RAM. Same data + same seed = same models.
+#############################################
+class _SavedPCA:
+    def __init__(self, mean, components, evr):
+        self.mean_, self.components_, self.explained_variance_ratio_ = mean, components, evr
+
+    def transform(self, x):
+        return (np.asarray(x) - self.mean_) @ self.components_.T
+
+
+class _SavedKMeans:
+    def __init__(self, centers):
+        self.cluster_centers_ = centers
+
+    def predict(self, x):
+        x = np.asarray(x, dtype=self.cluster_centers_.dtype)
+        out = np.empty(len(x), dtype=np.int64)
+        for start in range(0, len(x), PREDICT_CHUNK):
+            chunk = x[start:start + PREDICT_CHUNK]
+            d = ((chunk[:, None, :] - self.cluster_centers_[None, :, :]) ** 2).sum(axis=2)
+            out[start:start + PREDICT_CHUNK] = d.argmin(axis=1)
+        return out
+
+
+def export(path) -> None:
+    """Train with scikit-learn and save the fitted parameters for _load_saved()."""
+    import json
+    m = models()
+    np.savez(path, pca_mean=m["pca"].mean_, pca_components=m["pca"].components_,
+             pca_evr=m["pca"].explained_variance_ratio_, centers=m["kmeans"].cluster_centers_,
+             k=m["k"], silhouettes=json.dumps(m["silhouettes"]),
+             **{f"share_{b}": v for b, v in m["share"].items()},
+             **{f"centroid_{b}": v for b, v in m["centroids_env"].items()})
+
+
+def _load_saved(path) -> dict:
+    import json
+    z = np.load(path)
+    km = _SavedKMeans(z["centers"])
+    order = np.argsort(km.cluster_centers_.mean(axis=1))
+    remap = np.empty_like(order)
+    remap[order] = np.arange(len(order))
+    bodies = {b: data_loader.LOADERS[b]() for b in ("earth", "mars", "moon")}
+    log.info("ML models loaded from %s (k=%d, no scikit-learn import)", path, int(z["k"]))
+    return {"pca": _SavedPCA(z["pca_mean"], z["pca_components"], z["pca_evr"]), "kmeans": km,
+            "predict_type": lambda a: remap[km.predict(a)], "k": int(z["k"]),
+            "silhouettes": {int(k): v for k, v in json.loads(str(z["silhouettes"])).items()},
+            "share": {b: z[f"share_{b}"] for b in bodies}, "centroids_env": {b: z[f"centroid_{b}"] for b in bodies},
+            "bodies": bodies}
+
+
 @lru_cache(maxsize=1)
 def models() -> dict:
+    import os
+    saved = os.environ.get("TWINSITE_ML_MODELS")
+    if saved and os.path.isfile(saved):
+        return _load_saved(saved)
     from sklearn.cluster import KMeans
     from sklearn.decomposition import PCA
     from sklearn.metrics import silhouette_score
@@ -70,7 +132,7 @@ def models() -> dict:
     def balanced(cols):
         parts, weights = [], []
         for b, df in bodies.items():
-            a = _complete(df, cols)[cols].to_numpy()
+            a = df[cols].dropna().to_numpy()      # only the needed columns: no full-frame copy
             idx = rng.choice(len(a), min(SAMPLE_PER_BODY, len(a)), replace=False)
             parts.append(a[idx])
             weights.append(np.full(len(idx), SAMPLE_PER_BODY / len(idx)))  # equal total weight per body
@@ -96,12 +158,19 @@ def models() -> dict:
     def predict_type(a):
         return remap[km.predict(a)]
 
+    # Terrain-type share per body. Predicted in chunks over the needed columns only, so the
+    # 1.8M-row Mars grid never needs a full copy plus a full distance matrix (fits 512 MB hosts);
+    # labels are identical to a single predict() call.
     share = {}
     for b, df in bodies.items():
-        labels = predict_type(_complete(df, TERRAIN_FEATURES)[TERRAIN_FEATURES].to_numpy())
-        share[b] = np.bincount(labels, minlength=best_k) / max(len(labels), 1)
+        a = df[TERRAIN_FEATURES].dropna().to_numpy()
+        counts = np.zeros(best_k, dtype=np.int64)
+        for start in range(0, len(a), PREDICT_CHUNK):
+            counts += np.bincount(predict_type(a[start:start + PREDICT_CHUNK]), minlength=best_k)
+        share[b] = counts / max(len(a), 1)
+        del a
 
-    centroids_env = {b: _complete(df, ENV_FEATURES)[ENV_FEATURES].mean().to_numpy() for b, df in bodies.items()}
+    centroids_env = {b: df[ENV_FEATURES].dropna().mean().to_numpy() for b, df in bodies.items()}
     log.info("ML models trained: PCA %.0f%% variance, K-means k=%d (silhouette %.3f)",
              100 * pca.explained_variance_ratio_.sum(), best_k, candidates[best_k][0])
     return {"pca": pca, "kmeans": km, "predict_type": predict_type, "k": best_k,
@@ -233,3 +302,12 @@ def insights(result: dict) -> dict:
                    + ("" if zone == config.DEFAULT_ZONE else
                       f" The {config.EARTH_ZONES[zone]['name']} zone is projected with the same fitted models.")),
     }
+
+
+if __name__ == "__main__":                     # python -m services.ml_models export <file.npz>
+    import sys
+    if len(sys.argv) == 3 and sys.argv[1] == "export":
+        logging.basicConfig(level=logging.INFO)
+        export(sys.argv[2])
+    else:
+        sys.exit("usage: python -m services.ml_models export <file.npz>")

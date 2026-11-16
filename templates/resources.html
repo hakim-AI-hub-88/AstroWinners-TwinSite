@@ -1,0 +1,488 @@
+{% extends "base.html" %}
+{#- RESOURCES (/resources): the single hub for guides, documentation, architecture, stack, APIs, agents,
+    algorithms, data sources, tools, glossary and FAQ. Facts are taken from the code in this repository. -#}
+{% set blob = repo_url ~ '/blob/master/' %}
+{% set tree = repo_url ~ '/tree/master/' %}
+{% block title %}Resources{% endblock %}
+{% block description %}Guides, documentation, architecture, stack, APIs, agents, algorithms, data sources and FAQ for TwinSite, the open-source planetary analog platform.{% endblock %}
+{% block content %}
+<header class="page-hero">
+  <p class="eyebrow">Resources</p>
+  <h1>Everything you need to use, check and extend TwinSite</h1>
+  <p class="lead">Step-by-step guides, the architecture, every API route, the agents and algorithms, data sources and licenses. Everything on this page is described from the code in the repository.</p>
+</header>
+
+<div class="docs">
+  <details class="toc" open>
+    <summary>On this page</summary>
+    <nav aria-label="On this page">
+      <ol>
+        <li><a href="#guides">Guides</a></li>
+        <li><a href="#docs">Documentation</a></li>
+        <li><a href="#architecture">Architecture</a></li>
+        <li><a href="#stack">Stack &amp; dependencies</a></li>
+        <li><a href="#api">APIs</a></li>
+        <li><a href="#agents">Agents</a></li>
+        <li><a href="#algorithms">Algorithms</a></li>
+        <li><a href="#sources">Data sources &amp; licenses</a></li>
+        <li><a href="#tools">Tools</a></li>
+        <li><a href="#glossary">Glossary</a></li>
+        <li><a href="#faq">FAQ</a></li>
+      </ol>
+    </nav>
+  </details>
+
+  <div class="docs__body">
+  <!-- ============================== GUIDES ============================== -->
+  <section class="doc-section" id="guides" aria-labelledby="guides-h">
+    <h2 id="guides-h">Guides</h2>
+    <p class="lead">Short, practical paths. Each one takes a few minutes and uses only what ships in the repository.</p>
+
+    <div class="grid grid--2">
+      <article class="card guide" id="guide-scientists">
+        <h3>Quick start for scientists</h3>
+        <p>Inspect a score, check its inputs and reproduce it.</p>
+        <ol class="steps">
+          <li>Open <a href="/app#mission">Mission Control</a> and pick <strong>Mars · Jezero Crater</strong>.</li>
+          <li>Read the <strong>score breakdown</strong>: each feature's share of the weighted distance, missing features and confidence.</li>
+          <li>Open <a href="/app#science">Science &amp; validation</a> for the PCA atlas, K-means classes and reference-site checks.</li>
+          <li>In the <a href="/data">Data Hub</a>, open the harmonized grid, compare cleaning profiles and download CSV.</li>
+          <li>Reproduce the ranking with <code>POST /api/similarity</code> (see <a href="#api">APIs</a>).</li>
+        </ol>
+      </article>
+      <article class="card guide" id="guide-engineers">
+        <h3>Quick start for engineers</h3>
+        <p>Find terrain your rover can actually drive.</p>
+        <ol class="steps">
+          <li>In <a href="/app#mission">Mission Control</a>, turn on <strong>rover mode</strong> and set the slope limit (5–30°).</li>
+          <li>Regions qualify when at least 50% of land cells are under the limit. The filter never changes scores.</li>
+          <li>Open a region for its <strong>refined test point</strong> (~1 km cell) and the day/night thermal swing.</li>
+          <li>Use the <a href="/console/">Mission Console</a> to characterize a custom point from live NASA data.</li>
+          <li>Script it: <code>POST /api/similarity</code> with <code>rover_mode</code> and <code>max_slope</code>.</li>
+        </ol>
+      </article>
+      <article class="card guide" id="guide-educators">
+        <h3>Quick start for educators</h3>
+        <p>Show why a desert on Earth can stand in for Mars.</p>
+        <ol class="steps">
+          <li>Start on the <a href="/">home page</a>, then open <a href="/app#mission">Mission Control</a>.</li>
+          <li>Choose <strong>Moon · Apollo 15</strong> and compare the two globes side by side.</li>
+          <li>Open <a href="/app#explorer">Site Explorer</a> and click cells on the Atacama and Merzouga maps.</li>
+          <li>Use the <strong>Science communication</strong> card for the closest and most different features.</li>
+          <li>Print the <a href="/app#applications">mission report</a> as a handout (Print / Save as PDF).</li>
+        </ol>
+      </article>
+      <article class="card guide" id="guide-mission">
+        <h3>How to run a mission</h3>
+        <p>The interactive path, from target to report.</p>
+        <ol class="steps">
+          <li>Pick a preset target or click the target globe to define a custom region (25, 50 or 100 km radius).</li>
+          <li>Check the region summary: cell count, usable features and physical values.</li>
+          <li>Choose the Earth zone (Atacama or Merzouga), cleaning profile and data mode, then run the analysis.</li>
+          <li>Compare ranked regions, the similarity ring and the per-feature breakdown.</li>
+          <li>Open <strong>Report</strong> to build the dossier. The AI narrative is optional; a deterministic summary is used otherwise.</li>
+        </ol>
+      </article>
+      <article class="card guide" id="guide-auto">
+        <h3>How to use Agentic Auto Mode</h3>
+        <p>One request, the whole pipeline, with a visible step log.</p>
+        <ol class="steps">
+          <li>Open <a href="/auto">Auto Mode</a> and enter a target (Moon or Mars preset, or latitude and longitude) and an objective.</li>
+          <li>Choose <strong>data mode</strong> (<code>bundled</code> or <code>auto</code> for live NASA acquisition) and a cleaning profile.</li>
+          <li>Start the mission. Steps run in order: plan, acquire, clean, analyze, agents, report.</li>
+          <li>Each step shows its state and detail. A step that cannot run is marked skipped or failed, with the reason.</li>
+          <li>Open the result: top regions, cleaning report, live evidence, agent trace and report link.</li>
+        </ol>
+      </article>
+      <article class="card guide" id="guide-data">
+        <h3>How to use the data API</h3>
+        <p>List, filter, clean and download every dataset.</p>
+        <ol class="steps">
+          <li>List datasets: <code>GET /api/data/datasets</code>.</li>
+          <li>Read columns, statistics, flags and provenance: <code>GET /api/data/datasets/&lt;id&gt;</code>.</li>
+          <li>Page through rows with <code>limit</code>, <code>offset</code>, <code>bbox</code> and <code>columns</code>.</li>
+          <li>Add <code>cleaning=strict</code> (or <code>robust</code>) and read the cleaning report in the response.</li>
+          <li>Add <code>format=csv</code> to download (up to 200,000 rows per request).</li>
+        </ol>
+      </article>
+    </div>
+
+    <h3 id="guide-local">Run TwinSite locally</h3>
+    <pre><code># web app (Flask, port 5050): pages, /api, bundled data
+python3 -m venv .venv &amp;&amp; source .venv/bin/activate
+pip install -r requirements.txt
+python backend/app.py                     # http://127.0.0.1:5050
+
+# optional: platform API (8080) + worker for /v1, agents and live data
+PYTHONPATH=backend:. python -m twinsite.api
+PYTHONPATH=backend:. python -m twinsite.jobs
+# or start all three with: make dev
+
+# optional: build the Mission Console served at /console/
+cd frontend &amp;&amp; npm ci &amp;&amp; npm run build</code></pre>
+    <div class="callout callout--info"><p><strong>AI is optional.</strong> Core analysis, ranking and reports work without any key. To enable the assistant, report narrative and AI agent roles, set provider keys on the server (for example <code>GROQ_API_KEY</code>) in an untracked <code>.env</code>. Keys are never sent to the browser.</p></div>
+  </section>
+
+  <!-- ============================== DOCUMENTATION ============================== -->
+  <section class="doc-section" id="docs" aria-labelledby="docs-h">
+    <h2 id="docs-h">Documentation</h2>
+    <p class="lead">Source documents in the repository, and the machine-readable API description.</p>
+    <ul class="link-list">
+      <li><a href="{{ repo_url }}#readme" rel="noopener">README<span>Overview, scoring, launch instructions</span></a></li>
+      <li><a href="{{ blob }}docs/catalog.md" rel="noopener">Resource catalog<span>APIs, data products, AI, reports, links</span></a></li>
+      <li><a href="{{ blob }}docs/implementation.md" rel="noopener">Implementation audit<span>Component-by-component notes and limits</span></a></li>
+      <li><a href="{{ blob }}docs/inventory.md" rel="noopener">Repository inventory<span>Every file in the base snapshot</span></a></li>
+      <li><a href="{{ blob }}contracts/SHARED_CONTRACT.md" rel="noopener">Shared contract<span>Platform API and schema rules</span></a></li>
+      <li><a href="{{ tree }}docs/release" rel="noopener">Release documents<span>QA, scientific review, deployment, data and AI status</span></a></li>
+      <li><a href="{{ repo_url }}" rel="noopener">Status reports<span>API, data, science and integration status (repository root and docs)</span></a></li>
+      <li><a href="{{ blob }}ops/vm/README.md" rel="noopener">VM runbook<span>systemd units, nginx, smoke test</span></a></li>
+      <li><a href="/v1/openapi.json">OpenAPI 3 description<span>/v1/openapi.json (needs the platform API running)</span></a></li>
+      <li><a href="/sitemap">Sitemap<span>Every page and key endpoint</span></a></li>
+      <li><a href="{{ repo_url }}" rel="noopener">GitHub repository<span>Source, issues, history</span></a></li>
+    </ul>
+  </section>
+
+  <!-- ============================== ARCHITECTURE ============================== -->
+  <section class="doc-section" id="architecture" aria-labelledby="arch-h">
+    <h2 id="arch-h">Architecture</h2>
+    <p class="lead">Two Python processes and one optional worker. Flask serves the site and the analysis APIs; the platform API runs missions, agents and the live NASA data gateway.</p>
+
+    <h3>System architecture</h3>
+    <figure class="figure">
+      <div class="figure__scroll"><img src="{{ url_for('static', filename='img/diagrams/system-architecture.svg') }}" width="1120" height="600" loading="lazy"
+        alt="Browser to Flask web on port 5050 (pages, /api blueprints, /v1 reverse proxy, bundled data_ready grids), to the platform API on port 8080 with the mission worker and SQLite plus blob store, to NASA and OpenStreetMap sources and free AI providers."></div>
+      <figcaption>The browser talks only to Flask. <code>/v1</code> requests are proxied to the platform API (in production nginx routes them directly). Outbound calls go to public data services and, when configured, AI providers. <a href="{{ url_for('static', filename='img/diagrams/system-architecture.svg') }}">Open full size</a></figcaption>
+    </figure>
+
+    <h3>Mission data flow</h3>
+    <figure class="figure">
+      <div class="figure__scroll"><img src="{{ url_for('static', filename='img/diagrams/mission-data-flow.svg') }}" width="1120" height="420" loading="lazy"
+        alt="Six steps: plan the target, acquire bundled and optional live data, clean with a profile, analyze similarity on every Earth zone, run the agents, build the report."></div>
+      <figcaption>The same six steps drive Auto Mode. Options <code>data_mode</code> and <code>cleaning</code> are accepted by every mission entry point and echoed in every response. <a href="{{ url_for('static', filename='img/diagrams/mission-data-flow.svg') }}">Open full size</a></figcaption>
+    </figure>
+
+    <h3>Agent pipeline A01–A13</h3>
+    <figure class="figure">
+      <div class="figure__scroll"><img src="{{ url_for('static', filename='img/diagrams/agent-pipeline.svg') }}" width="1120" height="470" loading="lazy"
+        alt="Thirteen agents in phases P10 to P90. Deterministic: A01, A03, A04, A08, A10, A11. AI: A02, A05, A06, A07, A09, A12, A13."></div>
+      <figcaption>Roles run in phase order. Blue roles are deterministic code; violet roles call AI providers and must cite evidence IDs. See <a href="#agents">Agents</a>. <a href="{{ url_for('static', filename='img/diagrams/agent-pipeline.svg') }}">Open full size</a></figcaption>
+    </figure>
+
+    <h3>Deployment topology</h3>
+    <figure class="figure">
+      <div class="figure__scroll"><img src="{{ url_for('static', filename='img/diagrams/deployment-topology.svg') }}" width="1120" height="400" loading="lazy"
+        alt="Prepared target topology: optional Vercel edge, then one VM with nginx routing /v1 to the platform API on 8080 and everything else to gunicorn and Flask on 5050, plus one worker and a persistent disk."></div>
+      <figcaption>The prepared target shape, not a statement that a deployment is live. The worker needs a durable disk and a long-lived process, which is why the backend runs on a VM rather than serverless functions. <a href="{{ url_for('static', filename='img/diagrams/deployment-topology.svg') }}">Open full size</a></figcaption>
+    </figure>
+  </section>
+
+  <!-- ============================== STACK ============================== -->
+  <section class="doc-section" id="stack" aria-labelledby="stack-h">
+    <h2 id="stack-h">Stack &amp; dependencies</h2>
+    <p class="lead">From <code>requirements.txt</code>, <code>requirements-integration.txt</code>, <code>frontend/package.json</code> and the CDN tags in the dashboard. Versions are the declared constraints.</p>
+
+    <h3>Python (web app and analysis)</h3>
+    <div class="table-wrap"><table class="tbl">
+      <thead><tr><th scope="col">Package</th><th scope="col">Version</th><th scope="col">Purpose</th><th scope="col">License</th></tr></thead>
+      <tbody>
+        <tr><td>Flask</td><td class="nowrap">&gt;=3.0</td><td>Web server, pages, JSON APIs</td><td>BSD-3-Clause</td></tr>
+        <tr><td>pandas</td><td class="nowrap">&gt;=2.2</td><td>Grid loading, filtering, cleaning</td><td>BSD-3-Clause</td></tr>
+        <tr><td>NumPy</td><td class="nowrap">&gt;=1.26</td><td>Distances, statistics</td><td>BSD-3-Clause</td></tr>
+        <tr><td>scikit-learn</td><td class="nowrap">&gt;=1.4</td><td>PCA and K-means views</td><td>BSD-3-Clause</td></tr>
+        <tr><td>Pillow</td><td class="nowrap">&gt;=10.1</td><td>Report map images</td><td>MIT-CMU (HPND)</td></tr>
+        <tr><td>groq</td><td class="nowrap">&gt;=1.0</td><td>Assistant tool calling (optional)</td><td>Apache-2.0</td></tr>
+        <tr><td>jsonschema</td><td class="nowrap">4.25.1</td><td>Contract verification (integration)</td><td>MIT</td></tr>
+        <tr><td>Python standard library</td><td class="nowrap">3.10+ (3.13 on the VM)</td><td>Platform API, worker, SQLite, NASA connectors, AI router</td><td>PSF-2.0</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Browser libraries (dashboard, from CDN)</h3>
+    <div class="table-wrap"><table class="tbl">
+      <thead><tr><th scope="col">Library</th><th scope="col">Version</th><th scope="col">Purpose</th><th scope="col">License</th></tr></thead>
+      <tbody>
+        <tr><td>CesiumJS</td><td class="nowrap">1.140.0</td><td>Twin 3D globes</td><td>Apache-2.0</td></tr>
+        <tr><td>Leaflet</td><td class="nowrap">1.9.4</td><td>Site Explorer maps</td><td>BSD-2-Clause</td></tr>
+        <tr><td>Chart.js</td><td class="nowrap">4.4.1</td><td>Radar, bars, PCA plots</td><td>MIT</td></tr>
+        <tr><td>Inter, Orbitron, JetBrains Mono</td><td class="nowrap">Google Fonts</td><td>Typography</td><td>SIL OFL 1.1</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Mission Console (frontend/)</h3>
+    <div class="table-wrap"><table class="tbl">
+      <thead><tr><th scope="col">Package</th><th scope="col">Version</th><th scope="col">Purpose</th><th scope="col">License</th></tr></thead>
+      <tbody>
+        <tr><td>react, react-dom</td><td class="nowrap">^18.3.1</td><td>UI</td><td>MIT</td></tr>
+        <tr><td>react-router-dom</td><td class="nowrap">^6.28.0</td><td>Routing under <code>/console</code></td><td>MIT</td></tr>
+        <tr><td>@tanstack/react-query</td><td class="nowrap">^5.59.0</td><td>API data fetching and caching</td><td>MIT</td></tr>
+        <tr><td>maplibre-gl</td><td class="nowrap">^5.0.0</td><td>Maps</td><td>BSD-3-Clause</td></tr>
+        <tr><td>vite <span class="muted">(dev)</span></td><td class="nowrap">^6.0.0</td><td>Build, base path <code>/console/</code></td><td>MIT</td></tr>
+        <tr><td>typescript <span class="muted">(dev)</span></td><td class="nowrap">~5.6.0</td><td>Type checking</td><td>Apache-2.0</td></tr>
+        <tr><td>tailwindcss, @tailwindcss/vite <span class="muted">(dev)</span></td><td class="nowrap">^4.0.0</td><td>Styling</td><td>MIT</td></tr>
+        <tr><td>@vitejs/plugin-react <span class="muted">(dev)</span></td><td class="nowrap">^4.3.0</td><td>React build plugin</td><td>MIT</td></tr>
+        <tr><td>vitest, jsdom, Testing Library <span class="muted">(dev)</span></td><td class="nowrap">^2.1 · ^25 · ^16</td><td>Tests</td><td>MIT</td></tr>
+        <tr><td>@types/node, @types/react <span class="muted">(dev)</span></td><td class="nowrap">^22 · ^18.3</td><td>Type definitions</td><td>MIT</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <!-- ============================== APIS ============================== -->
+  <section class="doc-section" id="api" aria-labelledby="api-h">
+    <h2 id="api-h">APIs</h2>
+    <p class="lead">All endpoints return JSON. Flask serves <code>/api/*</code> on port 5050; the platform API serves <code>/v1/*</code> on port 8080, also reachable through Flask's <code>/v1</code> proxy. Examples assume <code>http://127.0.0.1:5050</code>.</p>
+
+    <h3>Flask analysis API · <code>/api</code></h3>
+    <div class="table-wrap"><table class="tbl">
+      <thead><tr><th scope="col">Method</th><th scope="col">Path</th><th scope="col">Purpose</th></tr></thead>
+      <tbody>
+        <tr><td><span class="tag tag--get">GET</span></td><td><code>/api/status</code></td><td>Datasets and models loaded, readiness</td></tr>
+        <tr><td><span class="tag tag--get">GET</span></td><td><code>/api/zones</code></td><td>Earth analog zones (Atacama, Merzouga)</td></tr>
+        <tr><td><span class="tag tag--get">GET</span></td><td><code>/api/targets</code></td><td>Preset Moon and Mars targets</td></tr>
+        <tr><td><span class="tag tag--post">POST</span></td><td><code>/api/similarity</code></td><td>Rank Earth regions for a target: <code>planet, location, zone, rover_mode, max_slope, data_mode, cleaning</code></td></tr>
+        <tr><td><span class="tag tag--get">GET</span></td><td><code>/api/ml</code></td><td>PCA atlas and K-means classes for a target (<code>planet, location, zone</code>)</td></tr>
+        <tr><td><span class="tag tag--get">GET</span></td><td><code>/api/layers</code></td><td>Globe layer catalog (<code>?body=</code>)</td></tr>
+        <tr><td><span class="tag tag--get">GET</span></td><td><code>/api/layer/&lt;body&gt;/&lt;feature&gt;.png</code></td><td>Rendered data layer image</td></tr>
+        <tr><td><span class="tag tag--get">GET</span></td><td><code>/api/region-info</code></td><td>Custom region check (<code>planet, lat, lon, radius</code>)</td></tr>
+        <tr><td><span class="tag tag--post">POST</span></td><td><code>/api/report</code></td><td>Mission report facts, maps and narrative</td></tr>
+        <tr><td><span class="tag tag--get">GET</span></td><td><code>/api/assistant/status</code></td><td>Whether the assistant is configured</td></tr>
+        <tr><td><span class="tag tag--post">POST</span></td><td><code>/api/assistant</code></td><td>Ask the mission assistant (<code>question, history, context</code>)</td></tr>
+        <tr><td><span class="tag tag--get">GET</span></td><td><code>/api/ai/status</code></td><td>Configured AI providers (names only, never keys)</td></tr>
+      </tbody>
+    </table></div>
+    <pre><code>curl -X POST http://127.0.0.1:5050/api/similarity \
+  -H 'Content-Type: application/json' \
+  -d '{"planet":"mars","location":"Jezero Crater","zone":"atacama","rover_mode":true,"max_slope":15,"cleaning":"standard"}'</code></pre>
+
+    <h3>Data Hub API · <code>/api/data</code></h3>
+    <div class="table-wrap"><table class="tbl">
+      <thead><tr><th scope="col">Method</th><th scope="col">Path</th><th scope="col">Purpose</th></tr></thead>
+      <tbody>
+        <tr><td><span class="tag tag--get">GET</span></td><td><code>/api/data/datasets</code></td><td>Every bundled dataset: body, zone, stage, rows, columns, resolution, license, source</td></tr>
+        <tr><td><span class="tag tag--get">GET</span></td><td><code>/api/data/datasets/&lt;id&gt;</code></td><td>Column statistics, quality flags, normalization, provenance</td></tr>
+        <tr><td><span class="tag tag--get">GET</span></td><td><code>/api/data/datasets/&lt;id&gt;/records</code></td><td>Rows with <code>limit, offset, bbox, columns, cleaning, format=json|csv</code></td></tr>
+        <tr><td><span class="tag tag--get">GET</span></td><td><code>/api/data/cleaning</code></td><td>Cleaning profiles and their steps</td></tr>
+        <tr><td><span class="tag tag--post">POST</span></td><td><code>/api/data/clean</code></td><td>Cleaning report only: <code>dataset, profile, bbox</code></td></tr>
+        <tr><td><span class="tag tag--get">GET</span></td><td><code>/api/data/sources</code></td><td>Bundled datasets plus live platform connectors (marked unavailable if the API is down)</td></tr>
+      </tbody>
+    </table></div>
+    <pre><code>curl 'http://127.0.0.1:5050/api/data/datasets/mars.harmonized/records?limit=5&amp;cleaning=strict'
+curl -o atacama.csv 'http://127.0.0.1:5050/api/data/datasets/earth.processed/records?format=csv&amp;limit=200000'</code></pre>
+
+    <h3>Agentic Auto Mode API · <code>/api/auto</code></h3>
+    <div class="table-wrap"><table class="tbl">
+      <thead><tr><th scope="col">Method</th><th scope="col">Path</th><th scope="col">Purpose</th></tr></thead>
+      <tbody>
+        <tr><td><span class="tag tag--post">POST</span></td><td><code>/api/auto/missions</code></td><td>Start a mission: <code>target, objective, slope_limit, zones, data_mode, cleaning, ai</code>. Returns <code>202 {mission_id}</code></td></tr>
+        <tr><td><span class="tag tag--get">GET</span></td><td><code>/api/auto/missions/&lt;id&gt;</code></td><td>State, step log and result</td></tr>
+        <tr><td><span class="tag tag--get">GET</span></td><td><code>/api/auto/missions</code></td><td>Recent missions</td></tr>
+      </tbody>
+    </table></div>
+    <pre><code>curl -X POST http://127.0.0.1:5050/api/auto/missions \
+  -H 'Content-Type: application/json' \
+  -d '{"target":{"planet":"mars","location":"Jezero Crater"},"objective":"rover traverse test","data_mode":"bundled","cleaning":"standard","ai":true}'</code></pre>
+
+    <h3>Platform API · <code>/v1</code></h3>
+    <div class="table-wrap"><table class="tbl">
+      <thead><tr><th scope="col">Method</th><th scope="col">Path</th><th scope="col">Purpose</th></tr></thead>
+      <tbody>
+        <tr><td><span class="tag tag--get">GET</span></td><td><code>/v1/health</code></td><td>Readiness and feature flags (AI, uploads)</td></tr>
+        <tr><td><span class="tag tag--get">GET</span></td><td><code>/v1/openapi.json</code></td><td>OpenAPI description (core mission and data routes)</td></tr>
+        <tr><td><span class="tag tag--post">POST</span></td><td><code>/v1/missions</code></td><td>Queue a mission run (<code>Idempotency-Key</code> header)</td></tr>
+        <tr><td><span class="tag tag--post">POST</span></td><td><code>/v1/missions/measured</code></td><td>Mission on a published measured dataset pair</td></tr>
+        <tr><td><span class="tag tag--post">POST</span></td><td><code>/v1/missions/match</code></td><td>Characterize a Moon/Mars point, pre-rank stored Earth sites, run a mission (<code>?analysis_mode=ai|simple</code>)</td></tr>
+        <tr><td><span class="tag tag--get">GET</span></td><td><code>/v1/missions/{run_id}</code></td><td>Run status</td></tr>
+        <tr><td><span class="tag tag--get">GET</span></td><td><code>/v1/missions/{run_id}/events</code></td><td>Committed progress events</td></tr>
+        <tr><td><span class="tag tag--get">GET</span></td><td><code>/v1/missions/{run_id}/result</code></td><td>Committed deterministic result</td></tr>
+        <tr><td><span class="tag tag--get">GET</span></td><td><code>/v1/missions/{run_id}/evidence</code></td><td>Evidence records</td></tr>
+        <tr><td><span class="tag tag--get">GET</span></td><td><code>/v1/missions/{run_id}/agents</code></td><td>Agent trace: role, execution, output, evidence IDs</td></tr>
+        <tr><td><span class="tag tag--get">GET</span></td><td><code>/v1/missions/{run_id}/report</code></td><td>Mission report</td></tr>
+        <tr><td><span class="tag tag--post">POST</span></td><td><code>/v1/missions/{run_id}/cancel</code></td><td>Request cancellation (provisional)</td></tr>
+        <tr><td><span class="tag tag--get">GET</span></td><td><code>/v1/ai/status</code></td><td>AI router state and providers</td></tr>
+        <tr><td><span class="tag tag--get">GET</span></td><td><code>/v1/science/sources</code></td><td>Live data connectors</td></tr>
+        <tr><td><span class="tag tag--get">GET</span></td><td><code>/v1/science/sites</code></td><td>Characterized sites</td></tr>
+        <tr><td><span class="tag tag--post">POST</span></td><td><code>/v1/science/sites</code></td><td>Add and characterize a site</td></tr>
+        <tr><td><span class="tag tag--get">GET</span></td><td><code>/v1/science/observations</code></td><td>Stored observations (<code>domain, body, kind, limit, offset</code>)</td></tr>
+        <tr><td><span class="tag tag--get">GET</span></td><td><code>/v1/science/coverage</code></td><td>Coverage by site and domain</td></tr>
+        <tr><td><span class="tag tag--get">GET</span></td><td><code>/v1/science/places</code></td><td>Place search for Earth locations (<code>?q=</code>)</td></tr>
+        <tr><td><span class="tag tag--post">POST</span></td><td><code>/v1/science/characterize</code></td><td>Live characterization of one point (<code>body, longitude, latitude, name</code>)</td></tr>
+        <tr><td><span class="tag tag--get">GET</span></td><td><code>/v1/science/assets/{asset_id}</code></td><td>Stored GIBS image asset</td></tr>
+        <tr><td><span class="tag tag--get">GET</span></td><td><code>/v1/data/catalog</code></td><td>Published terrain evidence catalog</td></tr>
+        <tr><td><span class="tag tag--get">GET</span></td><td><code>/v1/data/{dataset_id}/records</code></td><td>Records of a published dataset</td></tr>
+        <tr><td><span class="tag tag--get">GET</span></td><td><code>/v1/data/{dataset_id}/metadata</code></td><td>Dataset metadata</td></tr>
+        <tr><td><span class="tag tag--get">GET</span></td><td><code>/v1/data/{dataset_id}/grid</code></td><td>Gridded values</td></tr>
+        <tr><td><span class="tag tag--post">POST</span></td><td><code>/v1/data/compare</code></td><td>Compare published datasets</td></tr>
+        <tr><td><span class="tag tag--post">POST</span></td><td><code>/v1/uploads</code></td><td>Reserved, returns 501 (uploads disabled)</td></tr>
+        <tr><td><span class="tag tag--post">POST</span></td><td><code>/v1/missions/{run_id}/portfolios/alternatives</code></td><td>Reserved, returns 501</td></tr>
+      </tbody>
+    </table></div>
+    <pre><code>curl -X POST 'http://127.0.0.1:5050/v1/missions/match?analysis_mode=simple' \
+  -H 'Content-Type: application/json' -H 'Idempotency-Key: demo-001' \
+  -d '{"target":{"body":"Mars","longitude":77.58,"latitude":18.38,"name":"Jezero"}}'</code></pre>
+    <div class="callout callout--info"><p>When the platform API is not running, Flask's <code>/v1</code> proxy answers <code>503</code> with error code <code>PLATFORM_API_UNAVAILABLE</code>. Start it with <code>make dev</code>.</p></div>
+
+    <h3>External APIs used</h3>
+    <div class="table-wrap"><table class="tbl">
+      <thead><tr><th scope="col">Service</th><th scope="col">Used for</th><th scope="col">Access</th></tr></thead>
+      <tbody>
+        <tr><td>NASA PDS Geosciences Node</td><td>MGS MOLA MEGDR (Mars) and LRO LOLA LDEM (Moon) topography; LRO Diviner lunar temperatures</td><td>Keyless HTTPS, byte-range reads</td></tr>
+        <tr><td>NASA / USGS LP DAAC</td><td>SRTMGL1 v003 Earth elevation (published measured pair)</td><td>Earthdata login for download</td></tr>
+        <tr><td>AWS Open Data Terrain Tiles</td><td>Keyless global Earth DEM (skadi HGT, terrarium PNG)</td><td>Keyless</td></tr>
+        <tr><td>NASA POWER</td><td>Earth climatology: air temperature, range, wind, precipitation, humidity, pressure, insolation</td><td>Keyless</td></tr>
+        <tr><td>NASA GIBS</td><td>True-colour Earth imagery (visual context, never a measurement); dashboard tiles</td><td>Keyless</td></tr>
+        <tr><td>NASA CMR</td><td>Granule discovery (for example MOD11A2 land-surface temperature)</td><td>Keyless search</td></tr>
+        <tr><td>NASA NSSDCA fact sheets</td><td>Planetary reference constants</td><td>Public pages</td></tr>
+        <tr><td>NASA Solar System Treks, Esri World Imagery</td><td>Globe and map base layers in the dashboard</td><td>Public tile services</td></tr>
+        <tr><td>OpenStreetMap Overpass</td><td>Roads and access context near Earth sites (three public mirrors)</td><td>Keyless, ODbL data</td></tr>
+        <tr><td>Open-Meteo Geocoding</td><td>Place search (GeoNames data); Nominatim as fallback</td><td>Keyless</td></tr>
+        <tr><td>AI providers</td><td>Groq, Cloudflare Workers AI, Google Gemini API, Mistral, OpenRouter (free models), NVIDIA NIM, Ollama Cloud</td><td>Server-side keys, optional</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <!-- ============================== AGENTS ============================== -->
+  <section class="doc-section" id="agents" aria-labelledby="agents-h">
+    <h2 id="agents-h">Agents</h2>
+    <p class="lead">Thirteen roles, defined in <code>backend/twinsite/ai/agents.py</code>. Deterministic code owns every number; AI roles interpret, review and explain.</p>
+    <div class="table-wrap"><table class="tbl">
+      <thead><tr><th scope="col">ID</th><th scope="col">Role</th><th scope="col">Phase</th><th scope="col">Kind</th><th scope="col">What it does</th></tr></thead>
+      <tbody>
+        <tr><td>A01</td><td>Source Curator</td><td>P10</td><td><span class="tag tag--det">deterministic</span></td><td>Inventories evidence sources, assets and gateway context per domain.</td></tr>
+        <tr><td>A02</td><td>Visual Interpreter</td><td>P20</td><td><span class="tag tag--ai">AI vision</span></td><td>Qualitative reading of agency imagery, never a measurement.</td></tr>
+        <tr><td>A03</td><td>Cleaning Planner</td><td>P30</td><td><span class="tag tag--det">deterministic</span></td><td>Allowlisted cleaning transformations recorded by the engine.</td></tr>
+        <tr><td>A04</td><td>Quality Reviewer</td><td>P40</td><td><span class="tag tag--det">deterministic</span></td><td>Hard QA gates: QA status, flags, coverage, spatial support.</td></tr>
+        <tr><td>A05</td><td>Scenario Estimator</td><td>P50</td><td><span class="tag tag--ai">AI JSON</span></td><td>Proposes labelled alternative weight scenarios; the engine re-scores them.</td></tr>
+        <tr><td>A06</td><td>Domain Analyst</td><td>P60</td><td><span class="tag tag--ai">AI JSON</span></td><td>Evidence-linked findings per scientific domain, plus data gaps.</td></tr>
+        <tr><td>A07</td><td>Synthesis Analyst</td><td>P70</td><td><span class="tag tag--ai">AI JSON</span></td><td>Cross-domain synthesis with claims tied to evidence IDs.</td></tr>
+        <tr><td>A08</td><td>Process Auditor</td><td>P80</td><td><span class="tag tag--det">deterministic</span></td><td>Asserts the agent trace is well formed and the result untouched.</td></tr>
+        <tr><td>A09</td><td>Evidence Reviewer</td><td>P80</td><td><span class="tag tag--ai">AI JSON</span></td><td>An independent provider reviews each synthesis claim against the evidence.</td></tr>
+        <tr><td>A10</td><td>Portfolio Reviewer</td><td>P80</td><td><span class="tag tag--det">deterministic</span></td><td>Rechecks portfolio constraints and eligibility.</td></tr>
+        <tr><td>A11</td><td>Release Judge</td><td>P80</td><td><span class="tag tag--det">deterministic</span></td><td>Applies the deterministic release gate; AI cannot release.</td></tr>
+        <tr><td>A12</td><td>Targeted Rechecker</td><td>P80</td><td><span class="tag tag--ai">AI JSON</span></td><td>Re-examines only claims the reviewer could not support.</td></tr>
+        <tr><td>A13</td><td>Report Writer</td><td>P90</td><td><span class="tag tag--ai">AI narrative</span></td><td>Evidence-cited narrative appended to the deterministic report.</td></tr>
+      </tbody>
+    </table></div>
+    <h3>Guarantees</h3>
+    <ul>
+      <li>AI outputs that cite evidence IDs not present in the evidence packet fail validation, and the router moves to another provider.</li>
+      <li>A role is reported as executed by AI only when a real provider call returned, or when a cached response from an earlier real call is reused and labelled as cached.</li>
+      <li>Without configured providers the AI roles record a fallback with the reason. Results and scores are unchanged.</li>
+      <li>One role's failure never stops the others; the trace records every role's execution and issues.</li>
+    </ul>
+  </section>
+
+  <!-- ============================== ALGORITHMS ============================== -->
+  <section class="doc-section" id="algorithms" aria-labelledby="algo-h">
+    <h2 id="algo-h">Algorithms</h2>
+    <p class="lead">Deterministic, inspectable and configured in <code>backend/utils/config.py</code>. A score of 100 means an identical profile on the shared normalized scale; it is not a probability of mission success.</p>
+
+    <h3>Similarity score</h3>
+    <pre><code>effective weight = nominal weight × (1 − 0.30 × target uncertainty)
+                                  × (1 − 0.30 × Earth-cell uncertainty)
+
+distance = √( Σ effective_weight × (Earth_feature − target_mean)² / Σ effective_weight )
+score    = 100 × (1 − distance)</code></pre>
+    <ul>
+      <li>Target values are averaged over a circular window (50 km for presets). At least four shared features are required.</li>
+      <li>Elevation is excluded: each body uses a different reference surface (geoid, areoid, sphere).</li>
+      <li>Up to ten regions are ranked, at least 25 km apart. <strong>Confidence</strong> is available effective weight over planned weight: an evidence-coverage indicator, not a calibrated certainty.</li>
+    </ul>
+    <div class="table-wrap"><table class="tbl">
+      <thead><tr><th scope="col">Feature</th><th scope="col">Weight</th><th scope="col">Feature</th><th scope="col">Weight</th></tr></thead>
+      <tbody>
+        <tr><td>Slope</td><td>0.15</td><td>Night temperature</td><td>0.20</td></tr>
+        <tr><td>Roughness</td><td>0.15</td><td>Albedo</td><td>0.15</td></tr>
+        <tr><td>Relief</td><td>0.15</td><td>Thermal inertia</td><td>0.15</td></tr>
+        <tr><td>Day temperature</td><td>0.20</td><td>Mineral (iron) index</td><td>0.10</td></tr>
+      </tbody>
+    </table></div>
+    <p class="muted">Weights are renormalized over the features that are available for both target and Earth cell.</p>
+
+    <h3>Cleaning profiles</h3>
+    <div class="table-wrap"><table class="tbl">
+      <thead><tr><th scope="col">Profile</th><th scope="col">Behaviour</th></tr></thead>
+      <tbody>
+        <tr><td><code>raw</code></td><td>No cleaning. Provenance view of the data as bundled.</td></tr>
+        <tr><td><code>standard</code> <span class="tag">default</span></td><td>Current engine behaviour: quality flags lower weights, rows with a missing value are excluded per feature. Reproduces existing scores exactly.</td></tr>
+        <tr><td><code>strict</code></td><td>Drops cells whose quality flags mark estimated, proxy or gap-filled values, and applies physical range checks.</td></tr>
+        <tr><td><code>robust</code></td><td>Strict, plus per-feature median / MAD outlier rejection (|robust z| &gt; 3.5) and optional isolated-cell despeckle.</td></tr>
+      </tbody>
+    </table></div>
+    <p>Every profile returns a report: rows in and out, removals per step and per feature.</p>
+
+    <h3>Rover filter and refinement</h3>
+    <p>The optional rover filter admits regions where at least 50% of land cells meet the chosen 5–30° slope limit; it does not alter scores. Refinement searches the ~1 km processed Earth grid inside each region, excludes water and steep cells and minimizes day/night temperature mismatch; without target temperatures it picks the lowest qualifying slope. A qualifying point may be absent.</p>
+
+    <h3>PCA and K-means</h3>
+    <p>PCA projects six environmental features into two dimensions for the atlas. K-means clusters slope, roughness and relief, choosing <code>k</code> from 3 to 6 by silhouette score. Training samples up to 3,000 cells per body. These views explain the landscape; they never determine the similarity score.</p>
+
+    <h3>Validation</h3>
+    <p>Five published analog sites (Licancabur, Yungay and Salar de Pajonales in the Atacama; the MARS2013 Weyprecht and Payer camps near Merzouga) are checked after ranking: the closest scored cell within 30 km, its percentile and the nearest ranked region. Reference sites never train the models or change the ranking.</p>
+  </section>
+
+  <!-- ============================== SOURCES ============================== -->
+  <section class="doc-section" id="sources" aria-labelledby="sources-h">
+    <h2 id="sources-h">Data sources &amp; licenses</h2>
+    <p class="lead">Bundled harmonized grids, as recorded in <code>data_ready/harmonized/validation_report.md</code>: <strong>1,843,200</strong> Mars, <strong>460,800</strong> Moon, <strong>1,200</strong> Atacama and <strong>400</strong> Merzouga rows (grid cells, not all complete observations).</p>
+    <div class="table-wrap"><table class="tbl">
+      <thead><tr><th scope="col">Data</th><th scope="col">Role</th><th scope="col">License / terms</th></tr></thead>
+      <tbody>
+        <tr><td>Harmonized grids (normalized + physical)</td><td>~11 km regions on a shared 0–1 scale; physical units for explanations</td><td>Derived from NASA data; MIT for TwinSite processing</td></tr>
+        <tr><td>Processed Earth grids (Atacama, Merzouga)</td><td>~1 km cells for rover eligibility and refined points</td><td>Derived from NASA data</td></tr>
+        <tr><td>MOLA, LOLA, Diviner, SRTM, POWER, GIBS, CMR</td><td>Topography, temperature, climate, imagery, discovery</td><td>NASA data: public domain unless noted</td></tr>
+        <tr><td>AWS Terrain Tiles</td><td>Keyless Earth DEM composite (void-filled)</td><td>Open data; attribution per the Terrain Tiles documentation</td></tr>
+        <tr><td>OpenStreetMap (Overpass, Nominatim)</td><td>Access context, fallback place search</td><td>© OpenStreetMap contributors, ODbL 1.0</td></tr>
+        <tr><td>GeoNames via Open-Meteo</td><td>Place search</td><td>CC BY 4.0</td></tr>
+        <tr><td>NASA images (home, application cards)</td><td>Illustration</td><td>Public domain; credits on the <a href="/policy#attribution">policy page</a></td></tr>
+      </tbody>
+    </table></div>
+    <div class="callout"><p><strong>Known limits.</strong> Modeled Mars temperatures; measured and estimated lunar temperatures; lunar albedo proxy; coarse NASA POWER albedo; thermal inertia and iron absent for Earth zones and the Moon; two bounded Earth study areas, not a worldwide search.</p></div>
+  </section>
+
+  <!-- ============================== TOOLS ============================== -->
+  <section class="doc-section" id="tools" aria-labelledby="tools-h">
+    <h2 id="tools-h">Tools</h2>
+    <div class="grid grid--3">
+      <div class="card"><h3>Mission assistant</h3><p>Conversational explanations in English and French, with tool calls into the current analysis. Requires a Groq key on the server.</p></div>
+      <div class="card"><h3>Multi-provider AI router</h3><p>Routes agent and narrative calls across free-tier providers, validates JSON outputs and falls back when a provider fails.</p></div>
+      <div class="card"><h3>Science data gateway</h3><p>Retrieves, decodes, quality-checks and stores NASA observations with SHA-256 verified raw assets.</p></div>
+      <div class="card"><h3>Mission report</h3><p>Computed facts, similarity maps, validation and methodology, printed or saved as PDF from the browser.</p></div>
+      <div class="card"><h3>Ops scripts</h3><p><code>ops/verify.sh</code>, secret scan, coverage matrix and VM smoke test for reproducible checks.</p></div>
+      <div class="card"><h3>Tests</h3><p>Python tests under <code>tests/</code> and <code>backend/tests/</code>; console tests with Vitest.</p></div>
+    </div>
+  </section>
+
+  <!-- ============================== GLOSSARY ============================== -->
+  <section class="doc-section" id="glossary" aria-labelledby="glossary-h">
+    <h2 id="glossary-h">Glossary</h2>
+    <dl class="glossary">
+      <dt>Analog site</dt><dd>A place on Earth whose terrain or environment resembles a target on another body, used for testing and training.</dd>
+      <dt>Harmonized grid</dt><dd>Moon, Mars and Earth data resampled to comparable regions with the same feature columns.</dd>
+      <dt>Normalized feature</dt><dd>A feature rescaled to a shared 0–1 range so different bodies can be compared.</dd>
+      <dt>Quality flags</dt><dd>A bitmask per cell marking estimated, proxy, gap-filled or fixed-local-time values.</dd>
+      <dt>Slope, roughness, relief</dt><dd>Terrain descriptors: steepness in degrees, small-scale height variation and local height range.</dd>
+      <dt>Albedo</dt><dd>The fraction of sunlight a surface reflects.</dd>
+      <dt>Thermal inertia</dt><dd>How strongly a surface resists temperature change; hints at grain size and rock abundance.</dd>
+      <dt>Cleaning profile</dt><dd>A named, reproducible set of data-cleaning steps: raw, standard, strict or robust.</dd>
+      <dt>MAD</dt><dd>Median absolute deviation, a robust spread measure used to reject outliers.</dd>
+      <dt>PCA / K-means</dt><dd>Dimensionality reduction for the atlas, and clustering into terrain classes.</dd>
+      <dt>Evidence ID</dt><dd>An identifier for one observation in a run's evidence packet. AI claims must cite these.</dd>
+      <dt>Release gate</dt><dd>Deterministic rules deciding whether a mission result can be released (for example PASS or BLOCK).</dd>
+      <dt>Data mode</dt><dd><code>bundled</code> uses the repository grids; <code>auto</code> adds live NASA acquisition for the target point.</dd>
+      <dt>AOI</dt><dd>Area of interest: the window around a point used for live characterization.</dd>
+    </dl>
+  </section>
+
+  <!-- ============================== FAQ ============================== -->
+  <section class="doc-section faq" id="faq" aria-labelledby="faq-h">
+    <h2 id="faq-h">FAQ</h2>
+    <details><summary>Is TwinSite endorsed by NASA?</summary><div><p>No. TwinSite is an independent open-source project built by team AstroWinners for the NASA Space Apps Challenge 2026. It uses public NASA data but is not endorsed by NASA.</p></div></details>
+    <details><summary>Is the similarity score a probability of success?</summary><div><p>No. 100 means an identical profile on the shared normalized feature scale. It ignores gravity, atmosphere, pressure and radiation, so treat it as a screening signal.</p></div></details>
+    <details><summary>Why only the Atacama and Merzouga?</summary><div><p>They are the two Earth study zones with bundled, validated grids. The platform API can characterize other Earth points live (<code>POST /v1/science/sites</code>), with coverage limits stated in the results.</p></div></details>
+    <details><summary>Do I need an API key?</summary><div><p>No. Analysis, ranking, data downloads and deterministic reports work without keys. AI features need provider keys set on the server.</p></div></details>
+    <details><summary>What is sent to AI providers?</summary><div><p>Public scientific context: computed facts and evidence summaries and, for the assistant, your question, the conversation history, dashboard context and computed tool results. No personal data unless you type it. See the <a href="/policy#privacy">privacy policy</a>.</p></div></details>
+    <details><summary>Why does /console/ show "not built"?</summary><div><p>The Mission Console is a React app that must be built once: <code>cd frontend &amp;&amp; npm ci &amp;&amp; npm run build</code>. Flask then serves it from <code>frontend/dist</code>.</p></div></details>
+    <details><summary>Why did an Auto Mode step say "skipped"?</summary><div><p>A step that cannot run, for example agents when the platform API is not running or live data when a NASA service is down, is marked skipped or failed with the reason. Nothing is fabricated to fill the gap.</p></div></details>
+    <details><summary>Can I reuse the code and data?</summary><div><p>The code is MIT licensed. Data keeps its source license: NASA data is public domain unless noted, OpenStreetMap data is ODbL, GeoNames is CC BY 4.0.</p></div></details>
+  </section>
+  </div>
+</div>
+{% endblock %}

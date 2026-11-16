@@ -1,0 +1,10 @@
+# Vercel is the edge only: upload just the Flask static files and this config.
+# Everything else (backend code, data_ready/ ~260 MB, .env*, .runtime/, .venv/, node_modules/, frontend/)
+# stays off Vercel; all other paths are proxied to the VM by the rewrite in vercel.json.
+/*
+!/static
+!/vercel.json
+.env*
+**/node_modules
+**/.venv
+**/__pycache__

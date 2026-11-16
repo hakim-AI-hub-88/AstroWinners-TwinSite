@@ -1,6 +1,10 @@
-flask>=3.0
+# TwinSite runtime: Flask web app + platform API/worker (the platform itself is stdlib-only
+# apart from jsonschema). Install: python -m pip install -r requirements.txt
+flask>=3.0,<4
 pandas>=2.2
 numpy>=1.26
-groq>=1.0          # AI Mission Assistant (LLM API)
-scikit-learn>=1.4  # machine-learning models (PCA, K-means)
-Pillow>=10.1      # mission report map images
+scikit-learn>=1.4    # machine-learning views (PCA, K-means)
+Pillow>=10.1         # mission report map images
+groq>=1.0            # optional: Groq tool-calling for the AI Mission Assistant
+jsonschema>=4.23     # contract validation in the platform API/worker (full schema checks)
+gunicorn>=22.0       # production WSGI server for the Flask app (Linux VM)

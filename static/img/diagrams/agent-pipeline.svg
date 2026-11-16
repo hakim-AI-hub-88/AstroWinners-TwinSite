@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 470" role="img" aria-labelledby="t d">
+  <title id="t">Agent pipeline A01 to A13</title>
+  <desc id="d">Thirteen agent roles run in phases P10 to P90. Deterministic roles: A01 Source Curator, A03 Cleaning Planner, A04 Quality Reviewer, A08 Process Auditor, A10 Portfolio Reviewer, A11 Release Judge. AI roles: A02 Visual Interpreter, A05 Scenario Estimator, A06 Domain Analyst, A07 Synthesis Analyst, A09 Evidence Reviewer, A12 Targeted Rechecker, A13 Report Writer. AI claims must cite evidence IDs; the deterministic release gate decides.</desc>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#ff8a3d"/></marker>
+    <style>
+      text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;fill:#ece6df}
+      .p{font-size:11px;font-weight:700;letter-spacing:.14em;fill:#9b9188}.id{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;fill:#9b9188}
+      .h{font-size:13.5px;font-weight:600}.s{font-size:12.5px;fill:#c9c0b7}
+      .det{fill:#101722;stroke:#93c5fd;stroke-width:1.3}.ai{fill:#17121f;stroke:#a78bfa;stroke-width:1.3}
+      .ln{stroke:#ff8a3d;stroke-width:1.6;fill:none}
+    </style>
+  </defs>
+  <rect width="1120" height="470" fill="#0b0a0c"/>
+  <!-- phase labels -->
+  <text class="p" x="24" y="34">P10–P20</text><text class="p" x="244" y="34">P30–P40</text><text class="p" x="464" y="34">P50–P70</text>
+  <text class="p" x="684" y="34">P80 · REVIEW &amp; GATE</text><text class="p" x="934" y="34">P90</text>
+
+  <rect class="det" x="24" y="48" width="196" height="56" rx="10"/><text class="id" x="38" y="72">A01</text><text class="h" x="74" y="72">Source Curator</text><text class="s" x="38" y="92">inventory sources</text>
+  <rect class="ai" x="24" y="116" width="196" height="56" rx="10"/><text class="id" x="38" y="140">A02</text><text class="h" x="74" y="140">Visual Interpreter</text><text class="s" x="38" y="160">qualitative imagery</text>
+
+  <rect class="det" x="244" y="48" width="196" height="56" rx="10"/><text class="id" x="258" y="72">A03</text><text class="h" x="294" y="72">Cleaning Planner</text><text class="s" x="258" y="92">allowlisted transforms</text>
+  <rect class="det" x="244" y="116" width="196" height="56" rx="10"/><text class="id" x="258" y="140">A04</text><text class="h" x="294" y="140">Quality Reviewer</text><text class="s" x="258" y="160">hard QA gates</text>
+
+  <rect class="ai" x="464" y="48" width="196" height="56" rx="10"/><text class="id" x="478" y="72">A05</text><text class="h" x="514" y="72">Scenario Estimator</text><text class="s" x="478" y="92">weight scenarios</text>
+  <rect class="ai" x="464" y="116" width="196" height="56" rx="10"/><text class="id" x="478" y="140">A06</text><text class="h" x="514" y="140">Domain Analyst</text><text class="s" x="478" y="160">findings per domain</text>
+  <rect class="ai" x="464" y="184" width="196" height="56" rx="10"/><text class="id" x="478" y="208">A07</text><text class="h" x="514" y="208">Synthesis Analyst</text><text class="s" x="478" y="228">cross-domain claims</text>
+
+  <rect class="det" x="684" y="48" width="226" height="56" rx="10"/><text class="id" x="698" y="72">A08</text><text class="h" x="734" y="72">Process Auditor</text><text class="s" x="698" y="92">trace well-formed</text>
+  <rect class="ai" x="684" y="116" width="226" height="56" rx="10"/><text class="id" x="698" y="140">A09</text><text class="h" x="734" y="140">Evidence Reviewer</text><text class="s" x="698" y="160">independent provider</text>
+  <rect class="det" x="684" y="184" width="226" height="56" rx="10"/><text class="id" x="698" y="208">A10</text><text class="h" x="734" y="208">Portfolio Reviewer</text><text class="s" x="698" y="228">constraints, eligibility</text>
+  <rect class="ai" x="684" y="252" width="226" height="56" rx="10"/><text class="id" x="698" y="276">A12</text><text class="h" x="734" y="276">Targeted Rechecker</text><text class="s" x="698" y="296">unsupported claims only</text>
+  <rect class="det" x="684" y="320" width="226" height="56" rx="10"/><text class="id" x="698" y="344">A11</text><text class="h" x="734" y="344">Release Judge</text><text class="s" x="698" y="364">deterministic gate</text>
+
+  <rect class="ai" x="934" y="48" width="162" height="76" rx="10"/><text class="id" x="948" y="72">A13</text><text class="h" x="984" y="72">Report Writer</text><text class="s" x="948" y="94">evidence-cited</text><text class="s" x="948" y="112">narrative</text>
+
+  <path class="ln" d="M220 76 H240" marker-end="url(#a)"/>
+  <path class="ln" d="M440 76 H460" marker-end="url(#a)"/>
+  <path class="ln" d="M660 76 H680" marker-end="url(#a)"/>
+  <path class="ln" d="M910 76 H930" marker-end="url(#a)"/>
+
+  <rect x="24" y="400" width="1072" height="50" rx="10" fill="#120f0d" stroke="rgba(255,255,255,.08)"/>
+  <rect class="det" x="42" y="417" width="16" height="16" rx="4"/><text class="s" x="66" y="430">Deterministic code</text>
+  <rect class="ai" x="214" y="417" width="16" height="16" rx="4"/><text class="s" x="238" y="430">AI role (runs only when a provider is configured)</text>
+  <text class="s" x="580" y="430">AI claims must cite existing evidence IDs. AI never changes a score.</text>
+  <text class="s" x="24" y="268">Committed result: deterministic engine scores,</text>
+  <text class="s" x="24" y="288">eligibility and portfolios. A05 scenarios are</text>
+  <text class="s" x="24" y="308">re-scored by the engine, never by the model.</text>
+</svg>
