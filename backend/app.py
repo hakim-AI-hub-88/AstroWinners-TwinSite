@@ -27,7 +27,7 @@ for _p in (str(_ROOT / "backend"), str(_ROOT)):
     if _p not in sys.path:
         sys.path.insert(0, _p)
 
-from flask import Flask, jsonify, render_template
+from flask import Flask, jsonify, render_template, request
 
 from routes.assistant_routes import bp as assistant_bp
 from routes.ml_routes import bp as ml_bp
@@ -58,6 +58,26 @@ def _release_freed_memory() -> None:
         ctypes.CDLL("libc.so.6").malloc_trim(0)
     except (OSError, AttributeError):
         pass
+
+
+_HEAVY_PREFIXES = ("/api/data", "/api/auto", "/api/similarity", "/api/ml", "/api/report", "/api/twin")
+_LIBC = None
+
+
+def _trim_heap() -> None:
+    """malloc_trim only (no gc pass): cheap enough to run after every data-heavy request."""
+    global _LIBC
+    if _LIBC is None:
+        try:
+            import ctypes
+            _LIBC = ctypes.CDLL("libc.so.6")
+        except OSError:
+            _LIBC = False
+    if _LIBC:
+        try:
+            _LIBC.malloc_trim(0)
+        except AttributeError:
+            pass
 
 
 def create_app(preload: bool = True) -> Flask:
@@ -94,6 +114,14 @@ def create_app(preload: bool = True) -> Flask:
     @app.errorhandler(404)
     def not_found(_):
         return jsonify({"status": "error", "message": "Not found"}), 404
+
+    @app.after_request
+    def _return_freed_memory(response):
+        # Large transient frames (cleaning, ranking, CSV export) are freed after the response is built;
+        # hand those pages back to the OS so a 512 MB host keeps its headroom between requests.
+        if request.path.startswith(_HEAVY_PREFIXES):
+            _trim_heap()
+        return response
 
     if preload:
         try:

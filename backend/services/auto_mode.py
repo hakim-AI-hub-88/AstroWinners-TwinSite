@@ -302,6 +302,16 @@ def _run(m: dict) -> None:
         _save(m)
         with _LOCK:
             _ACTIVE.pop(m["mission_id"], None)
+        _trim_heap()
+
+
+def _trim_heap() -> None:
+    """Return memory freed by the mission to the OS (glibc); keeps 512 MB hosts' headroom between runs."""
+    try:
+        import ctypes
+        ctypes.CDLL("libc.so.6").malloc_trim(0)
+    except (OSError, AttributeError):
+        pass
 
 
 # ---------------------------------------------------------------- plan
